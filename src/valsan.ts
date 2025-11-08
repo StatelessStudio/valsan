@@ -20,14 +20,14 @@ export abstract class ValSan<TInput = unknown, TOutput = TInput> {
 	/**
 	 * Optional normalization step applied before validation.
 	 */
-	async normalize(input: TInput): Promise<TInput> {
+	protected async normalize(input: TInput): Promise<TInput> {
 		return input;
 	}
 
-	abstract validate(input: TInput): Promise<ValidationResult>;
-	abstract sanitize(input: TInput): Promise<TOutput>;
+	protected abstract validate(input: TInput): Promise<ValidationResult>;
+	protected abstract sanitize(input: TInput): Promise<TOutput>;
 
-	async run(input: TInput): Promise<SanitizeResult<TOutput>> {
+	public async run(input: TInput): Promise<SanitizeResult<TOutput>> {
 		// Apply normalization before validation
 		const normalized = await this.normalize(input);
 		const validation = await this.validate(normalized);

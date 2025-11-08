@@ -8,7 +8,7 @@ describe('ValSan - Basic Operations', () => {
 	});
 
 	describe('run() - successful validation and sanitization', () => {
-		it('should return success with sanitized data for valid input', async () => {
+		it('should return success with sanitized data', async () => {
 			const valsan = new TestValSan();
 			const result = await valsan.run('hello');
 

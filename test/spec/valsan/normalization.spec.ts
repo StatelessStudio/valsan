@@ -21,7 +21,7 @@ describe('ValSan - Normalization', () => {
 	it('should use default normalize when not overridden', async () => {
 		const valsan = new TestValSan();
 		const input = 'test';
-		const normalized = await valsan.normalize(input);
+		const normalized = await valsan['normalize'](input);
 
 		expect(normalized).toBe(input);
 	});
