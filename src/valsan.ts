@@ -16,7 +16,12 @@ export interface SanitizeResult<T> {
 	errors: ValidationError[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ValSanOptions {}
+
 export abstract class ValSan<TInput = unknown, TOutput = TInput> {
+	public constructor(protected readonly options: ValSanOptions = {}) {}
+
 	/**
 	 * Optional normalization step applied before validation.
 	 */

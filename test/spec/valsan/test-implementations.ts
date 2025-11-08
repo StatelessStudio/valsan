@@ -107,3 +107,194 @@ export class ThrowingNonErrorValSan extends ValSan<string, string> {
 		throw 'String error'; // eslint-disable-line no-throw-literal
 	}
 }
+
+// Test implementation with simple options
+interface OptionsTestOptions {
+	testOption?: string;
+	prefix?: string;
+}
+
+export class OptionsTestValSan extends ValSan<string, string> {
+	constructor(options: OptionsTestOptions = {}) {
+		super(options);
+	}
+
+	async validate(input: string): Promise<ValidationResult> {
+		if (input.length === 0) {
+			return {
+				isValid: false,
+				errors: [
+					{
+						code: 'EMPTY_INPUT',
+						message: 'Input cannot be empty',
+					},
+				],
+			};
+		}
+		return {
+			isValid: true,
+			errors: [],
+		};
+	}
+
+	async sanitize(input: string): Promise<string> {
+		const opts = this.options as OptionsTestOptions;
+		if (opts.prefix) {
+			return opts.prefix + input;
+		}
+		return input;
+	}
+}
+
+// Test implementation with minLength option
+interface MinLengthOptions {
+	minLength?: number;
+}
+
+export class MinLengthValSan extends ValSan<string, string> {
+	private readonly minLength: number;
+
+	constructor(options: MinLengthOptions = {}) {
+		super(options);
+		this.minLength = options.minLength ?? 3;
+	}
+
+	async validate(input: string): Promise<ValidationResult> {
+		if (input.length < this.minLength) {
+			return {
+				isValid: false,
+				errors: [
+					{
+						code: 'TOO_SHORT',
+						message:
+							`Input must be at least ${this.minLength} ` +
+							'characters',
+						context: {
+							minLength: this.minLength,
+							actualLength: input.length,
+						},
+					},
+				],
+			};
+		}
+		return {
+			isValid: true,
+			errors: [],
+		};
+	}
+
+	async sanitize(input: string): Promise<string> {
+		return input;
+	}
+}
+
+// Test implementation with case transformation options
+interface CaseTransformOptions {
+	transform?: 'uppercase' | 'lowercase' | 'none';
+}
+
+export class CaseTransformValSan extends ValSan<string, string> {
+	constructor(options: CaseTransformOptions = {}) {
+		super(options);
+	}
+
+	override async normalize(input: string): Promise<string> {
+		const opts = this.options as CaseTransformOptions;
+		const transform = opts.transform ?? 'none';
+
+		if (transform === 'uppercase') {
+			return input.toUpperCase();
+		}
+		else if (transform === 'lowercase') {
+			return input.toLowerCase();
+		}
+		return input;
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async validate(input: string): Promise<ValidationResult> {
+		return {
+			isValid: true,
+			errors: [],
+		};
+	}
+
+	async sanitize(input: string): Promise<string> {
+		return input;
+	}
+}
+
+// Test implementation with complex nested options
+interface ComplexOptions {
+	validation?: {
+		minLength?: number;
+		maxLength?: number;
+		pattern?: RegExp;
+	};
+	sanitization?: {
+		trim?: boolean;
+		lowercase?: boolean;
+	};
+}
+
+export class ComplexOptionsValSan extends ValSan<string, string> {
+	constructor(options: ComplexOptions = {}) {
+		super(options);
+	}
+
+	override async normalize(input: string): Promise<string> {
+		const opts = this.options as ComplexOptions;
+		let result = input;
+
+		if (opts.sanitization?.trim) {
+			result = result.trim();
+		}
+		if (opts.sanitization?.lowercase) {
+			result = result.toLowerCase();
+		}
+
+		return result;
+	}
+
+	async validate(input: string): Promise<ValidationResult> {
+		const opts = this.options as ComplexOptions;
+		const errors = [];
+
+		const minLength = opts.validation?.minLength ?? 0;
+		const maxLength = opts.validation?.maxLength ?? Infinity;
+		const pattern = opts.validation?.pattern;
+
+		if (input.length < minLength) {
+			errors.push({
+				code: 'TOO_SHORT',
+				message: `Input must be at least ${minLength} characters`,
+				context: { minLength, actualLength: input.length },
+			});
+		}
+
+		if (input.length > maxLength) {
+			errors.push({
+				code: 'TOO_LONG',
+				message: `Input must be at most ${maxLength} characters`,
+				context: { maxLength, actualLength: input.length },
+			});
+		}
+
+		if (pattern && !pattern.test(input)) {
+			errors.push({
+				code: 'PATTERN_MISMATCH',
+				message: 'Input does not match required pattern',
+				context: { pattern: pattern.toString() },
+			});
+		}
+
+		return {
+			isValid: errors.length === 0,
+			errors,
+		};
+	}
+
+	async sanitize(input: string): Promise<string> {
+		return input;
+	}
+}

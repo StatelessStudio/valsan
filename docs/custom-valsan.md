@@ -199,3 +199,7 @@ errors.push({
     context: { min: 1, max: 100, actual: input }
 });
 ```
+
+## Next Steps
+
+- [Using Options](using-options.md) - Learn how to pass configuration options to make validators reusable and flexible

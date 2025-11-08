@@ -11,6 +11,7 @@ ValSan provides a clean, type-safe way to validate and transform data and input.
 - ✅ **Structured errors** - Machine-readable error codes with context
 - ✅ **Normalization** - Clean input before validation (trim, lowercase, etc.)
 - ✅ **Type transformation** - Convert types during sanitization
+- ✅ **Configurable** - Pass options to customize validator behavior
 
 ## Installation
 
@@ -63,6 +64,7 @@ if (result.success) {
 ## Creating ValSans
 
 - [Creating Your Own ValSan](docs/custom-valsan.md) - Guide for implementing custom validators and sanitizers
+- [Using Options](docs/using-options.md) - Learn how to pass configuration options to make validators reusable
 
 ## Contributing & Development
 
