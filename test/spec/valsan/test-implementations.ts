@@ -1,4 +1,4 @@
-import { ValSan, ValidationResult } from '../../../src';
+import { ValSan, ValidationResult, ComposedValSan } from '../../../src';
 
 // Test implementation for testing the base class
 export class TestValSan extends ValSan<string, string> {
@@ -296,5 +296,150 @@ export class ComplexOptionsValSan extends ValSan<string, string> {
 
 	async sanitize(input: string): Promise<string> {
 		return input;
+	}
+}
+
+// Test implementation for piping - trims input
+export class TrimValSan extends ValSan<string, string> {
+	async validate(): Promise<ValidationResult> {
+		return {
+			isValid: true,
+			errors: [],
+		};
+	}
+
+	async sanitize(input: string): Promise<string> {
+		return input.trim();
+	}
+}
+
+// Test implementation for piping - converts to lowercase
+export class LowercaseValSan extends ValSan<string, string> {
+	protected async validate(input: string): Promise<ValidationResult> {
+		if (input.length === 0) {
+			return {
+				isValid: false,
+				errors: [
+					{
+						code: 'EMPTY_STRING',
+						message: 'Input cannot be empty',
+					},
+				],
+			};
+		}
+		return {
+			isValid: true,
+			errors: [],
+		};
+	}
+
+	async sanitize(input: string): Promise<string> {
+		return input.toLowerCase();
+	}
+}
+
+// Test implementation for piping - converts string to number
+export class StringToNumberValSan extends ValSan<string, number> {
+	async validate(input: string): Promise<ValidationResult> {
+		if (isNaN(Number(input))) {
+			return {
+				isValid: false,
+				errors: [
+					{
+						code: 'NOT_A_NUMBER',
+						message: 'Input must be a valid number',
+					},
+				],
+			};
+		}
+		return {
+			isValid: true,
+			errors: [],
+		};
+	}
+
+	async sanitize(input: string): Promise<number> {
+		return Number(input);
+	}
+}
+
+// Test implementation for piping - doubles a number
+export class DoubleNumberValSan extends ValSan<number, number> {
+	async validate(input: number): Promise<ValidationResult> {
+		if (input < 0) {
+			return {
+				isValid: false,
+				errors: [
+					{
+						code: 'NEGATIVE_NUMBER',
+						message: 'Number must be non-negative',
+					},
+				],
+			};
+		}
+		return {
+			isValid: true,
+			errors: [],
+		};
+	}
+
+	async sanitize(input: number): Promise<number> {
+		return input * 2;
+	}
+}
+
+// Test implementation for ComposedValSan - validates email format
+export class EmailFormatValSan extends ValSan<string, string> {
+	async validate(input: string): Promise<ValidationResult> {
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(input)) {
+			return {
+				isValid: false,
+				errors: [
+					{
+						code: 'INVALID_EMAIL',
+						message: 'Invalid email format',
+					},
+				],
+			};
+		}
+
+		return {
+			isValid: true,
+			errors: [],
+		};
+	}
+
+	async sanitize(input: string): Promise<string> {
+		return input;
+	}
+}
+
+// Composed ValSan example - Email validator
+export class EmailValSan extends ComposedValSan<string, string> {
+	constructor() {
+		super([
+			new TrimValSan(),
+			new LowercaseValSan(),
+			new EmailFormatValSan(),
+		]);
+	}
+}
+
+// Composed ValSan example - Number pipeline
+export class NumberPipelineValSan extends ComposedValSan<string, number> {
+	constructor() {
+		super([
+			new TrimValSan(),
+			new StringToNumberValSan(),
+			new DoubleNumberValSan(),
+		]);
+	}
+}
+
+// Composed ValSan with single step (edge case)
+export class SingleStepValSan extends ComposedValSan<string, string> {
+	constructor() {
+		super([new TrimValSan()]);
 	}
 }

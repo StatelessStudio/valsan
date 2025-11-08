@@ -203,3 +203,5 @@ errors.push({
 ## Next Steps
 
 - [Using Options](using-options.md) - Learn how to pass configuration options to make validators reusable and flexible
+- [ComposedValSan](composed-valsan.md) - Build complex validators by composing simple, reusable components
+

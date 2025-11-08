@@ -48,7 +48,7 @@ describe('ValSan - Options', () => {
 			expect(result.data).toBe('hello');
 		});
 
-		it('should use different minLength values for different instances', async () => {
+		it('should isolate options between instances', async () => {
 			const valsan1 = new MinLengthValSan({ minLength: 3 });
 			const valsan2 = new MinLengthValSan({ minLength: 10 });
 

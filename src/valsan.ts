@@ -19,7 +19,12 @@ export interface SanitizeResult<T> {
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ValSanOptions {}
 
-export abstract class ValSan<TInput = unknown, TOutput = TInput> {
+export interface RunsLikeAValSan<TInput = unknown, TOutput = TInput> {
+	run(input: TInput): Promise<SanitizeResult<TOutput>>;
+}
+
+export abstract class ValSan<TInput = unknown, TOutput = TInput>
+implements RunsLikeAValSan<TInput, TOutput> {
 	public constructor(protected readonly options: ValSanOptions = {}) {}
 
 	/**
