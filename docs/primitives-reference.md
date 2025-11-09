@@ -2,6 +2,41 @@
 
 ValSan provides a comprehensive library of primitive validators that can be used standalone or composed together to create complex validation pipelines.
 
+## Bool Primitives
+
+### StringToBooleanValSan
+Converts a string to a boolean, supporting common boolean representations.
+
+```typescript
+import { StringToBooleanValSan } from 'valsan'; // from 'valsan/bool'
+
+const validator = new StringToBooleanValSan();
+const result = await validator.run('yes');
+// result.data === true
+
+// Default true values: 'true', '1', 'yes', 'on' (case-insensitive)
+// Default false values: 'false', '0', 'no', 'off' (case-insensitive)
+
+// Custom values
+const custom = new StringToBooleanValSan({
+  trueValues: ['y', 'yes'],
+  falseValues: ['n', 'no']
+});
+```
+
+## DateTime Primitives
+
+### StringToDateValSan
+Converts a string to a Date object, validating that it's a valid date string.
+
+```typescript
+import { StringToDateValSan } from 'valsan'; // from 'valsan/date-time'
+
+const validator = new StringToDateValSan();
+const result = await validator.run('2024-01-15');
+// result.data instanceof Date === true
+```
+
 ## String Primitives
 
 ### TrimSanitizer
@@ -80,6 +115,17 @@ const result = await validator.run('123-4567');
 
 ## Number Primitives
 
+### StringToNumberValSan
+Converts a string to a number, validating that it's a valid numeric string.
+
+```typescript
+import { StringToNumberValSan } from 'valsan'; // from 'valsan/number'
+
+const validator = new StringToNumberValSan();
+const result = await validator.run('42');
+// result.data === 42 (number type)
+```
+
 ### MinValidator
 Validates that a number meets a minimum value requirement.
 
@@ -127,53 +173,15 @@ const result = await validator.run(3.14);
 // result.errors[0].code === 'NUMBER_NOT_INTEGER'
 ```
 
-## Transform Primitives
-
-### StringToNumberValSan
-Converts a string to a number, validating that it's a valid numeric string.
-
-```typescript
-import { StringToNumberValSan } from 'valsan';
-
-const validator = new StringToNumberValSan();
-const result = await validator.run('42');
-// result.data === 42 (number type)
-```
-
-### StringToDateValSan
-Converts a string to a Date object, validating that it's a valid date string.
-
-```typescript
-import { StringToDateValSan } from 'valsan';
-
-const validator = new StringToDateValSan();
-const result = await validator.run('2024-01-15');
-// result.data instanceof Date === true
-```
-
-### StringToBooleanValSan
-Converts a string to a boolean, supporting common boolean representations.
-
-```typescript
-import { StringToBooleanValSan } from 'valsan';
-
-const validator = new StringToBooleanValSan();
-const result = await validator.run('yes');
-// result.data === true
-
-// Default true values: 'true', '1', 'yes', 'on' (case-insensitive)
-// Default false values: 'false', '0', 'no', 'off' (case-insensitive)
-
-// Custom values
-const custom = new StringToBooleanValSan({
-  trueValues: ['y', 'yes'],
-  falseValues: ['n', 'no']
-});
-```
-
 ## Error Codes
 
 All primitives use consistent, descriptive error codes:
+
+### Bool Errors
+- `INVALID_BOOLEAN` - String is not a recognized boolean value
+
+### DateTime Errors
+- `INVALID_DATE` - String cannot be converted to a valid date
 
 ### String Errors
 - `EMPTY_STRING` - String is empty when empty strings are not allowed
@@ -182,15 +190,11 @@ All primitives use consistent, descriptive error codes:
 - `STRING_PATTERN_MISMATCH` - String doesn't match required pattern
 
 ### Number Errors
+- `NOT_A_NUMBER` - String cannot be converted to a number
 - `NUMBER_TOO_SMALL` - Number is less than minimum value
 - `NUMBER_TOO_LARGE` - Number exceeds maximum value
 - `NUMBER_OUT_OF_RANGE` - Number is outside the allowed range
 - `NUMBER_NOT_INTEGER` - Number has decimal places when integer required
-
-### Transform Errors
-- `NOT_A_NUMBER` - String cannot be converted to a number
-- `INVALID_DATE` - String cannot be converted to a valid date
-- `INVALID_BOOLEAN` - String is not a recognized boolean value
 
 ## Composing Primitives
 

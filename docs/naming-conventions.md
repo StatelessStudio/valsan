@@ -35,11 +35,6 @@ const upper = new UppercaseSanitizer();
 await upper.run('hello'); // → 'HELLO'
 ```
 
-**Current Sanitizers:**
-- `TrimSanitizer` - Removes leading/trailing whitespace
-- `LowercaseSanitizer` - Converts to lowercase
-- `UppercaseSanitizer` - Converts to uppercase
-
 ---
 
 ### `Validator` - Pure Validation
@@ -74,17 +69,6 @@ await pattern.run('123-4567'); // → succeeds, matches pattern
 const range = new RangeValidator({ min: 0, max: 100 });
 await range.run(150); // → fails, out of range
 ```
-
-**Current String Validators:**
-- `MinLengthValidator` - Validates minimum string length
-- `MaxLengthValidator` - Validates maximum string length
-- `PatternValidator` - Validates against regex pattern
-
-**Current Number Validators:**
-- `MinValidator` - Validates minimum numeric value
-- `MaxValidator` - Validates maximum numeric value
-- `RangeValidator` - Validates numeric range
-- `IntegerValidator` - Validates integer (no decimals)
 
 ---
 
@@ -121,12 +105,6 @@ const toBool = new StringToBooleanValSan();
 await toBool.run('yes'); // → true
 await toBool.run('maybe'); // → fails, not a boolean string
 ```
-
-**Current Transform ValSans:**
-- `StringToNumberValSan` - Validates and converts string to number
-- `StringToDateValSan` - Validates and converts string to Date
-- `StringToBooleanValSan` - Validates and converts string to boolean
-
 ---
 
 ## Composed Validators

@@ -1,0 +1,47 @@
+import 'jasmine';
+import { IntegerValidator } from '../../../../src';
+
+describe('IntegerValidator', () => {
+	it('should accept integer numbers', async () => {
+		const validator = new IntegerValidator();
+		const result = await validator.run(42);
+		expect(result.success).toBe(true);
+		expect(result.data).toBe(42);
+	});
+
+	it('should accept zero', async () => {
+		const validator = new IntegerValidator();
+		const result = await validator.run(0);
+		expect(result.success).toBe(true);
+		expect(result.data).toBe(0);
+	});
+
+	it('should accept negative integers', async () => {
+		const validator = new IntegerValidator();
+		const result = await validator.run(-42);
+		expect(result.success).toBe(true);
+		expect(result.data).toBe(-42);
+	});
+
+	it('should reject decimal numbers', async () => {
+		const validator = new IntegerValidator();
+		const result = await validator.run(3.14);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('NUMBER_NOT_INTEGER');
+		expect(result.errors[0].context?.['actual']).toBe(3.14);
+	});
+
+	it('should reject numbers with small decimal parts', async () => {
+		const validator = new IntegerValidator();
+		const result = await validator.run(42.001);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('NUMBER_NOT_INTEGER');
+	});
+
+	it('should accept large integers', async () => {
+		const validator = new IntegerValidator();
+		const result = await validator.run(1000000);
+		expect(result.success).toBe(true);
+		expect(result.data).toBe(1000000);
+	});
+});

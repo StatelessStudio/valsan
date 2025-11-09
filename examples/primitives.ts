@@ -6,6 +6,10 @@
  */
 
 import {
+	// Boolean primitive
+	StringToBooleanValSan,
+	// Date-time primitive
+	StringToDateValSan,
 	// String primitives
 	TrimSanitizer,
 	LowercaseSanitizer,
@@ -18,10 +22,7 @@ import {
 	MaxValidator,
 	RangeValidator,
 	IntegerValidator,
-	// Transform primitives
 	StringToNumberValSan,
-	StringToDateValSan,
-	StringToBooleanValSan,
 	// Core classes
 	ComposedValSan,
 } from '../src';
