@@ -1,3 +1,4 @@
+export { AlphanumericValidator } from './alphanumeric-validator';
 export { TrimSanitizer } from './trim-sanitizer';
 export { LowercaseSanitizer } from './lowercase-sanitizer';
 export { UppercaseSanitizer } from './uppercase-sanitizer';

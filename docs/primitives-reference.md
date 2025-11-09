@@ -8,6 +8,7 @@
   - [StringToDateValSan](#stringtodatevalsan)
   - [Iso8601TimestampValSan](#iso8601timestampvalsan)
 - [String Primitives](#string-primitives)
+  - [AlphanumericValidator](#alphanumericvalidator)
   - [TrimSanitizer](#trimsanitizer)
   - [LowercaseSanitizer](#lowercasesanitizer)
   - [UppercaseSanitizer](#uppercasesanitizer)
@@ -84,6 +85,29 @@ const result = await validator.run('2024-01-15T12:34:56Z');
 ```
 
 ## String Primitives
+
+### AlphanumericValidator
+
+Validates that a string contains only alphanumeric characters (letters and numbers).
+
+```typescript
+import { AlphanumericValidator } from 'valsan';
+
+const validator = new AlphanumericValidator();
+const result = await validator.run('abc123');
+// result.success === true
+// result.data === 'abc123'
+
+const fail = await validator.run('abc-123');
+// fail.success === false
+// fail.errors[0].code === 'STRING_NOT_ALPHANUMERIC'
+
+// Custom error message
+const custom = new AlphanumericValidator({ errorMessage: 'Only letters and numbers allowed!' });
+const fail2 = await custom.run('abc-123');
+// fail2.success === false
+// fail2.errors[0].message === 'Only letters and numbers allowed!'
+```
 
 ### TrimSanitizer
 
