@@ -12,6 +12,7 @@ class MyValSan extends ValSan<string, string> {
         return input.trim().toLowerCase();
     }
 
+    async validate(input: string) {
         if (input.includes(' ')) {
             return validationError([
                 { code: 'WORD_HAS_SPACES', message: 'No spaces allowed' }
