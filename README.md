@@ -1,44 +1,53 @@
 # ValSan
 
-**Class-based validation and sanitization for TypeScript**
-
 ValSan provides a clean, type-safe way to validate and transform data and input.
 
 ## Features
 
-- ✅ **Type-safe** - Full TypeScript support with generics
-- ✅ **Async-first** - Built for I/O operations (supports DB checks, API calls)
-- ✅ **Structured errors** - Machine-readable error codes with context
-- ✅ **Normalization** - Clean input before validation (trim, lowercase, etc.)
-- ✅ **Type transformation** - Convert types during sanitization
-- ✅ **Configurable** - Pass options to customize validator behavior
+- **Type-safe** - Full TypeScript support with generics
+- **Async-first** - Built for I/O operations (supports DB checks, API calls)
+- **Structured errors** - Machine-readable error codes with context
+- **Type transformation** - Convert types during sanitization
+- **Configurable** - Pass options to customize validator behavior
+- **Extensible** - Create your own ValSans
+- **Composable** - Build validation/sanitization pipelines
 
-## Installation
+## Install
 
 ```bash
 npm install valsan
 ```
-
 ## Quick Start
 
 ### What is a ValSan?
 
-A ValSan is a Validator + Sanitizer. It checks input data, and returns it in a clean and consistent type.
+A ValSan is a Validator + Sanitizer. It checks input data, and returns it in a clean and consistent type/format.
 
-### Object Sanitization (Validate Objects)
-
-Use the `ObjectSanitizer` class to create a valsan schema for an object:
+### Example - Object Validation & Sanitization
 
 ```typescript
 import {
     ObjectSanitizer,
     MinLengthValidator,
-    EmailValidator
+    LowercaseSanitizer,
+    TrimSanitizer,
+    EmailValidator,
+    ComposedValSan
 } from 'valsan';
+
+class UsernameValSan extends ComposedValSan<string, string> {
+    public constructor() {
+        super([
+            new TrimSanitizer(),
+            new MinLengthValidator({ minLength: 5 }),
+            new LowercaseSanitizer(),
+        ]);
+    }
+}
 
 // Create an object sanitizer
 const sanitizer = new ObjectSanitizer({
-  username: new MinLengthValidator({ minLength: 3 }),
+  username: new UsernameValSan(),
   email: new EmailValidator(),
 });
 
@@ -49,271 +58,37 @@ const result = await sanitizer.run({
 });
 
 if (result.success) {
-  console.log('Sanitized:', result.data);
-} else {
-  console.error('Validation errors:', result.errors);
+    console.log('Sanitized:', result.data);
+}
+else {
+    console.error('Validation errors:', result.errors);
 }
 ```
-
-- Each property in the schema is validated independently.
-- `result.data` contains the sanitized object if all fields are valid.
-- `result.errors` contains an array of errors with the field name if any validation fails.
 
 ### Using Built-in Primitives
 
 ValSan includes ready-to-use primitive validators for common validation tasks:
 
 ```typescript
-import { 
-    TrimSanitizer, 
-    LowercaseSanitizer, 
-    MinLengthValidator,
-    StringToNumberValSan,
-    RangeValidator 
-} from 'valsan';
-
-// String validation
-const trim = new TrimSanitizer();
-const result1 = await trim.run('  hello  ');
-console.log(result1.data); // "hello"
-
-// String length validation
-const minLength = new MinLengthValidator({ minLength: 3 });
-const result2 = await minLength.run('hi');
-console.log(result2.success); // false - too short
-
-// Type transformation
-const toNumber = new StringToNumberValSan();
-const result3 = await toNumber.run('42');
-console.log(result3.data); // 42 (number type)
+import { RangeValidator } from 'valsan';
 
 // Number validation
 const range = new RangeValidator({ min: 0, max: 100 });
-const result4 = await range.run(150);
-console.log(result4.success); // false - out of range
+const result = await range.run(150);
+console.log(result.success); // false - out of range
 ```
 
-**Available Primitives:**
+### Primitives Library
 
-See the [Primitives Reference](docs/primitives-reference.md) for complete documentation.
+Compose your own validators from built-in primitives:
 
-### Creating Custom ValSans
+[Primitives Reference](docs/primitives-reference.md)
 
-```typescript
-import { ValSan, ValidationResult } from 'valsan';
+## More
 
-class EmailValSan extends ValSan<string, string> {
-    async normalize(input: string): Promise<string> {
-        return input.trim().toLowerCase();
-    }
-
-    async validate(input: string): Promise<ValidationResult> {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        
-        if (!emailRegex.test(input)) {
-            return {
-                isValid: false,
-                errors: [{
-                    code: 'INVALID_EMAIL',
-                    message: 'Please provide a valid email address'
-                }]
-            };
-        }
-
-        return { isValid: true, errors: [] };
-    }
-
-    async sanitize(input: string): Promise<string> {
-        return input;
-    }
-}
-
-// Usage
-const validator = new EmailValSan();
-const result = await validator.run('  User@Example.COM  ');
-
-if (result.success) {
-    console.log(result.data); // "user@example.com"
-} else {
-    console.error(result.errors);
-}
-```
-
-## Optional Fields
-
-ValSan has built-in support for optional fields. When `isOptional: true` is set in the options, `undefined` and `null` values will pass validation without running any validation or sanitization logic:
-
-```typescript
-import { MinLengthValidator } from 'valsan';
-
-// Required field (default behavior)
-const requiredValidator = new MinLengthValidator({ minLength: 3 });
-const result1 = await requiredValidator.run(undefined);
-console.log(result1.success); // false - validation fails
-
-// Optional field
-const optionalValidator = new MinLengthValidator({ 
-    minLength: 3,
-    isOptional: true 
-});
-const result2 = await optionalValidator.run(undefined);
-console.log(result2.success); // true - undefined is allowed
-console.log(result2.data); // undefined
-
-const result3 = await optionalValidator.run('hello');
-console.log(result3.success); // true
-console.log(result3.data); // "hello"
-```
-
-This works with both `ValSan` and `ComposedValSan`:
-
-```typescript
-import { ComposedValSan, TrimSanitizer, MinLengthValidator } from 'valsan';
-
-class OptionalUsernameValSan extends ComposedValSan<string, string> {
-    constructor() {
-        super(
-            [
-                new TrimSanitizer(),
-                new MinLengthValidator({ minLength: 3 })
-            ],
-            { isOptional: true } // Make the entire composition optional
-        );
-    }
-}
-
-const validator = new OptionalUsernameValSan();
-const result = await validator.run(undefined);
-console.log(result.success); // true - skips all validation steps
-```
-
-## Building Reusable Validators with ComposedValSan
-
-Compose primitives together to create complex validators:
-
-```typescript
-import { 
-    ComposedValSan, 
-    TrimSanitizer, 
-    LowercaseSanitizer, 
-    MinLengthValidator,
-    MaxLengthValidator,
-    PatternValidator 
-} from 'valsan';
-
-// Create a username validator by composing primitives
-export class UsernameValSan extends ComposedValSan<string, string> {
-    constructor() {
-        super([
-            new TrimSanitizer(),
-            new LowercaseSanitizer(),
-            new MinLengthValidator({ minLength: 3 }),
-            new MaxLengthValidator({ maxLength: 20 }),
-            new PatternValidator({ 
-                pattern: /^[a-z0-9_]+$/,
-                errorMessage: 'Only lowercase letters, numbers, and underscores'
-            })
-        ]);
-    }
-}
-
-// Use it anywhere
-const validator = new UsernameValSan();
-const result = await validator.run('  JohnDoe123  ');
-console.log(result.data); // "johndoe123"
-
-// Or compose with type transformation
-import { StringToNumberValSan, IntegerValidator, RangeValidator } from 'valsan';
-
-export class AgeValSan extends ComposedValSan<string, number> {
-    constructor() {
-        super([
-            new TrimSanitizer(),
-            new StringToNumberValSan(),
-            new IntegerValidator(),
-            new RangeValidator({ min: 0, max: 120 })
-        ]);
-    }
-}
-
-const ageValidator = new AgeValSan();
-const ageResult = await ageValidator.run('  25  ');
-console.log(ageResult.data); // 25 (number type)
-```
-
-You can also create custom building blocks and compose them:
-
-```typescript
-import { ComposedValSan, ValSan, ValidationResult } from 'valsan';
-
-// Define reusable building blocks
-class TrimSanitizer extends ValSan<string, string> {
-    async validate(): Promise<ValidationResult> {
-        return { isValid: true, errors: [] };
-    }
-    async sanitize(input: string): Promise<string> {
-        return input.trim();
-    }
-}
-
-class LowercaseSanitizer extends ValSan<string, string> {
-    async validate(input: string): Promise<ValidationResult> {
-        if (input.length === 0) {
-            return {
-                isValid: false,
-                errors: [{ code: 'EMPTY', message: 'Cannot be empty' }]
-            };
-        }
-        return { isValid: true, errors: [] };
-    }
-    async sanitize(input: string): Promise<string> {
-        return input.toLowerCase();
-    }
-}
-
-class EmailFormatValSan extends ValSan<string, string> {
-    async validate(input: string): Promise<ValidationResult> {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(input)) {
-            return {
-                isValid: false,
-                errors: [{ 
-                    code: 'INVALID_EMAIL', 
-                    message: 'Invalid email format' 
-                }]
-            };
-        }
-        return { isValid: true, errors: [] };
-    }
-    async sanitize(input: string): Promise<string> {
-        return input;
-    }
-}
-
-// Compose them into a reusable validator
-export class EmailValSan extends ComposedValSan<string, string> {
-    constructor() {
-        super([
-            new TrimSanitizer(),
-            new LowercaseSanitizer(),
-            new EmailFormatValSan()
-        ]);
-    }
-}
-
-// Use it anywhere
-const emailValidator = new EmailValSan();
-const result = await emailValidator.run('  User@Example.COM  ');
-console.log(result.data); // "user@example.com"
-```
-
-## Documentation
-
-- [Primitives Reference](docs/primitives-reference.md) - Complete guide to all built-in primitive validators
-- [Creating Your Own ValSan](docs/custom-valsan.md) - Guide for implementing custom validators and sanitizers
-- [Using Options](docs/using-options.md) - Learn how to pass configuration options to make validators reusable
-- [ComposedValSan](docs/composed-valsan.md) - Build complex validators by composing simple, reusable components
-- [ObjectSanitizer](docs/object-sanitizer.md) - Learn how to validate and sanitize entire objects using schemas
+- [Custom Validators](docs/custom-valsan.md)
+- [Composed Validators](docs/composed-valsan.md)
+- [Options](docs/using-options.md)
 
 ## Contributing & Development
 
