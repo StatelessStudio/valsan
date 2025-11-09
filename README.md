@@ -7,7 +7,7 @@ ValSan provides a clean, type-safe way to validate and transform data and input.
 ## Features
 
 - ✅ **Type-safe** - Full TypeScript support with generics
-- ✅ **Async-first** - Built for I/O operations (DB checks, API calls)
+- ✅ **Async-first** - Built for I/O operations (supports DB checks, API calls)
 - ✅ **Structured errors** - Machine-readable error codes with context
 - ✅ **Normalization** - Clean input before validation (trim, lowercase, etc.)
 - ✅ **Type transformation** - Convert types during sanitization
@@ -21,9 +21,13 @@ npm install valsan
 
 ## Quick Start
 
+### What is a ValSan?
+
+A ValSan is a Validator + Sanitizer. It checks input data, and returns it in a clean and consistent type.
+
 ### Object Sanitization (Validate Objects)
 
-You can validate and sanitize entire objects by defining a schema of valsan validators for each property. Use the `ObjectSanitizer` class:
+Use the `ObjectSanitizer` class to create a valsan schema for an object:
 
 ```typescript
 import {
@@ -32,11 +36,13 @@ import {
     EmailValidator
 } from 'valsan';
 
+// Create an object sanitizer
 const sanitizer = new ObjectSanitizer({
   username: new MinLengthValidator({ minLength: 3 }),
   email: new EmailValidator(),
 });
 
+// Validate & sanitize input data
 const result = await sanitizer.run({
     username: 'alice',
     email: 'alice@example.com'
@@ -88,13 +94,10 @@ console.log(result4.success); // false - out of range
 ```
 
 **Available Primitives:**
-- **String**: `TrimSanitizer`, `LowercaseSanitizer`, `UppercaseSanitizer`, `MinLengthValidator`, `MaxLengthValidator`, `PatternValidator`
-- **Number**: `MinValidator`, `MaxValidator`, `RangeValidator`, `IntegerValidator`
-- **Transform**: `StringToNumberValSan`, `StringToDateValSan`, `StringToBooleanValSan`
 
 See the [Primitives Reference](docs/primitives-reference.md) for complete documentation.
 
-### Creating Custom Validators
+### Creating Custom ValSans
 
 ```typescript
 import { ValSan, ValidationResult } from 'valsan';
