@@ -1,11 +1,13 @@
 import 'jasmine';
-import { ComposedValSan } from '../../../src';
+import {
+	ComposedValSan,
+	TrimSanitizer,
+	LowercaseSanitizer,
+} from '../../../src';
 import {
 	EmailValSan,
 	NumberPipelineValSan,
 	SingleStepValSan,
-	TrimValSan,
-	LowercaseValSan,
 	EmailFormatValSan,
 	TestValSan,
 } from './test-implementations';
@@ -36,8 +38,8 @@ describe('ComposedValSan', () => {
 			const steps = emailValidator.getSteps();
 
 			expect(steps.length).toBe(3);
-			expect(steps[0] instanceof TrimValSan).toBe(true);
-			expect(steps[1] instanceof LowercaseValSan).toBe(true);
+			expect(steps[0] instanceof TrimSanitizer).toBe(true);
+			expect(steps[1] instanceof LowercaseSanitizer).toBe(true);
 			expect(steps[2] instanceof EmailFormatValSan).toBe(true);
 		});
 
@@ -105,7 +107,7 @@ describe('ComposedValSan', () => {
 		it('should fail when first step validation fails', async () => {
 			const composed = new ComposedValSan<string, string>([
 				new TestValSan(), // Requires 3+ chars
-				new LowercaseValSan(),
+				new LowercaseSanitizer(),
 			]);
 			const result = await composed.run('ab');
 
@@ -145,8 +147,8 @@ describe('ComposedValSan', () => {
 			const emailValidator = new EmailValSan();
 			const result = await emailValidator.run('  TEST@EXAMPLE.COM  ');
 
-			// TrimValSan is first, but has no custom normalize
-			// LowercaseValSan normalizes to lowercase
+			// TrimSanitizer is first, but has no custom normalize
+			// LowercaseSanitizer normalizes to lowercase
 			expect(result.success).toBe(true);
 			expect(result.data).toBe('test@example.com');
 		});
@@ -156,7 +158,7 @@ describe('ComposedValSan', () => {
 		it('should use first step validation', async () => {
 			const emailValidator = new EmailValSan();
 
-			// Empty string fails LowercaseValSan validation
+			// Empty string fails LowercaseSanitizer validation
 			const result = await emailValidator.run('   ');
 
 			expect(result.success).toBe(false);

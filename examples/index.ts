@@ -1,59 +1,12 @@
 /* eslint-disable no-console */
-import { ValSan, ValidationResult, ComposedValSan } from '../src';
-
-// Example 1: Simple string transformations
-class TrimValSan extends ValSan<string, string> {
-	async validate(): Promise<ValidationResult> {
-		return { isValid: true, errors: [] };
-	}
-
-	async sanitize(input: string): Promise<string> {
-		return input.trim();
-	}
-}
-
-class LowercaseValSan extends ValSan<string, string> {
-	async validate(input: string): Promise<ValidationResult> {
-		if (input.length === 0) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'EMPTY_STRING',
-						message: 'Input cannot be empty',
-					},
-				],
-			};
-		}
-		return { isValid: true, errors: [] };
-	}
-
-	async sanitize(input: string): Promise<string> {
-		return input.toLowerCase();
-	}
-}
-
-// Example 2: Type transformation chain
-class StringToNumberValSan extends ValSan<string, number> {
-	async validate(input: string): Promise<ValidationResult> {
-		if (isNaN(Number(input))) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'NOT_A_NUMBER',
-						message: 'Input must be a valid number',
-					},
-				],
-			};
-		}
-		return { isValid: true, errors: [] };
-	}
-
-	async sanitize(input: string): Promise<number> {
-		return Number(input);
-	}
-}
+import {
+	ValSan,
+	ValidationResult,
+	ComposedValSan,
+	TrimSanitizer,
+	LowercaseSanitizer,
+	StringToNumberValSan,
+} from '../src';
 
 class DoubleValSan extends ValSan<number, number> {
 	async validate(input: number): Promise<ValidationResult> {
@@ -107,8 +60,8 @@ async function runExamples(): Promise<void> {
 	class EmailValSan extends ComposedValSan<string, string> {
 		constructor() {
 			super([
-				new TrimValSan(),
-				new LowercaseValSan(),
+				new TrimSanitizer(),
+				new LowercaseSanitizer(),
 				new EmailFormatValSan(),
 			]);
 		}
@@ -125,7 +78,7 @@ async function runExamples(): Promise<void> {
 	class NumberPipeline extends ComposedValSan<string, number> {
 		constructor() {
 			super([
-				new TrimValSan(),
+				new TrimSanitizer(),
 				new StringToNumberValSan(),
 				new DoubleValSan(),
 			]);

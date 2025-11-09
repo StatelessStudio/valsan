@@ -1,4 +1,11 @@
-import { ValSan, ValidationResult, ComposedValSan } from '../../../src';
+import {
+	ValSan,
+	ValidationResult,
+	ComposedValSan,
+	TrimSanitizer,
+	LowercaseSanitizer,
+	StringToNumberValSan,
+} from '../../../src';
 
 // Test implementation for testing the base class
 export class TestValSan extends ValSan<string, string> {
@@ -299,70 +306,6 @@ export class ComplexOptionsValSan extends ValSan<string, string> {
 	}
 }
 
-// Test implementation for piping - trims input
-export class TrimValSan extends ValSan<string, string> {
-	async validate(): Promise<ValidationResult> {
-		return {
-			isValid: true,
-			errors: [],
-		};
-	}
-
-	async sanitize(input: string): Promise<string> {
-		return input.trim();
-	}
-}
-
-// Test implementation for piping - converts to lowercase
-export class LowercaseValSan extends ValSan<string, string> {
-	protected async validate(input: string): Promise<ValidationResult> {
-		if (input.length === 0) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'EMPTY_STRING',
-						message: 'Input cannot be empty',
-					},
-				],
-			};
-		}
-		return {
-			isValid: true,
-			errors: [],
-		};
-	}
-
-	async sanitize(input: string): Promise<string> {
-		return input.toLowerCase();
-	}
-}
-
-// Test implementation for piping - converts string to number
-export class StringToNumberValSan extends ValSan<string, number> {
-	async validate(input: string): Promise<ValidationResult> {
-		if (isNaN(Number(input))) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'NOT_A_NUMBER',
-						message: 'Input must be a valid number',
-					},
-				],
-			};
-		}
-		return {
-			isValid: true,
-			errors: [],
-		};
-	}
-
-	async sanitize(input: string): Promise<number> {
-		return Number(input);
-	}
-}
-
 // Test implementation for piping - doubles a number
 export class DoubleNumberValSan extends ValSan<number, number> {
 	async validate(input: number): Promise<ValidationResult> {
@@ -419,8 +362,8 @@ export class EmailFormatValSan extends ValSan<string, string> {
 export class EmailValSan extends ComposedValSan<string, string> {
 	constructor() {
 		super([
-			new TrimValSan(),
-			new LowercaseValSan(),
+			new TrimSanitizer(),
+			new LowercaseSanitizer(),
 			new EmailFormatValSan(),
 		]);
 	}
@@ -430,7 +373,7 @@ export class EmailValSan extends ComposedValSan<string, string> {
 export class NumberPipelineValSan extends ComposedValSan<string, number> {
 	constructor() {
 		super([
-			new TrimValSan(),
+			new TrimSanitizer(),
 			new StringToNumberValSan(),
 			new DoubleNumberValSan(),
 		]);
@@ -440,6 +383,6 @@ export class NumberPipelineValSan extends ComposedValSan<string, number> {
 // Composed ValSan with single step (edge case)
 export class SingleStepValSan extends ComposedValSan<string, string> {
 	constructor() {
-		super([new TrimValSan()]);
+		super([new TrimSanitizer()]);
 	}
 }
