@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { validationError, validationSuccess } from '../../errors';
 
 export interface PatternValidatorOptions extends ValSanOptions {
 	/**
@@ -46,25 +47,20 @@ export class PatternValidator extends ValSan<string, string> {
 
 	async validate(input: string): Promise<ValidationResult> {
 		if (!this.pattern.test(input)) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'STRING_PATTERN_MISMATCH',
-						message:
-							this.errorMessage ??
-							'Input does not match required pattern',
-						context: {
-							pattern: this.pattern.toString(),
-						},
+			return validationError([
+				{
+					code: 'STRING_PATTERN_MISMATCH',
+					message:
+						this.errorMessage ??
+						'Input does not match required pattern',
+					context: {
+						pattern: this.pattern.toString(),
 					},
-				],
-			};
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<string> {

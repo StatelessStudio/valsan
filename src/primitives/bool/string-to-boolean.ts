@@ -1,3 +1,4 @@
+import { validationError, validationSuccess } from '../../errors';
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
 
 export interface StringToBooleanValSanOptions extends ValSanOptions {
@@ -71,24 +72,19 @@ export class StringToBooleanValSan extends ValSan<string, boolean> {
 			!this.trueValues.includes(input) &&
 			!this.falseValues.includes(input)
 		) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'INVALID_BOOLEAN',
-						message: 'Input must be a valid boolean string',
-						context: {
-							allowedTrue: this.trueValues,
-							allowedFalse: this.falseValues,
-						},
+			return validationError([
+				{
+					code: 'INVALID_BOOLEAN',
+					message: 'Input must be a valid boolean string',
+					context: {
+						allowedTrue: this.trueValues,
+						allowedFalse: this.falseValues,
 					},
-				],
-			};
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<boolean> {

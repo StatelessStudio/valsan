@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult } from '../../valsan';
+import { validationError, validationSuccess } from '../../errors';
 
 /**
  * Converts a string to a number.
@@ -27,20 +28,15 @@ export class StringToNumberValSan extends ValSan<string, number> {
 
 	async validate(input: number): Promise<ValidationResult> {
 		if (isNaN(input)) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'NOT_A_NUMBER',
-						message: 'Input must be a valid number',
-					},
-				],
-			};
+			return validationError([
+				{
+					code: 'NOT_A_NUMBER',
+					message: 'Input must be a valid number',
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+
+		return validationSuccess();
 	}
 
 	async sanitize(input: number): Promise<number> {

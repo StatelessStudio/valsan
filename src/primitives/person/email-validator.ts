@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { validationSuccess } from '../../errors';
 
 export interface EmailValidatorOptions extends ValSanOptions {
 	/**
@@ -93,7 +94,7 @@ export class EmailValidator extends ValSan<string, string> {
 			}
 		}
 
-		return { isValid: true, errors: [] };
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<string> {

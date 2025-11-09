@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { validationError, validationSuccess } from '../../errors';
 
 export interface MaxLengthValidatorOptions extends ValSanOptions {
 	/**
@@ -38,26 +39,21 @@ export class MaxLengthValidator extends ValSan<string, string> {
 	async validate(input: string): Promise<ValidationResult> {
 		if (input.length > this.maxLength) {
 			const plural = this.maxLength === 1 ? '' : 's';
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'STRING_TOO_LONG',
-						message:
-							`Input must be at most ${this.maxLength} ` +
-							`character${plural}`,
-						context: {
-							maxLength: this.maxLength,
-							actualLength: input.length,
-						},
+			return validationError([
+				{
+					code: 'STRING_TOO_LONG',
+					message:
+						`Input must be at most ${this.maxLength} ` +
+						`character${plural}`,
+					context: {
+						maxLength: this.maxLength,
+						actualLength: input.length,
 					},
-				],
-			};
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<string> {

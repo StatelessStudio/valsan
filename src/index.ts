@@ -7,6 +7,8 @@ export {
 	RunsLikeAValSan,
 } from './valsan';
 
+export * from './errors';
+
 export { ComposedValSan, ComposedValSanOptions } from './valsan-composed';
 
 export {

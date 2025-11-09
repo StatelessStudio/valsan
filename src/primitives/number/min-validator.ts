@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { validationError, validationSuccess } from '../../errors';
 
 export interface MinValidatorOptions extends ValSanOptions {
 	/**
@@ -37,24 +38,19 @@ export class MinValidator extends ValSan<number, number> {
 
 	async validate(input: number): Promise<ValidationResult> {
 		if (input < this.min) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'NUMBER_TOO_SMALL',
-						message: `Number must be at least ${this.min}`,
-						context: {
-							min: this.min,
-							actual: input,
-						},
+			return validationError([
+				{
+					code: 'NUMBER_TOO_SMALL',
+					message: `Number must be at least ${this.min}`,
+					context: {
+						min: this.min,
+						actual: input,
 					},
-				],
-			};
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+
+		return validationSuccess();
 	}
 
 	async sanitize(input: number): Promise<number> {

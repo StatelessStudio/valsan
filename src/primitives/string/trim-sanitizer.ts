@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult } from '../../valsan';
+import { validationSuccess } from '../../errors';
 
 /**
  * Trims whitespace from the beginning and end of a string.
@@ -15,10 +16,7 @@ import { ValSan, ValidationResult } from '../../valsan';
  */
 export class TrimSanitizer extends ValSan<string, string> {
 	async validate(): Promise<ValidationResult> {
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<string> {

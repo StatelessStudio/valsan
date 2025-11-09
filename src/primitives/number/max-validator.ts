@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { validationError, validationSuccess } from '../../errors';
 
 export interface MaxValidatorOptions extends ValSanOptions {
 	/**
@@ -37,24 +38,19 @@ export class MaxValidator extends ValSan<number, number> {
 
 	async validate(input: number): Promise<ValidationResult> {
 		if (input > this.max) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'NUMBER_TOO_LARGE',
-						message: `Number must be at most ${this.max}`,
-						context: {
-							max: this.max,
-							actual: input,
-						},
+			return validationError([
+				{
+					code: 'NUMBER_TOO_LARGE',
+					message: `Number must be at most ${this.max}`,
+					context: {
+						max: this.max,
+						actual: input,
 					},
-				],
-			};
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+
+		return validationSuccess();
 	}
 
 	async sanitize(input: number): Promise<number> {

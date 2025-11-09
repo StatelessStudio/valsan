@@ -13,13 +13,12 @@ class MyValSan extends ValSan<string, string> {
     }
 
         if (input.includes(' ')) {
-            return {
-                isValid: false,
-                errors: [{ code: 'WORD_HAS_SPACES', message: 'No spaces allowed' }]
-            };
+            return validationError([
+                { code: 'WORD_HAS_SPACES', message: 'No spaces allowed' }
+            ]);
         }
 
-        return { isValid: true, errors: [] };
+        return validationSuccess();
     }
 
     async sanitize(input: string) {

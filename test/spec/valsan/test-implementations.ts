@@ -9,26 +9,21 @@ import {
 	StringToNumberValSan,
 	MaxLengthValidator,
 } from '../../../src';
+import { validationSuccess, validationError } from '../../../src/errors';
 
 // Test implementation for testing the base class
 export class TestValSan extends ValSan<string, string> {
 	async validate(input: string): Promise<ValidationResult> {
 		if (input.length < 3) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'TOO_SHORT',
-						message: 'Input must be at least 3 characters',
-						field: 'testField',
-					},
-				],
-			};
+			return validationError([
+				{
+					code: 'TOO_SHORT',
+					message: 'Input must be at least 3 characters',
+					field: 'testField',
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<string> {
@@ -44,20 +39,14 @@ export class NormalizingValSan extends ValSan<string, string> {
 
 	async validate(input: string): Promise<ValidationResult> {
 		if (input.includes('invalid')) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'INVALID_WORD',
-						message: 'Input contains invalid word',
-					},
-				],
-			};
+			return validationError([
+				{
+					code: 'INVALID_WORD',
+					message: 'Input contains invalid word',
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<string> {
@@ -69,20 +58,14 @@ export class NormalizingValSan extends ValSan<string, string> {
 export class TypeTransformValSan extends ValSan<string, number> {
 	async validate(input: string): Promise<ValidationResult> {
 		if (isNaN(Number(input))) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'NOT_A_NUMBER',
-						message: 'Input must be a valid number',
-					},
-				],
-			};
+			return validationError([
+				{
+					code: 'NOT_A_NUMBER',
+					message: 'Input must be a valid number',
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<number> {
@@ -93,10 +76,7 @@ export class TypeTransformValSan extends ValSan<string, number> {
 // Test implementation that throws during sanitization
 export class ThrowingSanitizeValSan extends ValSan<string, string> {
 	async validate(): Promise<ValidationResult> {
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return validationSuccess();
 	}
 
 	async sanitize(): Promise<string> {
@@ -107,10 +87,7 @@ export class ThrowingSanitizeValSan extends ValSan<string, string> {
 // Test implementation that throws non-Error during sanitization
 export class ThrowingNonErrorValSan extends ValSan<string, string> {
 	async validate(): Promise<ValidationResult> {
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return validationSuccess();
 	}
 
 	async sanitize(): Promise<string> {
@@ -131,20 +108,14 @@ export class OptionsTestValSan extends ValSan<string, string> {
 
 	async validate(input: string): Promise<ValidationResult> {
 		if (input.length === 0) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'EMPTY_INPUT',
-						message: 'Input cannot be empty',
-					},
-				],
-			};
+			return validationError([
+				{
+					code: 'EMPTY_INPUT',
+					message: 'Input cannot be empty',
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<string> {
@@ -171,26 +142,21 @@ export class MinLengthValSan extends ValSan<string, string> {
 
 	async validate(input: string): Promise<ValidationResult> {
 		if (input.length < this.minLength) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'TOO_SHORT',
-						message:
-							`Input must be at least ${this.minLength} ` +
-							'characters',
-						context: {
-							minLength: this.minLength,
-							actualLength: input.length,
-						},
+			return validationError([
+				{
+					code: 'TOO_SHORT',
+					message:
+						'Input must be at least ' +
+						this.minLength +
+						' characters',
+					context: {
+						minLength: this.minLength,
+						actualLength: input.length,
 					},
-				],
-			};
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<string> {
@@ -223,10 +189,7 @@ export class CaseTransformValSan extends ValSan<string, string> {
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async validate(input: string): Promise<ValidationResult> {
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<string> {
@@ -298,10 +261,10 @@ export class ComplexOptionsValSan extends ValSan<string, string> {
 			});
 		}
 
-		return {
-			isValid: errors.length === 0,
-			errors,
-		};
+		if (errors.length === 0) {
+			return validationSuccess();
+		}
+		return validationError(errors);
 	}
 
 	async sanitize(input: string): Promise<string> {
@@ -313,20 +276,14 @@ export class ComplexOptionsValSan extends ValSan<string, string> {
 export class DoubleNumberValSan extends ValSan<number, number> {
 	async validate(input: number): Promise<ValidationResult> {
 		if (input < 0) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'NEGATIVE_NUMBER',
-						message: 'Number must be non-negative',
-					},
-				],
-			};
+			return validationError([
+				{
+					code: 'NEGATIVE_NUMBER',
+					message: 'Number must be non-negative',
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return validationSuccess();
 	}
 
 	async sanitize(input: number): Promise<number> {
@@ -339,21 +296,15 @@ export class EmailFormatValSan extends ValSan<string, string> {
 	async validate(input: string): Promise<ValidationResult> {
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		if (!emailRegex.test(input)) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'INVALID_EMAIL',
-						message: 'Invalid email format',
-					},
-				],
-			};
+			return validationError([
+				{
+					code: 'INVALID_EMAIL',
+					message: 'Invalid email format',
+				},
+			]);
 		}
 
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<string> {

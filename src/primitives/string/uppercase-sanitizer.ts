@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult } from '../../valsan';
+import { validationError, validationSuccess } from '../../errors';
 
 /**
  * Converts a string to uppercase.
@@ -14,21 +15,15 @@ import { ValSan, ValidationResult } from '../../valsan';
 export class UppercaseSanitizer extends ValSan<string, string> {
 	protected async validate(input: string): Promise<ValidationResult> {
 		if (typeof input !== 'string') {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'NOT_A_STRING',
-						message: 'Input must be a string',
-					},
-				],
-			};
+			return validationError([
+				{
+					code: 'NOT_A_STRING',
+					message: 'Input must be a string',
+				},
+			]);
 		}
 
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<string> {

@@ -1,3 +1,4 @@
+import { validationSuccess, validationError } from '../src/errors';
 /* eslint-disable no-console */
 import {
 	ValSan,
@@ -11,17 +12,15 @@ import {
 class DoubleValSan extends ValSan<number, number> {
 	async validate(input: number): Promise<ValidationResult> {
 		if (input < 0) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'NEGATIVE_NUMBER',
-						message: 'Number must be non-negative',
-					},
-				],
-			};
+			return validationError([
+				{
+					code: 'NEGATIVE_NUMBER',
+					message: 'Number must be non-negative',
+				},
+			]);
 		}
-		return { isValid: true, errors: [] };
+
+		return validationSuccess();
 	}
 
 	async sanitize(input: number): Promise<number> {
@@ -36,20 +35,15 @@ async function runExamples(): Promise<void> {
 		async validate(input: string): Promise<ValidationResult> {
 			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 			if (!emailRegex.test(input)) {
-				return {
-					isValid: false,
-					errors: [
-						{
-							code: 'INVALID_EMAIL',
-							message: 'Invalid email format',
-						},
-					],
-				};
+				return validationError([
+					{
+						code: 'INVALID_EMAIL',
+						message: 'Invalid email format',
+					},
+				]);
 			}
-			return {
-				isValid: true,
-				errors: [],
-			};
+
+			return validationSuccess();
 		}
 
 		async sanitize(input: string): Promise<string> {

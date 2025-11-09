@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { validationError, validationSuccess } from '../../errors';
 
 export interface AlphanumericValidatorOptions extends ValSanOptions {
 	/**
@@ -28,23 +29,17 @@ export class AlphanumericValidator extends ValSan<string, string> {
 
 	async validate(input: string): Promise<ValidationResult> {
 		if (typeof input !== 'string' || !/^[a-zA-Z0-9]+$/.test(input)) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'STRING_NOT_ALPHANUMERIC',
-						message:
-							this.errorMessage ??
-							'Value must be alphanumeric (letters and numbers ' +
-								'only)',
-					},
-				],
-			};
+			return validationError([
+				{
+					code: 'STRING_NOT_ALPHANUMERIC',
+					message:
+						this.errorMessage ??
+						'Value must be alphanumeric (letters and numbers only)',
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+
+		return validationSuccess();
 	}
 
 	async sanitize(input: string): Promise<string> {

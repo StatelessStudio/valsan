@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { validationError, validationSuccess } from '../../errors';
 
 export interface RangeValidatorOptions extends ValSanOptions {
 	/**
@@ -44,27 +45,22 @@ export class RangeValidator extends ValSan<number, number> {
 
 	async validate(input: number): Promise<ValidationResult> {
 		if (input < this.min || input > this.max) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'NUMBER_OUT_OF_RANGE',
-						message:
-							`Number must be between ${this.min} ` +
-							`and ${this.max}`,
-						context: {
-							min: this.min,
-							max: this.max,
-							actual: input,
-						},
+			return validationError([
+				{
+					code: 'NUMBER_OUT_OF_RANGE',
+					message:
+						`Number must be between ${this.min} and ` +
+						`${this.max}`,
+					context: {
+						min: this.min,
+						max: this.max,
+						actual: input,
 					},
-				],
-			};
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+
+		return validationSuccess();
 	}
 
 	async sanitize(input: number): Promise<number> {
