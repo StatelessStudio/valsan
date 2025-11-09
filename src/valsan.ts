@@ -29,19 +29,22 @@ export interface RunsLikeAValSan<TInput = unknown, TOutput = TInput> {
 	run(input: TInput): Promise<SanitizeResult<TOutput>>;
 }
 
-export abstract class ValSan<TInput = unknown, TOutput = TInput>
-implements RunsLikeAValSan<TInput, TOutput> {
+export abstract class ValSan<
+	TInput = unknown,
+	TOutput = TInput,
+	TNormalized = TInput | TOutput,
+> implements RunsLikeAValSan<TInput, TOutput> {
 	public constructor(protected readonly options: ValSanOptions = {}) {}
 
 	/**
 	 * Optional normalization step applied before validation.
 	 */
-	protected async normalize(input: TInput): Promise<TInput> {
-		return input;
+	protected async normalize(input: TInput): Promise<TNormalized> {
+		return input as unknown as TNormalized;
 	}
 
-	protected abstract validate(input: TInput): Promise<ValidationResult>;
-	protected abstract sanitize(input: TInput): Promise<TOutput>;
+	protected abstract validate(input: TNormalized): Promise<ValidationResult>;
+	protected abstract sanitize(input: TNormalized): Promise<TOutput>;
 
 	public async run(input: TInput): Promise<SanitizeResult<TOutput>> {
 		// Handle optional fields

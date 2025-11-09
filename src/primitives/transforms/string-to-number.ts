@@ -21,8 +21,12 @@ import { ValSan, ValidationResult } from '../../valsan';
  * ```
  */
 export class StringToNumberValSan extends ValSan<string, number> {
-	async validate(input: string): Promise<ValidationResult> {
-		if (isNaN(Number(input))) {
+	protected override async normalize(input: string): Promise<number> {
+		return Number(input);
+	}
+
+	async validate(input: number): Promise<ValidationResult> {
+		if (isNaN(input)) {
 			return {
 				isValid: false,
 				errors: [
@@ -39,7 +43,7 @@ export class StringToNumberValSan extends ValSan<string, number> {
 		};
 	}
 
-	async sanitize(input: string): Promise<number> {
-		return Number(input);
+	async sanitize(input: number): Promise<number> {
+		return input;
 	}
 }

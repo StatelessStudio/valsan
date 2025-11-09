@@ -62,12 +62,14 @@ export class StringToBooleanValSan extends ValSan<string, boolean> {
 		).map((v) => v.toLowerCase());
 	}
 
-	async validate(input: string): Promise<ValidationResult> {
-		const normalized = input.toLowerCase();
+	override async normalize(input: string): Promise<string> {
+		return input.toLowerCase();
+	}
 
+	async validate(input: string): Promise<ValidationResult> {
 		if (
-			!this.trueValues.includes(normalized) &&
-			!this.falseValues.includes(normalized)
+			!this.trueValues.includes(input) &&
+			!this.falseValues.includes(input)
 		) {
 			return {
 				isValid: false,
@@ -90,7 +92,6 @@ export class StringToBooleanValSan extends ValSan<string, boolean> {
 	}
 
 	async sanitize(input: string): Promise<boolean> {
-		const normalized = input.toLowerCase();
-		return this.trueValues.includes(normalized);
+		return this.trueValues.includes(input);
 	}
 }

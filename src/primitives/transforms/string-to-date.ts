@@ -22,9 +22,12 @@ import { ValSan, ValidationResult } from '../../valsan';
  * ```
  */
 export class StringToDateValSan extends ValSan<string, Date> {
-	async validate(input: string): Promise<ValidationResult> {
-		const date = new Date(input);
-		if (isNaN(date.getTime())) {
+	override async normalize(input: string): Promise<Date> {
+		return new Date(input);
+	}
+
+	async validate(input: Date): Promise<ValidationResult> {
+		if (input.toString() === 'Invalid Date') {
 			return {
 				isValid: false,
 				errors: [
@@ -41,7 +44,7 @@ export class StringToDateValSan extends ValSan<string, Date> {
 		};
 	}
 
-	async sanitize(input: string): Promise<Date> {
-		return new Date(input);
+	async sanitize(input: Date): Promise<Date> {
+		return input;
 	}
 }
