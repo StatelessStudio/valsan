@@ -9,5 +9,11 @@ export {
 
 export { ComposedValSan, ComposedValSanOptions } from './valsan-composed';
 
+export {
+	ObjectSchema,
+	ObjectSanitizationResult,
+	ObjectSanitizer,
+} from './object-sanitizer';
+
 // Primitives
 export * from './primitives';

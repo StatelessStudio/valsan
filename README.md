@@ -21,6 +21,38 @@ npm install valsan
 
 ## Quick Start
 
+### Object Sanitization (Validate Objects)
+
+You can validate and sanitize entire objects by defining a schema of valsan validators for each property. Use the `ObjectSanitizer` class:
+
+```typescript
+import {
+    ObjectSanitizer,
+    MinLengthValidator,
+    EmailValidator
+} from 'valsan';
+
+const sanitizer = new ObjectSanitizer({
+  username: new MinLengthValidator({ minLength: 3 }),
+  email: new EmailValidator(),
+});
+
+const result = await sanitizer.run({
+    username: 'alice',
+    email: 'alice@example.com'
+});
+
+if (result.success) {
+  console.log('Sanitized:', result.data);
+} else {
+  console.error('Validation errors:', result.errors);
+}
+```
+
+- Each property in the schema is validated independently.
+- `result.data` contains the sanitized object if all fields are valid.
+- `result.errors` contains an array of errors with the field name if any validation fails.
+
 ### Using Built-in Primitives
 
 ValSan includes ready-to-use primitive validators for common validation tasks:
@@ -278,6 +310,7 @@ console.log(result.data); // "user@example.com"
 - [Creating Your Own ValSan](docs/custom-valsan.md) - Guide for implementing custom validators and sanitizers
 - [Using Options](docs/using-options.md) - Learn how to pass configuration options to make validators reusable
 - [ComposedValSan](docs/composed-valsan.md) - Build complex validators by composing simple, reusable components
+- [ObjectSanitizer](docs/object-sanitizer.md) - Learn how to validate and sanitize entire objects using schemas
 
 ## Contributing & Development
 
