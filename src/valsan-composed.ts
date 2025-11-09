@@ -4,8 +4,14 @@ import {
 	ValSanOptions,
 } from './valsan';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ComposedValSanOptions extends ValSanOptions {}
+export interface ComposedValSanOptions extends ValSanOptions {
+	/**
+	 * If true, undefined and null values will pass validation without
+	 * running validation or sanitization steps.
+	 * @default false
+	 */
+	isOptional?: boolean;
+}
 
 /**
  * ComposedValSan allows you to compose multiple ValSan instances into a
@@ -61,6 +67,16 @@ implements RunsLikeAValSan<TInput, TOutput> {
 	}
 
 	async run(input: TInput): Promise<SanitizeResult<TOutput>> {
+		// Handle optional fields
+		const isOptional = this.options.isOptional;
+		if (isOptional && (input === undefined || input === null)) {
+			return {
+				success: true,
+				data: input as unknown as TOutput,
+				errors: [],
+			};
+		}
+
 		let value: TInput | TOutput = input;
 
 		for (const step of this.steps) {

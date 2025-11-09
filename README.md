@@ -104,6 +104,54 @@ if (result.success) {
 }
 ```
 
+## Optional Fields
+
+ValSan has built-in support for optional fields. When `isOptional: true` is set in the options, `undefined` and `null` values will pass validation without running any validation or sanitization logic:
+
+```typescript
+import { MinLengthValidator } from 'valsan';
+
+// Required field (default behavior)
+const requiredValidator = new MinLengthValidator({ minLength: 3 });
+const result1 = await requiredValidator.run(undefined);
+console.log(result1.success); // false - validation fails
+
+// Optional field
+const optionalValidator = new MinLengthValidator({ 
+    minLength: 3,
+    isOptional: true 
+});
+const result2 = await optionalValidator.run(undefined);
+console.log(result2.success); // true - undefined is allowed
+console.log(result2.data); // undefined
+
+const result3 = await optionalValidator.run('hello');
+console.log(result3.success); // true
+console.log(result3.data); // "hello"
+```
+
+This works with both `ValSan` and `ComposedValSan`:
+
+```typescript
+import { ComposedValSan, TrimSanitizer, MinLengthValidator } from 'valsan';
+
+class OptionalUsernameValSan extends ComposedValSan<string, string> {
+    constructor() {
+        super(
+            [
+                new TrimSanitizer(),
+                new MinLengthValidator({ minLength: 3 })
+            ],
+            { isOptional: true } // Make the entire composition optional
+        );
+    }
+}
+
+const validator = new OptionalUsernameValSan();
+const result = await validator.run(undefined);
+console.log(result.success); // true - skips all validation steps
+```
+
 ## Building Reusable Validators with ComposedValSan
 
 Compose primitives together to create complex validators:

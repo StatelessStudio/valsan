@@ -1,5 +1,6 @@
 import {
 	ValSan,
+	ValSanOptions,
 	ValidationResult,
 	ComposedValSan,
 	ComposedValSanOptions,
@@ -118,7 +119,7 @@ export class ThrowingNonErrorValSan extends ValSan<string, string> {
 }
 
 // Test implementation with simple options
-interface OptionsTestOptions {
+interface OptionsTestOptions extends ValSanOptions {
 	testOption?: string;
 	prefix?: string;
 }
@@ -156,7 +157,7 @@ export class OptionsTestValSan extends ValSan<string, string> {
 }
 
 // Test implementation with minLength option
-interface MinLengthOptions {
+interface MinLengthOptions extends ValSanOptions {
 	minLength?: number;
 }
 
@@ -198,7 +199,7 @@ export class MinLengthValSan extends ValSan<string, string> {
 }
 
 // Test implementation with case transformation options
-interface CaseTransformOptions {
+interface CaseTransformOptions extends ValSanOptions {
 	transform?: 'uppercase' | 'lowercase' | 'none';
 }
 
@@ -234,7 +235,7 @@ export class CaseTransformValSan extends ValSan<string, string> {
 }
 
 // Test implementation with complex nested options
-interface ComplexOptions {
+interface ComplexOptions extends ValSanOptions {
 	validation?: {
 		minLength?: number;
 		maxLength?: number;

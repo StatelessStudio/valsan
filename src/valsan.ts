@@ -16,8 +16,14 @@ export interface SanitizeResult<T> {
 	errors: ValidationError[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ValSanOptions {}
+export interface ValSanOptions {
+	/**
+	 * If true, undefined and null values will pass validation without
+	 * running validation or sanitization steps.
+	 * @default false
+	 */
+	isOptional?: boolean;
+}
 
 export interface RunsLikeAValSan<TInput = unknown, TOutput = TInput> {
 	run(input: TInput): Promise<SanitizeResult<TOutput>>;
@@ -38,6 +44,16 @@ implements RunsLikeAValSan<TInput, TOutput> {
 	protected abstract sanitize(input: TInput): Promise<TOutput>;
 
 	public async run(input: TInput): Promise<SanitizeResult<TOutput>> {
+		// Handle optional fields
+		const isOptional = this.options.isOptional;
+		if (isOptional && (input === undefined || input === null)) {
+			return {
+				success: true,
+				data: input as unknown as TOutput,
+				errors: [],
+			};
+		}
+
 		// Apply normalization before validation
 		const normalized = await this.normalize(input);
 		const validation = await this.validate(normalized);
