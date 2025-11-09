@@ -7,7 +7,7 @@ export {
 	RunsLikeAValSan,
 } from './valsan';
 
-export { ComposedValSan } from './valsan-composed';
+export { ComposedValSan, ComposedValSanOptions } from './valsan-composed';
 
 // Primitives
 export * from './primitives';

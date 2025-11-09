@@ -10,6 +10,10 @@ import {
 	SingleStepValSan,
 	EmailFormatValSan,
 	TestValSan,
+	ConfigurableEmailValSan,
+	ConfigurableNumberPipelineValSan,
+	SimpleComposedWithOptionsValSan,
+	EmailWithLengthValSan,
 } from './test-implementations';
 
 describe('ComposedValSan', () => {
@@ -186,6 +190,217 @@ describe('ComposedValSan', () => {
 				const email: string = result.data;
 				expect(email).toBe('test@example.com');
 			}
+		});
+	});
+
+	describe('constructor options', () => {
+		it('should accept options in constructor', () => {
+			const valsan = new SimpleComposedWithOptionsValSan({
+				skipTrim: true,
+			});
+			expect(valsan).toBeDefined();
+		});
+
+		it('should work with default empty options', () => {
+			const valsan = new SimpleComposedWithOptionsValSan();
+			expect(valsan).toBeDefined();
+		});
+
+		it('should work when passing no options', async () => {
+			const valsan = new ConfigurableEmailValSan();
+			const result = await valsan.run('test@example.com');
+			expect(result.success).toBe(true);
+		});
+	});
+
+	describe('using options to configure steps', () => {
+		it('should conditionally include steps based on options', async () => {
+			const withTrim = new SimpleComposedWithOptionsValSan({
+				skipTrim: false,
+			});
+			const withoutTrim = new SimpleComposedWithOptionsValSan({
+				skipTrim: true,
+			});
+
+			const result1 = await withTrim.run('  HELLO  ');
+			const result2 = await withoutTrim.run('  HELLO  ');
+
+			expect(result1.success).toBe(true);
+			expect(result1.data).toBe('hello');
+
+			expect(result2.success).toBe(true);
+			expect(result2.data).toBe('  hello  ');
+		});
+
+		it('should allow uppercase when configured', async () => {
+			const allowUppercase = new ConfigurableEmailValSan({
+				allowUppercase: true,
+			});
+			const result = await allowUppercase.run('TEST@EXAMPLE.COM');
+
+			expect(result.success).toBe(true);
+			expect(result.data).toBe('TEST@EXAMPLE.COM');
+		});
+
+		it('should lowercase by default', async () => {
+			const defaultBehavior = new ConfigurableEmailValSan();
+			const result = await defaultBehavior.run('TEST@EXAMPLE.COM');
+
+			expect(result.success).toBe(true);
+			expect(result.data).toBe('test@example.com');
+		});
+	});
+
+	describe('using options in run method', () => {
+		it('should validate custom domain when specified', async () => {
+			const validator = new ConfigurableEmailValSan({
+				customDomain: 'example.com',
+			});
+
+			const result1 = await validator.run('user@example.com');
+			const result2 = await validator.run('user@other.com');
+
+			expect(result1.success).toBe(true);
+			expect(result1.data).toBe('user@example.com');
+
+			expect(result2.success).toBe(false);
+			expect(result2.errors[0].code).toBe('INVALID_DOMAIN');
+			expect(result2.errors[0].message).toContain('example.com');
+		});
+
+		it('should not validate domain when not specified', async () => {
+			const validator = new ConfigurableEmailValSan();
+
+			const result = await validator.run('user@any-domain.com');
+
+			expect(result.success).toBe(true);
+			expect(result.data).toBe('user@any-domain.com');
+		});
+
+		it('should apply multiplier when specified', async () => {
+			const validator = new ConfigurableNumberPipelineValSan({
+				multiplier: 3,
+			});
+
+			const result = await validator.run('10');
+
+			expect(result.success).toBe(true);
+			expect(result.data).toBe(60); // 10 * 2 (doubled) * 3 (multiplier)
+		});
+
+		it('should work without multiplier', async () => {
+			const validator = new ConfigurableNumberPipelineValSan();
+
+			const result = await validator.run('10');
+
+			expect(result.success).toBe(true);
+			expect(result.data).toBe(20); // 10 * 2 (doubled)
+		});
+	});
+
+	describe('options isolation', () => {
+		it('should isolate options between instances', async () => {
+			const validator1 = new ConfigurableEmailValSan({
+				customDomain: 'example.com',
+			});
+			const validator2 = new ConfigurableEmailValSan({
+				customDomain: 'other.com',
+			});
+
+			const result1 = await validator1.run('user@example.com');
+			const result2 = await validator2.run('user@example.com');
+
+			expect(result1.success).toBe(true);
+			expect(result2.success).toBe(false);
+		});
+
+		it('should handle different multipliers independently', async () => {
+			const validator1 = new ConfigurableNumberPipelineValSan({
+				multiplier: 2,
+			});
+			const validator2 = new ConfigurableNumberPipelineValSan({
+				multiplier: 5,
+			});
+
+			const result1 = await validator1.run('10');
+			const result2 = await validator2.run('10');
+
+			expect(result1.data).toBe(40); // 10 * 2 * 2
+			expect(result2.data).toBe(100); // 10 * 2 * 5
+		});
+	});
+
+	describe('passing options to child steps', () => {
+		it('should pass maxLength option to child validator', async () => {
+			const validator = new EmailWithLengthValSan({
+				maxLength: 20,
+			});
+
+			const result1 = await validator.run('short@test.com');
+			const result2 = await validator.run(
+				'verylongemailaddress@example.com'
+			);
+
+			expect(result1.success).toBe(true);
+			expect(result1.data).toBe('short@test.com');
+
+			expect(result2.success).toBe(false);
+			expect(result2.errors[0].code).toBe('STRING_TOO_LONG');
+		});
+
+		it('should pass minLength option to child validator', async () => {
+			const validator = new EmailWithLengthValSan({
+				minLength: 10,
+			});
+
+			const result1 = await validator.run('test@example.com');
+			const result2 = await validator.run('a@b.c');
+
+			expect(result1.success).toBe(true);
+			expect(result1.data).toBe('test@example.com');
+
+			expect(result2.success).toBe(false);
+			expect(result2.errors[0].code).toBe('TOO_SHORT');
+		});
+
+		it('should pass both min and max length options', async () => {
+			const validator = new EmailWithLengthValSan({
+				minLength: 10,
+				maxLength: 30,
+			});
+
+			const result1 = await validator.run('test@example.com');
+			const result2 = await validator.run('a@b.c');
+			const result3 = await validator.run(
+				'verylongemailaddress@example.com'
+			);
+
+			expect(result1.success).toBe(true);
+			expect(result2.success).toBe(false);
+			expect(result2.errors[0].code).toBe('TOO_SHORT');
+			expect(result3.success).toBe(false);
+			expect(result3.errors[0].code).toBe('STRING_TOO_LONG');
+		});
+
+		it('should work without any length options', async () => {
+			const validator = new EmailWithLengthValSan();
+
+			const result = await validator.run('test@example.com');
+
+			expect(result.success).toBe(true);
+			expect(result.data).toBe('test@example.com');
+		});
+
+		it('should isolate child options between instances', async () => {
+			const strict = new EmailWithLengthValSan({ maxLength: 15 });
+			const lenient = new EmailWithLengthValSan({ maxLength: 50 });
+
+			const email = 'moderatelength@test.com';
+			const result1 = await strict.run(email);
+			const result2 = await lenient.run(email);
+
+			expect(result1.success).toBe(false);
+			expect(result2.success).toBe(true);
 		});
 	});
 });

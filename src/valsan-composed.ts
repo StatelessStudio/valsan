@@ -1,4 +1,11 @@
-import { RunsLikeAValSan as RunsLikeAValSan, SanitizeResult } from './valsan';
+import {
+	RunsLikeAValSan as RunsLikeAValSan,
+	SanitizeResult,
+	ValSanOptions,
+} from './valsan';
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ComposedValSanOptions extends ValSanOptions {}
 
 /**
  * ComposedValSan allows you to compose multiple ValSan instances into a
@@ -32,10 +39,12 @@ implements RunsLikeAValSan<TInput, TOutput> {
 	 *
 	 * @param steps - Array of ValSan instances to compose.
 	 * Must have at least one step.
+	 * @param options - Optional configuration for the composed validator.
 	 */
 	constructor(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		protected readonly steps: RunsLikeAValSan<any, any>[]
+		protected readonly steps: RunsLikeAValSan<any, any>[],
+		protected readonly options: ComposedValSanOptions = {}
 	) {
 		if (steps.length === 0) {
 			throw new Error('ComposedValSan requires at least one step');

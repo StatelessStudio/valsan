@@ -2,9 +2,11 @@ import {
 	ValSan,
 	ValidationResult,
 	ComposedValSan,
+	ComposedValSanOptions,
 	TrimSanitizer,
 	LowercaseSanitizer,
 	StringToNumberValSan,
+	MaxLengthValidator,
 } from '../../../src';
 
 // Test implementation for testing the base class
@@ -384,5 +386,150 @@ export class NumberPipelineValSan extends ComposedValSan<string, number> {
 export class SingleStepValSan extends ComposedValSan<string, string> {
 	constructor() {
 		super([new TrimSanitizer()]);
+	}
+}
+
+// Composed ValSan with options - configurable email validator
+interface EmailValSanOptions extends ComposedValSanOptions {
+	allowUppercase?: boolean;
+	customDomain?: string;
+}
+
+export class ConfigurableEmailValSan extends ComposedValSan<string, string> {
+	constructor(options: EmailValSanOptions = {}) {
+		const steps: Array<
+			TrimSanitizer | LowercaseSanitizer | EmailFormatValSan
+		> = [new TrimSanitizer()];
+
+		if (!options.allowUppercase) {
+			steps.push(new LowercaseSanitizer());
+		}
+
+		steps.push(new EmailFormatValSan());
+
+		super(steps, options);
+	}
+
+	// Access options to provide custom behavior
+	override async run(
+		input: string
+	): Promise<import('../../../src').SanitizeResult<string>> {
+		const result = await super.run(input);
+		const opts = this.options as EmailValSanOptions;
+
+		// If validation passed and custom domain is specified, validate domain
+		if (result.success && result.data && opts.customDomain) {
+			if (!result.data.endsWith(`@${opts.customDomain}`)) {
+				return {
+					success: false,
+					errors: [
+						{
+							code: 'INVALID_DOMAIN',
+							message:
+								'Email must be from domain ' +
+								`${opts.customDomain}`,
+							context: { expectedDomain: opts.customDomain },
+						},
+					],
+				};
+			}
+		}
+
+		return result;
+	}
+}
+
+// Composed ValSan with options - configurable number pipeline
+interface NumberPipelineOptions extends ComposedValSanOptions {
+	multiplier?: number;
+	allowNegative?: boolean;
+}
+
+export class ConfigurableNumberPipelineValSan extends ComposedValSan<
+	string,
+	number
+> {
+	constructor(options: NumberPipelineOptions = {}) {
+		const steps: Array<
+			TrimSanitizer | StringToNumberValSan | DoubleNumberValSan
+		> = [new TrimSanitizer(), new StringToNumberValSan()];
+
+		if (!options.allowNegative) {
+			steps.push(new DoubleNumberValSan());
+		}
+
+		super(steps, options);
+	}
+
+	override async run(
+		input: string
+	): Promise<import('../../../src').SanitizeResult<number>> {
+		const result = await super.run(input);
+		const opts = this.options as NumberPipelineOptions;
+
+		// Apply custom multiplier if specified
+		if (result.success && result.data !== undefined && opts.multiplier) {
+			return {
+				success: true,
+				data: result.data * opts.multiplier,
+				errors: [],
+			};
+		}
+
+		return result;
+	}
+}
+
+// Simple composed ValSan that uses options to control behavior
+interface SimpleComposedOptions extends ComposedValSanOptions {
+	skipTrim?: boolean;
+	testValue?: string;
+}
+
+export class SimpleComposedWithOptionsValSan extends ComposedValSan<
+	string,
+	string
+> {
+	constructor(options: SimpleComposedOptions = {}) {
+		const steps: Array<TrimSanitizer | LowercaseSanitizer> = [];
+		if (!options.skipTrim) {
+			steps.push(new TrimSanitizer());
+		}
+		steps.push(new LowercaseSanitizer());
+
+		super(steps, options);
+	}
+}
+
+// Composed ValSan that passes options to child steps
+interface EmailWithLengthOptions extends ComposedValSanOptions {
+	maxLength?: number;
+	minLength?: number;
+}
+
+export class EmailWithLengthValSan extends ComposedValSan<string, string> {
+	constructor(options: EmailWithLengthOptions = {}) {
+		const steps: Array<
+			| TrimSanitizer
+			| LowercaseSanitizer
+			| EmailFormatValSan
+			| MinLengthValSan
+			| MaxLengthValidator
+		> = [new TrimSanitizer()];
+
+		// Pass options down to child validators
+		if (options.minLength !== undefined) {
+			steps.push(new MinLengthValSan({ minLength: options.minLength }));
+		}
+
+		if (options.maxLength !== undefined) {
+			steps.push(
+				new MaxLengthValidator({ maxLength: options.maxLength })
+			);
+		}
+
+		steps.push(new LowercaseSanitizer(), new EmailFormatValSan());
+
+		super(steps, options);
 	}
 }
