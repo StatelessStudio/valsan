@@ -160,7 +160,7 @@ async function runPrimitivesExamples(): Promise<void> {
 		constructor() {
 			super([
 				new TrimSanitizer(),
-				new LowercaseSanitizer({ allowEmpty: false }),
+				new LowercaseSanitizer({ isOptional: false }),
 				new MinLengthValidator({ minLength: 3 }),
 				new MaxLengthValidator({ maxLength: 20 }),
 				new PatternValidator({

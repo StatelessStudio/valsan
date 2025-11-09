@@ -1,12 +1,6 @@
 export { TrimSanitizer } from './trim-sanitizer';
-export {
-	LowercaseSanitizer,
-	LowercaseSanitizerOptions,
-} from './lowercase-sanitizer';
-export {
-	UppercaseSanitizer,
-	UppercaseSanitizerOptions,
-} from './uppercase-sanitizer';
+export { LowercaseSanitizer } from './lowercase-sanitizer';
+export { UppercaseSanitizer } from './uppercase-sanitizer';
 export {
 	MinLengthValidator,
 	MinLengthValidatorOptions,

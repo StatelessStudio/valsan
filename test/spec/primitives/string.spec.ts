@@ -1,6 +1,7 @@
 import 'jasmine';
 import {
 	TrimSanitizer,
+	LowercaseSanitizer,
 	UppercaseSanitizer,
 	MinLengthValidator,
 	MaxLengthValidator,
@@ -31,6 +32,37 @@ describe('String Primitives', () => {
 		});
 	});
 
+	describe('LowercaseSanitizer', () => {
+		it('should convert string to lowercase', async () => {
+			const sanitizer = new LowercaseSanitizer();
+			const result = await sanitizer.run('HELLO');
+			expect(result.success).toBe(true);
+			expect(result.data).toBe('hello');
+		});
+
+		it('should reject null input by default', async () => {
+			const sanitizer = new LowercaseSanitizer();
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const result = await sanitizer.run(null as any);
+			expect(result.success).toBe(false);
+			expect(result.errors[0].code).toBe('NOT_A_STRING');
+		});
+
+		it('should allow empty strings with isOptional', async () => {
+			const sanitizer = new LowercaseSanitizer({ isOptional: true });
+			const result = await sanitizer.run('');
+			expect(result.success).toBe(true);
+			expect(result.data).toBe('');
+		});
+
+		it('should handle mixed case', async () => {
+			const sanitizer = new LowercaseSanitizer();
+			const result = await sanitizer.run('HeLLo WoRLd');
+			expect(result.success).toBe(true);
+			expect(result.data).toBe('hello world');
+		});
+	});
+
 	describe('UppercaseSanitizer', () => {
 		it('should convert string to uppercase', async () => {
 			const sanitizer = new UppercaseSanitizer();
@@ -39,15 +71,16 @@ describe('String Primitives', () => {
 			expect(result.data).toBe('HELLO');
 		});
 
-		it('should reject empty strings by default', async () => {
+		it('should reject null input by default', async () => {
 			const sanitizer = new UppercaseSanitizer();
-			const result = await sanitizer.run('');
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const result = await sanitizer.run(null as any);
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('EMPTY_STRING');
+			expect(result.errors[0].code).toBe('NOT_A_STRING');
 		});
 
-		it('should allow empty strings with allowEmpty option', async () => {
-			const sanitizer = new UppercaseSanitizer({ allowEmpty: true });
+		it('should allow empty strings with isOptional', async () => {
+			const sanitizer = new UppercaseSanitizer({ isOptional: true });
 			const result = await sanitizer.run('');
 			expect(result.success).toBe(true);
 			expect(result.data).toBe('');
@@ -195,6 +228,7 @@ describe('String Primitives', () => {
 			const validator = new PatternValidator({
 				pattern: /^[a-z0-9._-]+@[a-z0-9.-]+\.[a-z]{2,}$/i,
 			});
+
 			const valid = await validator.run('user@example.com');
 			const invalid = await validator.run('not-an-email');
 			expect(valid.success).toBe(true);

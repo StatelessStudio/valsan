@@ -1,17 +1,7 @@
-import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
-
-export interface UppercaseSanitizerOptions extends ValSanOptions {
-	/**
-	 * If true, allows empty strings.
-	 * @default false
-	 */
-	allowEmpty?: boolean;
-}
+import { ValSan, ValidationResult } from '../../valsan';
 
 /**
  * Converts a string to uppercase.
- *
- * By default, rejects empty strings. Use `allowEmpty: true` to allow them.
  *
  * @example
  * ```typescript
@@ -20,33 +10,21 @@ export interface UppercaseSanitizerOptions extends ValSanOptions {
  * // result.data === 'HELLO'
  * ```
  *
- * @example With options
- * ```typescript
- * const sanitizer = new UppercaseSanitizer({ allowEmpty: true });
- * const result = await sanitizer.run('');
- * // result.success === true, result.data === ''
- * ```
  */
 export class UppercaseSanitizer extends ValSan<string, string> {
-	constructor(options: UppercaseSanitizerOptions = {}) {
-		super(options);
-	}
-
 	protected async validate(input: string): Promise<ValidationResult> {
-		const opts = this.options as UppercaseSanitizerOptions;
-		const allowEmpty = opts.allowEmpty ?? false;
-
-		if (!allowEmpty && input.length === 0) {
+		if (typeof input !== 'string') {
 			return {
 				isValid: false,
 				errors: [
 					{
-						code: 'EMPTY_STRING',
-						message: 'Input cannot be empty',
+						code: 'NOT_A_STRING',
+						message: 'Input must be a string',
 					},
 				],
 			};
 		}
+
 		return {
 			isValid: true,
 			errors: [],

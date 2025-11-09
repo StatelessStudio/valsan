@@ -26,7 +26,7 @@ const result = await validator.run('HELLO');
 // result.data === 'hello'
 
 // Allow empty strings
-const allowEmpty = new LowercaseSanitizer({ allowEmpty: true });
+const optionalLowercase = new LowercaseSanitizer({ isOptional: true });
 ```
 
 ### UppercaseSanitizer
