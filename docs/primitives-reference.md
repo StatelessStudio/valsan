@@ -2,6 +2,8 @@
 
 ## Table of Contents
 
+- [Auth Primitives](#auth-primitives)
+  - [BearerTokenValSan](#bearertokenvalsan)
 - [Bool Primitives](#bool-primitives)
   - [StringToBooleanValSan](#stringtobooleanvalsan)
 - [DateTime Primitives](#datetime-primitives)
@@ -367,6 +369,25 @@ const validator = new EmailValidator();
 const result = await validator.run('test@example.com');
 // result.success === true
 
+```
+
+## Auth Primitives
+
+### BearerTokenValSan
+
+Validates that a string is a valid HTTP Bearer token (RFC 6750).
+
+```typescript
+import { BearerTokenValSan } from 'valsan';
+
+const validator = new BearerTokenValSan();
+const result = await validator.run('mF_9.B5f-4.1JqM');
+// result.success === true
+// result.data === 'mF_9.B5f-4.1JqM'
+
+const fail = await validator.run('Bearer ');
+// fail.success === false
+// fail.errors[0].code === 'INVALID_BEARER_TOKEN'
 ```
 
 ## Utility Primitives

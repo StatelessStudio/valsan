@@ -1,3 +1,6 @@
+// Auth primitives
+export * from './auth';
+
 // Boolean primitives
 export * from './bool';
 
