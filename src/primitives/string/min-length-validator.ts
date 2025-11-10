@@ -39,13 +39,12 @@ export class MinLengthValidator extends ValSan<string, string> {
 
 	async validate(input: string): Promise<ValidationResult> {
 		if (input.length < this.minLength) {
-			const plural = this.minLength === 1 ? '' : 's';
 			return validationError([
 				{
 					code: 'STRING_TOO_SHORT',
 					message:
 						`Input must be at least ${this.minLength} ` +
-						`character${plural}`,
+						'character(s)',
 					context: {
 						minLength: this.minLength,
 						actualLength: input.length,

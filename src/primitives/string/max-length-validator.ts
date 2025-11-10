@@ -38,13 +38,12 @@ export class MaxLengthValidator extends ValSan<string, string> {
 
 	async validate(input: string): Promise<ValidationResult> {
 		if (input.length > this.maxLength) {
-			const plural = this.maxLength === 1 ? '' : 's';
 			return validationError([
 				{
 					code: 'STRING_TOO_LONG',
 					message:
 						`Input must be at most ${this.maxLength} ` +
-						`character${plural}`,
+						'character(s)',
 					context: {
 						maxLength: this.maxLength,
 						actualLength: input.length,
