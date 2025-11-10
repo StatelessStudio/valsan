@@ -1,7 +1,7 @@
 {
 	"name": "valsan",
 	"version": "1.0.0",
-	"description": "valsan",
+	"description": "Validation and sanitization library for TypeScript",
 	"private": "true",
 	"typescript-template": {
 		"base": "1.0.1",
@@ -41,13 +41,26 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/valsan/valsan.git"
+		"url": "git+https://github.com/StatelessStudio/valsan.git"
 	},
-	"author": "valsan",
+	"author": "Stateless Studio",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/valsan/valsan/issues"
+		"url": "https://github.com/StatelessStudio/valsan/issues"
 	},
-	"homepage": "https://github.com/valsan/valsan#readme",
-	"keywords": []
+	"homepage": "https://github.com/StatelessStudio/valsan#readme",
+	"keywords": [
+		"validation",
+		"sanitization",
+		"typescript",
+		"validator",
+		"sanitizer",
+		"library",
+		"data-validation",
+		"data-sanitization",
+		"input-validation",
+		"input-sanitization",
+		"form-validation",
+		"form-sanitization"
+	]
 }

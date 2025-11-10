@@ -1,8 +1,8 @@
 import 'jasmine';
 import * as index from '../../src';
 
-describe('valsan', () => {
-	it('exports a', () => {
-		expect(index.a).toBeTrue();
+describe('ValSan', () => {
+	it('should export the ValSan class', () => {
+		expect(index.ValSan).toBeDefined();
 	});
 });
