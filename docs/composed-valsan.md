@@ -8,8 +8,7 @@ import {
         ComposedValSan,
         TrimSanitizer,
         LowercaseSanitizer,
-        MinLengthValidator,
-        MaxLengthValidator,
+        LengthValidator,
         AlphaNumericValidator,
 } from 'valsan';
 
@@ -18,8 +17,7 @@ class UsernameValSan extends ComposedValSan<string, string> {
         super([
             new TrimSanitizer(),
             new LowercaseSanitizer(),
-            new MinLengthValidator({ minLength: 3 }),
-            new MaxLengthValidator({ maxLength: 20 }),
+            new LengthValidator({ minLength: 3, maxLength: 60 }),
             new AlphaNumericValidator()
         ]);
     }
@@ -53,8 +51,10 @@ class EmailAddressValSan extends ComposedValSan<string, string> {
     constructor(options: EmailAddressOptions = {}) {
         super([
             new TrimSanitizer(),
-            new MinLengthValidator({ minLength: options.minLength ?? 3 }),
-            new MaxLengthValidator({ maxLength: options.maxLength ?? 255 }),
+            new LengthValidator({
+                minLength: options.minLength ?? 3,
+                maxLength: options.maxLength ?? 255
+            }),
             new LowercaseSanitizer(),
             new EmailValidator(),
         ], options);

@@ -28,7 +28,7 @@ A ValSan is a Validator + Sanitizer. It checks input data, and returns it in a c
 ```typescript
 import {
     ObjectSanitizer,
-    MinLengthValidator,
+    LengthValidator,
     LowercaseSanitizer,
     TrimSanitizer,
     EmailValidator,
@@ -39,7 +39,7 @@ class UsernameValSan extends ComposedValSan<string, string> {
     public constructor() {
         super([
             new TrimSanitizer(),
-            new MinLengthValidator({ minLength: 5 }),
+            new LengthValidator({ minLength: 5, maxLength: 10 }),
             new LowercaseSanitizer(),
         ]);
     }

@@ -14,6 +14,7 @@
   - [UppercaseSanitizer](#uppercasesanitizer)
   - [MinLengthValidator](#minlengthvalidator)
   - [MaxLengthValidator](#maxlengthvalidator)
+  - [LengthValidator](#lengthvalidator)
   - [PatternValidator](#patternvalidator)
 - [Number Primitives](#number-primitives)
   - [StringToNumberValSan](#stringtonumbervalsan)
@@ -177,6 +178,27 @@ const result = await validator.run('this is way too long');
 // result.success === false
 
 // result.errors[0].code === 'STRING_TOO_LONG'
+```
+
+### LengthValidator
+
+Validates that a string's length is between a minimum and maximum (inclusive).
+
+```typescript
+import { LengthValidator } from 'valsan';
+
+const validator = new LengthValidator({ minLength: 2, maxLength: 5 });
+const result = await validator.run('abcd');
+// result.success === true
+// result.data === 'abcd'
+
+const failShort = await validator.run('a');
+// failShort.success === false
+// failShort.errors[0].code === 'STRING_TOO_SHORT'
+
+const failLong = await validator.run('abcdef');
+// failLong.success === false
+// failLong.errors[0].code === 'STRING_TOO_LONG'
 ```
 
 ### PatternValidator

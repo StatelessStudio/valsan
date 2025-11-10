@@ -11,3 +11,4 @@ export {
 	MaxLengthValidatorOptions,
 } from './max-length-validator';
 export { PatternValidator, PatternValidatorOptions } from './pattern-validator';
+export { LengthValidator, LengthValidatorOptions } from './length-validator';
