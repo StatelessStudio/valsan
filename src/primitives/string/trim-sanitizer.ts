@@ -20,6 +20,6 @@ export class TrimSanitizer extends ValSan<string, string> {
 	}
 
 	async sanitize(input: string): Promise<string> {
-		return input.trim();
+		return input?.trim();
 	}
 }

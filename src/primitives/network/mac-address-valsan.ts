@@ -6,15 +6,20 @@ const macRegex =
 	/^([0-9A-Fa-f]{2}([-:])){5}([0-9A-Fa-f]{2})$|^([0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4})$/;
 
 export class MacAddressValSan extends ValSan<string, string> {
+	protected override async normalize(input: string): Promise<string> {
+		return input?.trim();
+	}
+
 	protected async validate(input: string): Promise<ValidationResult> {
 		const errors: ValidationError[] = [];
-		const trimmed = input.trim();
-		if (!macRegex.test(trimmed)) {
+
+		if (!macRegex.test(input)) {
 			errors.push({
 				code: 'INVALID_MAC',
 				message: 'Invalid MAC address format',
 			});
 		}
+
 		return {
 			isValid: errors.length === 0,
 			errors,
@@ -22,6 +27,6 @@ export class MacAddressValSan extends ValSan<string, string> {
 	}
 
 	protected async sanitize(input: string): Promise<string> {
-		return input.trim();
+		return input;
 	}
 }

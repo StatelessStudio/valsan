@@ -7,15 +7,20 @@ const fqdnRegex =
 	/^(?=.{1,255}$)([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
 
 export class FqdnValSan extends ValSan<string, string> {
+	protected override async normalize(input: string): Promise<string> {
+		return input?.trim();
+	}
+
 	protected async validate(input: string): Promise<ValidationResult> {
 		const errors: ValidationError[] = [];
-		const trimmed = input.trim();
-		if (!fqdnRegex.test(trimmed)) {
+
+		if (!fqdnRegex.test(input)) {
 			errors.push({
 				code: 'INVALID_FQDN',
 				message: 'Invalid FQDN format',
 			});
 		}
+
 		return {
 			isValid: errors.length === 0,
 			errors,
@@ -23,6 +28,6 @@ export class FqdnValSan extends ValSan<string, string> {
 	}
 
 	protected async sanitize(input: string): Promise<string> {
-		return input.trim();
+		return input;
 	}
 }

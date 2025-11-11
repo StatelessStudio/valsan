@@ -7,7 +7,7 @@ const ipv6Regex = /^([\da-fA-F]{1,4}:){7}[\da-fA-F]{1,4}$/;
 
 export class IpAddressValSan extends ValSan<string, string> {
 	protected override async normalize(input: string): Promise<string> {
-		return input.trim();
+		return input?.trim();
 	}
 
 	protected async validate(input: string): Promise<ValidationResult> {

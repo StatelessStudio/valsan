@@ -16,6 +16,7 @@ export class PortNumberValSan extends ValSan<number | string, number> {
 
 	protected async validate(input: number): Promise<ValidationResult> {
 		const errors: ValidationError[] = [];
+
 		if (!Number.isInteger(input) || input < 0 || input > 65535) {
 			errors.push({
 				code: 'INVALID_PORT',

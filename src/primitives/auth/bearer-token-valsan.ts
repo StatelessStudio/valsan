@@ -31,7 +31,7 @@ export class BearerTokenValSan extends ValSan<
 		input: string | string[] | undefined
 	): Promise<string | undefined> {
 		if (typeof input === 'string') {
-			return input.trim();
+			return input?.trim();
 		}
 		else {
 			return undefined;
@@ -48,7 +48,7 @@ export class BearerTokenValSan extends ValSan<
 			]);
 		}
 
-		if (input.trim().length === 0) {
+		if (input.length === 0) {
 			return validationError([
 				{
 					code: 'INVALID_BEARER_TOKEN',

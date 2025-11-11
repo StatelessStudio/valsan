@@ -1,6 +1,10 @@
 import { ValSan, ValidationResult, ValidationError } from '../../valsan';
 
 export class UrlValSan extends ValSan<string, string> {
+	protected override async normalize(input: string): Promise<string> {
+		return input?.trim();
+	}
+
 	protected async validate(input: string): Promise<ValidationResult> {
 		const errors: ValidationError[] = [];
 		try {
@@ -20,6 +24,6 @@ export class UrlValSan extends ValSan<string, string> {
 	}
 
 	protected async sanitize(input: string): Promise<string> {
-		return input.trim();
+		return input;
 	}
 }

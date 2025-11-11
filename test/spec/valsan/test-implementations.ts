@@ -34,7 +34,7 @@ export class TestValSan extends ValSan<string, string> {
 // Test implementation with custom normalize
 export class NormalizingValSan extends ValSan<string, string> {
 	override async normalize(input: string): Promise<string> {
-		return input.trim().toLowerCase();
+		return input?.trim().toLowerCase();
 	}
 
 	async validate(input: string): Promise<ValidationResult> {
@@ -220,10 +220,10 @@ export class ComplexOptionsValSan extends ValSan<string, string> {
 		let result = input;
 
 		if (opts.sanitization?.trim) {
-			result = result.trim();
+			result = result?.trim();
 		}
 		if (opts.sanitization?.lowercase) {
-			result = result.toLowerCase();
+			result = result?.toLowerCase();
 		}
 
 		return result;
