@@ -12,3 +12,5 @@ export {
 } from './max-length-validator';
 export { PatternValidator, PatternValidatorOptions } from './pattern-validator';
 export { LengthValidator, LengthValidatorOptions } from './length-validator';
+
+export { isString } from './is-string';

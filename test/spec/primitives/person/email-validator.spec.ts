@@ -16,6 +16,14 @@ describe('EmailValidator', () => {
 		expect(result.errors[0].code).toBe('STRING_EMAIL_INVALID');
 	});
 
+	it('rejects undefined input', async () => {
+		const validator = new EmailValidator();
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await validator.run(undefined as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('INVALID_STRING');
+	});
+
 	it('should reject plus addressing if not allowed', async () => {
 		const validator = new EmailValidator({ allowPlusAddress: false });
 		const result = await validator.run('user+tag@example.com');

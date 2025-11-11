@@ -1,5 +1,6 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
-import { validationSuccess } from '../../errors';
+import { validationError, validationSuccess } from '../../errors';
+import { isString } from '../string/is-string';
 
 export interface EmailValidatorOptions extends ValSanOptions {
 	/**
@@ -49,6 +50,15 @@ export class EmailValidator extends ValSan<string, string> {
 	}
 
 	async validate(input: string): Promise<ValidationResult> {
+		if (!isString(input)) {
+			return validationError([
+				{
+					code: 'INVALID_STRING',
+					message: 'Input must be a string',
+				},
+			]);
+		}
+
 		// Basic email regex, optionally restrict plus addressing
 		const plusPart = this.allowPlusAddress ? '+?' : '';
 		const localPart = `[A-Za-z0-9._%${plusPart}-]+`;
@@ -56,41 +66,35 @@ export class EmailValidator extends ValSan<string, string> {
 		const emailPattern = new RegExp(`^${localPart}${domainPart}$`);
 
 		if (!emailPattern.test(input)) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'STRING_EMAIL_INVALID',
-						message:
-							this.errorMessage ??
-							'Input is not a valid email address',
-						context: {
-							allowPlusAddress: this.allowPlusAddress,
-							allowedDomains: this.allowedDomains,
-						},
+			return validationError([
+				{
+					code: 'STRING_EMAIL_INVALID',
+					message:
+						this.errorMessage ??
+						'Input is not a valid email address',
+					context: {
+						allowPlusAddress: this.allowPlusAddress,
+						allowedDomains: this.allowedDomains,
 					},
-				],
-			};
+				},
+			]);
 		}
 
 		// Check allowed domains if specified
 		if (this.allowedDomains) {
 			const domain = input.split('@')[1]?.toLowerCase();
 			if (!domain || !this.allowedDomains.includes(domain)) {
-				return {
-					isValid: false,
-					errors: [
-						{
-							code: 'STRING_EMAIL_DOMAIN_NOT_ALLOWED',
-							message:
-								this.errorMessage ?? 'Email domain not allowed',
-							context: {
-								allowedDomains: this.allowedDomains,
-								actualDomain: domain,
-							},
+				return validationError([
+					{
+						code: 'STRING_EMAIL_DOMAIN_NOT_ALLOWED',
+						message:
+							this.errorMessage ?? 'Email domain not allowed',
+						context: {
+							allowedDomains: this.allowedDomains,
+							actualDomain: domain,
 						},
-					],
-				};
+					},
+				]);
 			}
 		}
 

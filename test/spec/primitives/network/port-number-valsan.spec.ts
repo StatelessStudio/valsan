@@ -19,6 +19,12 @@ describe('PortNumberValSan', () => {
 		expect(result.success).toBe(false);
 	});
 
+	it('rejects undefined input', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await valSan.run(undefined as any);
+		expect(result.success).toBe(false);
+	});
+
 	it('rejects port > 65535', async () => {
 		const result = await valSan.run(70000);
 		expect(result.success).toBe(false);

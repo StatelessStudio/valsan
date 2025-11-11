@@ -24,6 +24,12 @@ describe('UrlValSan', () => {
 		expect(result.success).toBe(false);
 	});
 
+	it('rejects undefined input', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await valSan.run(undefined as any);
+		expect(result.success).toBe(false);
+	});
+
 	it('rejects URL missing protocol', async () => {
 		const result = await valSan.run('example.com');
 		expect(result.success).toBe(false);

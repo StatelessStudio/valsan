@@ -15,7 +15,7 @@ describe('ValSan - Edge Cases', () => {
 			override async normalize(input: string): Promise<string> {
 				// Simulate async operation
 				await new Promise((resolve) => setTimeout(resolve, 10));
-				return input.trim();
+				return input?.trim();
 			}
 
 			async validate(): Promise<ValidationResult> {

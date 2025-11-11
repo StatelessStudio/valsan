@@ -31,6 +31,15 @@ describe('MaxLengthValidator', () => {
 		expect(result.success).toBe(true);
 	});
 
+	it('should reject undefined input', async () => {
+		const validator = new MaxLengthValidator({ maxLength: 10 });
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await validator.run(undefined as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('INVALID_STRING');
+	});
+
 	it('should handle maxLength of 1', async () => {
 		const validator = new MaxLengthValidator({ maxLength: 1 });
 		const result1 = await validator.run('a');

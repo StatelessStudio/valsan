@@ -25,6 +25,14 @@ describe('MinValidator', () => {
 		expect(result.errors[0].context?.['actual']).toBe(-5);
 	});
 
+	it('should reject undefined input', async () => {
+		const validator = new MinValidator({ min: 0 });
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await validator.run(undefined as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('INVALID_NUMBER');
+	});
+
 	it('should work with negative minimums', async () => {
 		const validator = new MinValidator({ min: -10 });
 		const result1 = await validator.run(-5);

@@ -1,5 +1,6 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
 import { validationError, validationSuccess } from '../../errors';
+import { isString } from './is-string';
 
 export interface MaxLengthValidatorOptions extends ValSanOptions {
 	/**
@@ -37,6 +38,15 @@ export class MaxLengthValidator extends ValSan<string, string> {
 	}
 
 	async validate(input: string): Promise<ValidationResult> {
+		if (!isString(input)) {
+			return validationError([
+				{
+					code: 'INVALID_STRING',
+					message: 'Input must be a string',
+				},
+			]);
+		}
+
 		if (input.length > this.maxLength) {
 			return validationError([
 				{

@@ -1,5 +1,6 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
 import { validationError, validationSuccess } from '../../errors';
+import { isString } from './is-string';
 
 export interface MinLengthValidatorOptions extends ValSanOptions {
 	/**
@@ -38,6 +39,15 @@ export class MinLengthValidator extends ValSan<string, string> {
 	}
 
 	async validate(input: string): Promise<ValidationResult> {
+		if (!isString(input)) {
+			return validationError([
+				{
+					code: 'INVALID_STRING',
+					message: 'Input must be a string',
+				},
+			]);
+		}
+
 		if (input.length < this.minLength) {
 			return validationError([
 				{

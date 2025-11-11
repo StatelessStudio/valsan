@@ -20,6 +20,17 @@ describe('PatternValidator', () => {
 		expect(result.errors[0].code).toBe('STRING_PATTERN_MISMATCH');
 	});
 
+	it('should reject non-string input', async () => {
+		const validator = new PatternValidator({
+			pattern: /^\d{3}-\d{4}$/,
+		});
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await validator.run(1234567 as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('INVALID_STRING');
+	});
+
 	it('should use custom error message', async () => {
 		const validator = new PatternValidator({
 			pattern: /^[A-Z]+$/,

@@ -8,6 +8,7 @@
  */
 import { ValSan, ValidationResult } from '../../valsan';
 import { validationError, validationSuccess } from '../../errors';
+import { isString } from '../string/is-string';
 
 export class Iso8601TimestampValSan extends ValSan<string | Date, Date> {
 	protected static readonly iso8601Regex =
@@ -15,6 +16,15 @@ export class Iso8601TimestampValSan extends ValSan<string | Date, Date> {
 		/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})$/;
 
 	async validate(input: string | Date): Promise<ValidationResult> {
+		if (!isString(input) && !(input instanceof Date)) {
+			return validationError([
+				{
+					code: 'INVALID_ISO8601',
+					message: 'Input is required',
+				},
+			]);
+		}
+
 		if (input instanceof Date && !isNaN(input.getTime())) {
 			return validationSuccess();
 		}

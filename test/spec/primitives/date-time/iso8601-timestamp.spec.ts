@@ -24,6 +24,13 @@ describe('Iso8601TimestampValSan', () => {
 		expect(result.errors[0].code).toBe('INVALID_ISO8601');
 	});
 
+	it('should fail for undefined input', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await valSan.run(undefined as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('INVALID_ISO8601');
+	});
+
 	it('should sanitize a Date to Date', async () => {
 		const date = new Date('2025-11-09T12:34:56Z');
 		const result = await valSan.run(date);

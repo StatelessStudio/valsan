@@ -9,7 +9,7 @@ import { ValSan, ValidationResult } from 'valsan';
 
 class MyValSan extends ValSan<string, string> {
     async normalize(input: string) {
-        return input.trim().toLowerCase();
+        return input?.trim().toLowerCase();
     }
 
     async validate(input: string) {

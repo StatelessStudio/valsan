@@ -430,7 +430,7 @@ All primitives use consistent, descriptive error codes:
 
 ### Number Errors
 
-- `NOT_A_NUMBER` - String cannot be converted to a number
+- `INVALID_NUMBER` - String cannot be converted to a number
 - `NUMBER_TOO_SMALL` - Number is less than minimum value
 - `NUMBER_TOO_LARGE` - Number exceeds maximum value
 - `NUMBER_OUT_OF_RANGE` - Number is outside the allowed range
