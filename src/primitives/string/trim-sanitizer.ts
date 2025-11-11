@@ -1,5 +1,6 @@
 import { ValSan, ValidationResult } from '../../valsan';
-import { validationSuccess } from '../../errors';
+import { validationError, validationSuccess } from '../../errors';
+import { isString } from './is-string';
 
 /**
  * Trims whitespace from the beginning and end of a string.
@@ -15,7 +16,16 @@ import { validationSuccess } from '../../errors';
  * ```
  */
 export class TrimSanitizer extends ValSan<string, string> {
-	async validate(): Promise<ValidationResult> {
+	async validate(input: string): Promise<ValidationResult> {
+		if (!isString(input)) {
+			return validationError([
+				{
+					code: 'INVALID_STRING',
+					message: 'Input must be a string',
+				},
+			]);
+		}
+
 		return validationSuccess();
 	}
 

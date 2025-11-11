@@ -6,6 +6,7 @@ describe('FqdnValSan', () => {
 		const result = await valSan.run('sub.example.com');
 		expect(result.success).toBe(true);
 	});
+
 	it('rejects invalid FQDN', async () => {
 		const result = await valSan.run('invalid_domain');
 		expect(result.success).toBe(false);
@@ -19,6 +20,12 @@ describe('FqdnValSan', () => {
 
 	it('rejects empty string', async () => {
 		const result = await valSan.run('');
+		expect(result.success).toBe(false);
+	});
+
+	it('rejects undefined input', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await valSan.run(undefined as any);
 		expect(result.success).toBe(false);
 	});
 

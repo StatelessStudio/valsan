@@ -1,5 +1,6 @@
 import { ValSan, ValidationResult } from '../../valsan';
 import { validationError, validationSuccess } from '../../errors';
+import { isString } from '../string/is-string';
 
 /**
  * Validates that a string is a valid HTTP Bearer token (RFC 6750).
@@ -39,7 +40,7 @@ export class BearerTokenValSan extends ValSan<
 	}
 
 	async validate(input: string | undefined): Promise<ValidationResult> {
-		if (typeof input !== 'string') {
+		if (!isString(input)) {
 			return validationError([
 				{
 					code: 'INVALID_BEARER_TOKEN',
@@ -48,7 +49,7 @@ export class BearerTokenValSan extends ValSan<
 			]);
 		}
 
-		if (input.length === 0) {
+		if (!input) {
 			return validationError([
 				{
 					code: 'INVALID_BEARER_TOKEN',

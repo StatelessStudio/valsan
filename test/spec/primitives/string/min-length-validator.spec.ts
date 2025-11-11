@@ -25,6 +25,15 @@ describe('MinLengthValidator', () => {
 		expect(result.errors[0].context?.['actualLength']).toBe(2);
 	});
 
+	it('should reject undefined input', async () => {
+		const validator = new MinLengthValidator({ minLength: 3 });
+
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await validator.run(undefined as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('INVALID_STRING');
+	});
+
 	it('should use default minLength of 1', async () => {
 		const validator = new MinLengthValidator();
 		const result = await validator.run('x');

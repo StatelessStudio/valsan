@@ -1,5 +1,6 @@
 import { ValSan, ValidationResult } from '../../valsan';
 import { validationError, validationSuccess } from '../../errors';
+import { isString } from './is-string';
 
 /**
  * Converts a string to lowercase.
@@ -15,7 +16,7 @@ import { validationError, validationSuccess } from '../../errors';
  */
 export class LowercaseSanitizer extends ValSan<string, string> {
 	protected async validate(input: string): Promise<ValidationResult> {
-		if (typeof input !== 'string') {
+		if (!isString(input)) {
 			return validationError([
 				{
 					code: 'NOT_A_STRING',

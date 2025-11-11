@@ -1,5 +1,5 @@
 import { validationError, validationSuccess } from '../../errors';
-import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { ValSan, ValidationResult, ValSanOptions } from '../../';
 
 export interface StringToBooleanValSanOptions extends ValSanOptions {
 	/**
@@ -64,7 +64,7 @@ export class StringToBooleanValSan extends ValSan<string, boolean> {
 	}
 
 	override async normalize(input: string): Promise<string> {
-		return input.toLowerCase();
+		return input?.toLowerCase();
 	}
 
 	async validate(input: string): Promise<ValidationResult> {

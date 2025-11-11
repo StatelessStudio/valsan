@@ -1,5 +1,6 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
 import { validationError, validationSuccess } from '../../errors';
+import { isNumeric } from './is-numeric';
 
 export interface MaxValidatorOptions extends ValSanOptions {
 	/**
@@ -37,6 +38,15 @@ export class MaxValidator extends ValSan<number, number> {
 	}
 
 	async validate(input: number): Promise<ValidationResult> {
+		if (!isNumeric(input)) {
+			return validationError([
+				{
+					code: 'INVALID_NUMBER',
+					message: 'Input must be a number',
+				},
+			]);
+		}
+
 		if (input > this.max) {
 			return validationError([
 				{

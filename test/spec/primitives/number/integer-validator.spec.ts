@@ -23,6 +23,14 @@ describe('IntegerValidator', () => {
 		expect(result.data).toBe(-42);
 	});
 
+	it('should reject undefined input', async () => {
+		const validator = new IntegerValidator();
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await validator.run(undefined as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('INVALID_NUMBER');
+	});
+
 	it('should reject decimal numbers', async () => {
 		const validator = new IntegerValidator();
 		const result = await validator.run(3.14);

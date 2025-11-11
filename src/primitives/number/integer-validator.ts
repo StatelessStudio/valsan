@@ -1,4 +1,6 @@
+import { validationError, validationSuccess } from '../../errors';
 import { ValSan, ValidationResult } from '../../valsan';
+import { isNumeric } from './is-numeric';
 
 /**
  * Validates that a number is an integer (no decimal places).
@@ -20,26 +22,29 @@ import { ValSan, ValidationResult } from '../../valsan';
  * // result.success === true, result.data === 42
  * ```
  */
-export class IntegerValidator extends ValSan<number, number> {
-	async validate(input: number): Promise<ValidationResult> {
-		if (!Number.isInteger(input)) {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'NUMBER_NOT_INTEGER',
-						message: 'Number must be an integer',
-						context: {
-							actual: input,
-						},
-					},
-				],
-			};
+export class IntegerValidator extends ValSan<number | string, number> {
+	async validate(input: number | string): Promise<ValidationResult> {
+		if (!isNumeric(input)) {
+			return validationError([
+				{
+					code: 'INVALID_NUMBER',
+					message: 'Input must be a number',
+				},
+			]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+
+		if (!Number.isInteger(input)) {
+			return validationError([
+				{
+					code: 'NUMBER_NOT_INTEGER',
+					message: 'Number must be an integer',
+					context: {
+						actual: input,
+					},
+				},
+			]);
+		}
+		return validationSuccess();
 	}
 
 	async sanitize(input: number): Promise<number> {

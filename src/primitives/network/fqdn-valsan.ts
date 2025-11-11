@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValidationError } from '../../valsan';
+import { isString } from '../string/is-string';
 
 // RFC 1035 FQDN: labels separated by dots, each label 1-63 chars,
 //  total <= 255, no leading/trailing dot
@@ -13,6 +14,13 @@ export class FqdnValSan extends ValSan<string, string> {
 
 	protected async validate(input: string): Promise<ValidationResult> {
 		const errors: ValidationError[] = [];
+
+		if (!isString(input)) {
+			errors.push({
+				code: 'INVALID_FQDN',
+				message: 'FQDN must be a string',
+			});
+		}
 
 		if (!fqdnRegex.test(input)) {
 			errors.push({

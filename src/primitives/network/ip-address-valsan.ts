@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValidationError } from '../../valsan';
+import { isString } from '../string/is-string';
 
 const ipv4Regex =
 	// eslint-disable-next-line max-len
@@ -12,6 +13,14 @@ export class IpAddressValSan extends ValSan<string, string> {
 
 	protected async validate(input: string): Promise<ValidationResult> {
 		const errors: ValidationError[] = [];
+
+		if (!isString(input)) {
+			errors.push({
+				code: 'INVALID_IP',
+				message: 'IP address must be a string',
+			});
+		}
+
 		if (!(ipv4Regex.test(input) || ipv6Regex.test(input))) {
 			errors.push({
 				code: 'INVALID_IP',

@@ -1,5 +1,6 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
 import { validationError, validationSuccess } from '../../errors';
+import { isString } from './is-string';
 
 export interface PatternValidatorOptions extends ValSanOptions {
 	/**
@@ -46,6 +47,15 @@ export class PatternValidator extends ValSan<string, string> {
 	}
 
 	async validate(input: string): Promise<ValidationResult> {
+		if (!isString(input)) {
+			return validationError([
+				{
+					code: 'INVALID_STRING',
+					message: 'Input must be a string',
+				},
+			]);
+		}
+
 		if (!this.pattern.test(input)) {
 			return validationError([
 				{

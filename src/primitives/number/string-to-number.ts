@@ -18,7 +18,7 @@ import { validationError, validationSuccess } from '../../errors';
  * const validator = new StringToNumberValSan();
  * const result = await validator.run('not a number');
  * // result.success === false
- * // result.errors[0].code === 'NOT_A_NUMBER'
+ * // result.errors[0].code === 'INVALID_NUMBER'
  * ```
  */
 export class StringToNumberValSan extends ValSan<string, number> {
@@ -30,7 +30,7 @@ export class StringToNumberValSan extends ValSan<string, number> {
 		if (isNaN(input)) {
 			return validationError([
 				{
-					code: 'NOT_A_NUMBER',
+					code: 'INVALID_NUMBER',
 					message: 'Input must be a valid number',
 				},
 			]);

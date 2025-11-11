@@ -60,7 +60,7 @@ export class TypeTransformValSan extends ValSan<string, number> {
 		if (isNaN(Number(input))) {
 			return validationError([
 				{
-					code: 'NOT_A_NUMBER',
+					code: 'INVALID_NUMBER',
 					message: 'Input must be a valid number',
 				},
 			]);
