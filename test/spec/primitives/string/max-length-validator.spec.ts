@@ -20,9 +20,8 @@ describe('MaxLengthValidator', () => {
 		const validator = new MaxLengthValidator({ maxLength: 5 });
 		const result = await validator.run('hello world');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('STRING_TOO_LONG');
+		expect(result.errors[0].code).toBe('string_max_len');
 		expect(result.errors[0].context?.['maxLength']).toBe(5);
-		expect(result.errors[0].context?.['actualLength']).toBe(11);
 	});
 
 	it('should accept empty strings', async () => {
@@ -37,7 +36,7 @@ describe('MaxLengthValidator', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await validator.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_STRING');
+		expect(result.errors[0].code).toBe('string');
 	});
 
 	it('should handle maxLength of 1', async () => {

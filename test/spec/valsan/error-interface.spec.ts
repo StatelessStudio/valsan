@@ -1,15 +1,8 @@
 import 'jasmine';
 import { ValSan, ValidationResult } from '../../../src';
-import { TestValSan, NormalizingValSan } from './test-implementations';
+import { NormalizingValSan } from './test-implementations';
 
 describe('ValSan - ValidationError Interface', () => {
-	it('should support optional field property', async () => {
-		const valsan = new TestValSan();
-		const result = await valsan.run('ab');
-
-		expect(result.errors[0].field).toBe('testField');
-	});
-
 	it('should support errors without field property', async () => {
 		const valsan = new NormalizingValSan();
 		const result = await valsan.run('invalid');
@@ -19,7 +12,7 @@ describe('ValSan - ValidationError Interface', () => {
 
 	it('should support optional context property', async () => {
 		class ContextValSan extends ValSan<string, string> {
-			async validate(input: string): Promise<ValidationResult> {
+			async validate(): Promise<ValidationResult> {
 				return {
 					isValid: false,
 					errors: [
@@ -28,7 +21,6 @@ describe('ValSan - ValidationError Interface', () => {
 							message: 'Error with context',
 							context: {
 								minLength: 5,
-								actualLength: input.length,
 							},
 						},
 					],
@@ -45,7 +37,6 @@ describe('ValSan - ValidationError Interface', () => {
 
 		expect(result.errors[0].context).toEqual({
 			minLength: 5,
-			actualLength: 3,
 		});
 	});
 });

@@ -12,14 +12,14 @@ describe('LengthValidator', () => {
 		const valSan = new LengthValidator({ minLength: 3, maxLength: 5 });
 		const result = await valSan.run('ab');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('STRING_TOO_SHORT');
+		expect(result.errors[0].code).toBe('string_min_len');
 	});
 
 	it('should fail for string longer than max', async () => {
 		const valSan = new LengthValidator({ minLength: 2, maxLength: 4 });
 		const result = await valSan.run('abcdef');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('STRING_TOO_LONG');
+		expect(result.errors[0].code).toBe('string_max_len');
 	});
 
 	it('should default minLength to 1 and maxLength to Infinity', async () => {

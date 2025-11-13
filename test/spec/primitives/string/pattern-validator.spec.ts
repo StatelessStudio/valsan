@@ -17,7 +17,7 @@ describe('PatternValidator', () => {
 		});
 		const result = await validator.run('abc-defg');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('STRING_PATTERN_MISMATCH');
+		expect(result.errors[0].code).toBe('pattern');
 	});
 
 	it('should reject non-string input', async () => {
@@ -28,7 +28,7 @@ describe('PatternValidator', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await validator.run(1234567 as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_STRING');
+		expect(result.errors[0].code).toBe('string');
 	});
 
 	it('should use custom error message', async () => {
@@ -47,9 +47,7 @@ describe('PatternValidator', () => {
 		});
 		const result = await validator.run('hello');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].message).toBe(
-			'Input does not match required pattern'
-		);
+		expect(result.errors[0].message).toBe('Input format is incorrect');
 	});
 
 	it('should include pattern in context', async () => {

@@ -19,3 +19,6 @@ export {
 
 // Primitives
 export * from './primitives';
+
+// Rules
+export * from './rules';

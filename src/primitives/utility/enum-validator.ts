@@ -1,5 +1,4 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
-import { validationError, validationSuccess } from '../../errors';
 
 export interface EnumValidatorOptions<T> extends ValSanOptions {
 	/**
@@ -16,23 +15,30 @@ export class EnumValidator<T> extends ValSan<T, T> {
 		this.allowedValues = options.allowedValues;
 	}
 
+	override rules() {
+		return {
+			enum: {
+				code: 'enum',
+				user: {
+					helperText: 'Values: ' + this.allowedValues.join(', '),
+					errorMessage:
+						'Value must be one of: ' +
+						this.allowedValues.join(', '),
+				},
+				context: {
+					allowedValues: this.allowedValues,
+				},
+			},
+		};
+	}
+
 	protected async validate(input: T): Promise<ValidationResult> {
 		const isValid = this.allowedValues.includes(input);
 		if (isValid) {
-			return validationSuccess();
+			return this.pass();
 		}
 
-		return validationError([
-			{
-				code: 'ENUM_INVALID',
-				message:
-					'Value must be one of: ' + this.allowedValues.join(', '),
-				context: {
-					allowedValues: this.allowedValues,
-					received: input,
-				},
-			},
-		]);
+		return this.fail([this.rules().enum]);
 	}
 
 	protected async sanitize(input: T): Promise<T> {

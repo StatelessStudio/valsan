@@ -1,13 +1,6 @@
-import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
-import { validationError, validationSuccess } from '../../errors';
+import { ValSan, ValidationResult } from '../../valsan';
 import { isString } from './is-string';
-
-export interface AlphanumericValidatorOptions extends ValSanOptions {
-	/**
-	 * Custom error message when value is not alphanumeric.
-	 */
-	errorMessage?: string;
-}
+import { stringRule } from './string-rules';
 
 /**
  * Validates that a string contains only alphanumeric characters
@@ -21,26 +14,29 @@ export interface AlphanumericValidatorOptions extends ValSanOptions {
  * ```
  */
 export class AlphanumericValidator extends ValSan<string, string> {
-	private readonly errorMessage?: string;
-
-	constructor(options: AlphanumericValidatorOptions = {}) {
-		super(options);
-		this.errorMessage = options.errorMessage;
+	override rules() {
+		return {
+			string: stringRule,
+			alphanumeric: {
+				code: 'alphanumeric',
+				user: {
+					helperText: 'Alphanumeric (letters and numbers only)',
+					errorMessage: 'Value is not alphanumeric',
+				},
+			},
+		};
 	}
 
 	async validate(input: string): Promise<ValidationResult> {
-		if (!isString(input) || !/^[a-zA-Z0-9]+$/.test(input)) {
-			return validationError([
-				{
-					code: 'STRING_NOT_ALPHANUMERIC',
-					message:
-						this.errorMessage ??
-						'Value must be alphanumeric (letters and numbers only)',
-				},
-			]);
+		if (!isString(input)) {
+			return this.fail([this.rules().string]);
 		}
 
-		return validationSuccess();
+		if (!/^[a-zA-Z0-9]+$/.test(input)) {
+			return this.fail([this.rules().alphanumeric]);
+		}
+
+		return this.pass();
 	}
 
 	async sanitize(input: string): Promise<string> {

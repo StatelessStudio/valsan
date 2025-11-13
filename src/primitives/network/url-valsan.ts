@@ -1,20 +1,28 @@
-import { validationError, validationSuccess } from '../../errors';
 import { ValSan, ValidationResult } from '../../valsan';
+import { stringRule } from '../string';
 import { isString } from '../string/is-string';
 
 export class UrlValSan extends ValSan<string, string> {
+	override rules() {
+		return {
+			string: stringRule,
+			url: {
+				code: 'url',
+				user: {
+					helperText: 'URL',
+					errorMessage: 'Invalid URL format',
+				},
+			},
+		};
+	}
+
 	protected override async normalize(input: string): Promise<string> {
 		return input?.trim();
 	}
 
 	protected async validate(input: string): Promise<ValidationResult> {
 		if (!isString(input)) {
-			return validationError([
-				{
-					code: 'INVALID_URL',
-					message: 'URL must be a string',
-				},
-			]);
+			return this.fail([this.rules().string]);
 		}
 
 		try {
@@ -22,15 +30,10 @@ export class UrlValSan extends ValSan<string, string> {
 			new URL(input);
 		}
 		catch {
-			return validationError([
-				{
-					code: 'INVALID_URL',
-					message: 'Invalid URL format',
-				},
-			]);
+			return this.fail([this.rules().url]);
 		}
 
-		return validationSuccess();
+		return this.pass();
 	}
 
 	protected async sanitize(input: string): Promise<string> {

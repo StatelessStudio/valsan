@@ -7,6 +7,21 @@ describe('ValSan - Basic Operations', () => {
 		expect(ValSan).toBeDefined();
 	});
 
+	it('should export default rules', () => {
+		const valsan = new (class extends ValSan<string, string> {
+			override async validate() {
+				return this.pass();
+			}
+
+			override async sanitize(input: string) {
+				return input;
+			}
+		})();
+
+		const rules = valsan.rules();
+		expect(rules).toBeDefined();
+	});
+
 	describe('run() - successful validation and sanitization', () => {
 		it('should return success with sanitized data', async () => {
 			const valsan = new TestValSan();

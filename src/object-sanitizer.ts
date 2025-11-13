@@ -13,7 +13,7 @@ export interface ObjectSanitizationResult {
  * Validates an object's properties using a schema of valsan validators.
  */
 export class ObjectSanitizer {
-	private readonly schema: ObjectSchema;
+	public readonly schema: ObjectSchema;
 
 	constructor(schema: ObjectSchema) {
 		this.schema = schema;

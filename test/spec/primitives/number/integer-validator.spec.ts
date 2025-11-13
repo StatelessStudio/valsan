@@ -28,22 +28,21 @@ describe('IntegerValidator', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await validator.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_NUMBER');
+		expect(result.errors[0].code).toBe('number');
 	});
 
 	it('should reject decimal numbers', async () => {
 		const validator = new IntegerValidator();
 		const result = await validator.run(3.14);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('NUMBER_NOT_INTEGER');
-		expect(result.errors[0].context?.['actual']).toBe(3.14);
+		expect(result.errors[0].code).toBe('integer');
 	});
 
 	it('should reject numbers with small decimal parts', async () => {
 		const validator = new IntegerValidator();
 		const result = await validator.run(42.001);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('NUMBER_NOT_INTEGER');
+		expect(result.errors[0].code).toBe('integer');
 	});
 
 	it('should accept large integers', async () => {

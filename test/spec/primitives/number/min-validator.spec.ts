@@ -20,9 +20,8 @@ describe('MinValidator', () => {
 		const validator = new MinValidator({ min: 0 });
 		const result = await validator.run(-5);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('NUMBER_TOO_SMALL');
+		expect(result.errors[0].code).toBe('minimum');
 		expect(result.errors[0].context?.['min']).toBe(0);
-		expect(result.errors[0].context?.['actual']).toBe(-5);
 	});
 
 	it('should reject undefined input', async () => {
@@ -30,7 +29,7 @@ describe('MinValidator', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await validator.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_NUMBER');
+		expect(result.errors[0].code).toBe('number');
 	});
 
 	it('should work with negative minimums', async () => {

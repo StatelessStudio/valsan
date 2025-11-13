@@ -21,7 +21,7 @@ describe('EnumValidator', () => {
 		const result = await validator.run('yellow' as any);
 
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('ENUM_INVALID');
+		expect(result.errors[0].code).toBe('enum');
 
 		// Optionally check error message and context
 		expect(result.errors[0].context?.['allowedValues']).toEqual([
@@ -29,8 +29,6 @@ describe('EnumValidator', () => {
 			'green',
 			'blue',
 		]);
-
-		expect(result.errors[0].context?.['received']).toBe('yellow');
 	});
 
 	it('should work with numbers', async () => {

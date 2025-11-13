@@ -1,3 +1,4 @@
+import { RuleSet } from './rules/rule';
 import {
 	RunsLikeAValSan as RunsLikeAValSan,
 	SanitizeResult,
@@ -49,8 +50,8 @@ implements RunsLikeAValSan<TInput, TOutput> {
 	 */
 	constructor(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		protected readonly steps: RunsLikeAValSan<any, any>[],
-		protected readonly options: ComposedValSanOptions = {}
+		public readonly steps: RunsLikeAValSan<any, any>[],
+		public readonly options: ComposedValSanOptions = {}
 	) {
 		if (steps.length === 0) {
 			throw new Error('ComposedValSan requires at least one step');
@@ -64,6 +65,22 @@ implements RunsLikeAValSan<TInput, TOutput> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	getSteps(): readonly RunsLikeAValSan<any, any>[] {
 		return [...this.steps];
+	}
+
+	public rules(): RuleSet {
+		const combinedRules: RuleSet = {};
+
+		for (const step of this.steps) {
+			const stepRules = step.rules();
+
+			for (const [key, rule] of Object.entries(stepRules)) {
+				if (!(key in combinedRules)) {
+					combinedRules[key] = rule;
+				}
+			}
+		}
+
+		return combinedRules;
 	}
 
 	async run(input: TInput): Promise<SanitizeResult<TOutput>> {

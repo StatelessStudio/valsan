@@ -1,7 +1,21 @@
-import { ValSan, ValidationResult, ValidationError } from '../../valsan';
+import { ValSan, ValidationResult } from '../../valsan';
 import { isNumeric } from '../number/is-numeric';
+import { numberRule } from '../number/number-rules';
 
 export class PortNumberValSan extends ValSan<number | string, number> {
+	override rules() {
+		return {
+			number: numberRule,
+			port_number: {
+				code: 'port_number',
+				user: {
+					helperText: 'Port number',
+					errorMessage: 'Port number must be between 0 and 65535',
+				},
+			},
+		};
+	}
+
 	protected override async normalize(
 		input: string | number
 	): Promise<number> {
@@ -16,26 +30,15 @@ export class PortNumberValSan extends ValSan<number | string, number> {
 	}
 
 	protected async validate(input: number): Promise<ValidationResult> {
-		const errors: ValidationError[] = [];
-
 		if (!isNumeric(input)) {
-			errors.push({
-				code: 'INVALID_PORT',
-				message: 'Port number must be a number',
-			});
+			return this.fail([this.rules().number]);
 		}
 
 		if (!Number.isInteger(input) || input < 0 || input > 65535) {
-			errors.push({
-				code: 'INVALID_PORT',
-				message: 'Port number must be an integer between 0 and 65535',
-			});
+			return this.fail([this.rules().port_number]);
 		}
 
-		return {
-			isValid: errors.length === 0,
-			errors,
-		};
+		return this.pass();
 	}
 
 	protected async sanitize(input: number): Promise<number> {

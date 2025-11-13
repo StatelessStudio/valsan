@@ -14,7 +14,7 @@ describe('LowercaseSanitizer', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await sanitizer.run(null as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('NOT_A_STRING');
+		expect(result.errors[0].code).toBe('string');
 	});
 
 	it('should allow empty strings with isOptional', async () => {

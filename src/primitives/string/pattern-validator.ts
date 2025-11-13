@@ -1,5 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
-import { validationError, validationSuccess } from '../../errors';
+import { stringRule } from './string-rules';
 import { isString } from './is-string';
 
 export interface PatternValidatorOptions extends ValSanOptions {
@@ -46,31 +46,38 @@ export class PatternValidator extends ValSan<string, string> {
 		this.errorMessage = options.errorMessage;
 	}
 
+	override rules() {
+		return {
+			string: stringRule,
+			pattern: {
+				code: 'pattern',
+				user: {
+					helperText: 'Pattern',
+					errorMessage:
+						this.errorMessage ?? 'Input format is incorrect',
+				},
+				dev: {
+					helperText: 'Pattern: ' + this.pattern.toString(),
+					errorMessage:
+						this.errorMessage ?? 'Input format is incorrect',
+				},
+				context: {
+					pattern: this.pattern.toString(),
+				},
+			},
+		};
+	}
+
 	async validate(input: string): Promise<ValidationResult> {
 		if (!isString(input)) {
-			return validationError([
-				{
-					code: 'INVALID_STRING',
-					message: 'Input must be a string',
-				},
-			]);
+			return this.fail([this.rules().string]);
 		}
 
 		if (!this.pattern.test(input)) {
-			return validationError([
-				{
-					code: 'STRING_PATTERN_MISMATCH',
-					message:
-						this.errorMessage ??
-						'Input does not match required pattern',
-					context: {
-						pattern: this.pattern.toString(),
-					},
-				},
-			]);
+			return this.fail([this.rules().pattern]);
 		}
 
-		return validationSuccess();
+		return this.pass();
 	}
 
 	async sanitize(input: string): Promise<string> {

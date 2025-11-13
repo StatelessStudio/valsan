@@ -21,16 +21,15 @@ describe('MaxValidator', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await validator.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_NUMBER');
+		expect(result.errors[0].code).toBe('number');
 	});
 
 	it('should reject numbers exceeding maximum', async () => {
 		const validator = new MaxValidator({ max: 100 });
 		const result = await validator.run(150);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('NUMBER_TOO_LARGE');
+		expect(result.errors[0].code).toBe('maximum');
 		expect(result.errors[0].context?.['max']).toBe(100);
-		expect(result.errors[0].context?.['actual']).toBe(150);
 	});
 
 	it('should work with negative maximums', async () => {

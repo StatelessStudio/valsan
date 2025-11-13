@@ -104,7 +104,7 @@ describe('ComposedValSan', () => {
 
 			expect(result.success).toBe(false);
 			expect(result.errors.length).toBeGreaterThan(0);
-			expect(result.errors[0].code).toBe('INVALID_EMAIL');
+			expect(result.errors[0].code).toBe('invalid_email');
 			expect(result.errors[0].message).toContain('Invalid email');
 		});
 
@@ -117,7 +117,7 @@ describe('ComposedValSan', () => {
 
 			expect(result.success).toBe(false);
 			expect(result.errors.length).toBeGreaterThan(0);
-			expect(result.errors[0].code).toBe('TOO_SHORT');
+			expect(result.errors[0].code).toBe('min_len');
 		});
 
 		it('should fail when middle step validation fails', async () => {
@@ -126,7 +126,7 @@ describe('ComposedValSan', () => {
 
 			expect(result.success).toBe(false);
 			expect(result.errors.length).toBeGreaterThan(0);
-			expect(result.errors[0].code).toBe('NEGATIVE_NUMBER');
+			expect(result.errors[0].code).toBe('negative_number');
 		});
 
 		it('should fail on empty string after trim', async () => {
@@ -345,7 +345,7 @@ describe('ComposedValSan', () => {
 			expect(result1.data).toBe('short@test.com');
 
 			expect(result2.success).toBe(false);
-			expect(result2.errors[0].code).toBe('STRING_TOO_LONG');
+			expect(result2.errors[0].code).toBe('string_max_len');
 		});
 
 		it('should pass minLength option to child validator', async () => {
@@ -360,7 +360,7 @@ describe('ComposedValSan', () => {
 			expect(result1.data).toBe('test@example.com');
 
 			expect(result2.success).toBe(false);
-			expect(result2.errors[0].code).toBe('TOO_SHORT');
+			expect(result2.errors[0].code).toBe('min_len');
 		});
 
 		it('should pass both min and max length options', async () => {
@@ -377,9 +377,9 @@ describe('ComposedValSan', () => {
 
 			expect(result1.success).toBe(true);
 			expect(result2.success).toBe(false);
-			expect(result2.errors[0].code).toBe('TOO_SHORT');
+			expect(result2.errors[0].code).toBe('min_len');
 			expect(result3.success).toBe(false);
-			expect(result3.errors[0].code).toBe('STRING_TOO_LONG');
+			expect(result3.errors[0].code).toBe('string_max_len');
 		});
 
 		it('should work without any length options', async () => {
@@ -401,6 +401,16 @@ describe('ComposedValSan', () => {
 
 			expect(result1.success).toBe(false);
 			expect(result2.success).toBe(true);
+		});
+	});
+
+	describe('rules', () => {
+		it('should aggregate rules from all steps', () => {
+			const emailValidator = new EmailValSan();
+			const rules = emailValidator.rules();
+			expect(rules).toBeDefined();
+			expect(Object.keys(rules).length).toBe(2);
+			expect(Object.keys(rules)).toEqual(['string', 'invalid_email']);
 		});
 	});
 });

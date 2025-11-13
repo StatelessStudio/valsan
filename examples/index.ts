@@ -1,4 +1,3 @@
-import { validationSuccess, validationError } from '../src/errors';
 /* eslint-disable no-console */
 import {
 	ValSan,
@@ -10,17 +9,23 @@ import {
 } from '../src';
 
 class DoubleValSan extends ValSan<number, number> {
+	override rules() {
+		return {
+			negative_number: {
+				code: 'negative_number',
+				user: {
+					helperText: 'Non-negative number',
+					errorMessage: 'Number must be non-negative',
+				},
+			},
+		};
+	}
+
 	async validate(input: number): Promise<ValidationResult> {
 		if (input < 0) {
-			return validationError([
-				{
-					code: 'NEGATIVE_NUMBER',
-					message: 'Number must be non-negative',
-				},
-			]);
+			return this.fail([this.rules().negative_number]);
 		}
-
-		return validationSuccess();
+		return this.pass();
 	}
 
 	async sanitize(input: number): Promise<number> {
@@ -32,18 +37,23 @@ class DoubleValSan extends ValSan<number, number> {
 async function runExamples(): Promise<void> {
 	console.log('=== Example 1: ComposedValSan - EmailValSan ===');
 	class EmailFormatValSan extends ValSan<string, string> {
-		async validate(input: string): Promise<ValidationResult> {
-			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-			if (!emailRegex.test(input)) {
-				return validationError([
-					{
-						code: 'INVALID_EMAIL',
-						message: 'Invalid email format',
+		override rules() {
+			return {
+				invalid_email: {
+					code: 'invalid_email',
+					user: {
+						helperText: 'Email address',
+						errorMessage: 'Input must be a valid email address',
 					},
-				]);
-			}
+				},
+			};
+		}
 
-			return validationSuccess();
+		async validate(input: string): Promise<ValidationResult> {
+			if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)) {
+				return this.fail([this.rules().invalid_email]);
+			}
+			return this.pass();
 		}
 
 		async sanitize(input: string): Promise<string> {
