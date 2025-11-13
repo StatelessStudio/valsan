@@ -1,4 +1,5 @@
 import { RuleSet } from './rules/rule';
+import { ValSanTypes } from './types/types';
 import {
 	RunsLikeAValSan as RunsLikeAValSan,
 	SanitizeResult,
@@ -41,6 +42,8 @@ export interface ComposedValSanOptions extends ValSanOptions {
  */
 export class ComposedValSan<TInput = unknown, TOutput = TInput>
 implements RunsLikeAValSan<TInput, TOutput> {
+	public type: ValSanTypes = 'unknown';
+
 	/**
 	 * Creates a composed validator from an array of ValSan steps.
 	 *

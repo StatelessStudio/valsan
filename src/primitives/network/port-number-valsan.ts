@@ -1,8 +1,11 @@
+import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
 import { isNumeric } from '../number/is-numeric';
 import { numberRule } from '../number/number-rules';
 
 export class PortNumberValSan extends ValSan<number | string, number> {
+	override type: ValSanTypes = 'number';
+
 	override rules() {
 		return {
 			number: numberRule,

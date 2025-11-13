@@ -1,3 +1,4 @@
+import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
 import { isString } from '../string/is-string';
 import { stringRule } from '../string/string-rules';
@@ -9,6 +10,8 @@ const fqdnRegex =
 	/^(?=.{1,255}$)([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
 
 export class FqdnValSan extends ValSan<string, string> {
+	override type: ValSanTypes = 'string';
+
 	override rules() {
 		return {
 			string: stringRule,

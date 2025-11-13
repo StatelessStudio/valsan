@@ -1,3 +1,4 @@
+import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
 import { isString } from '../string/is-string';
 import { stringNotEmptyRule, stringRule } from '../string/string-rules';
@@ -28,6 +29,8 @@ export class BearerTokenValSan extends ValSan<
 	string | string[] | undefined,
 	string
 > {
+	override type: ValSanTypes = 'string';
+
 	override rules() {
 		return {
 			string: stringRule,

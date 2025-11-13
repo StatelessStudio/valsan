@@ -1,3 +1,4 @@
+import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
 import { numberRule } from './number-rules';
 
@@ -22,6 +23,8 @@ import { numberRule } from './number-rules';
  * ```
  */
 export class IntegerValidator extends ValSan<number | string, number> {
+	override type: ValSanTypes = 'number';
+
 	override rules() {
 		return {
 			number: numberRule,

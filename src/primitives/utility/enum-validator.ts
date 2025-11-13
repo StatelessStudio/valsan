@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { ValSanTypes } from '../../types/types';
 
 export interface EnumValidatorOptions<T> extends ValSanOptions {
 	/**
@@ -8,6 +9,7 @@ export interface EnumValidatorOptions<T> extends ValSanOptions {
 }
 
 export class EnumValidator<T> extends ValSan<T, T> {
+	override type: ValSanTypes = 'unknown';
 	protected readonly allowedValues: readonly T[];
 
 	constructor(options: EnumValidatorOptions<T>) {

@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../';
+import { ValSanTypes } from '../../types/types';
 import { stringRule } from '../string/string-rules';
 
 export interface StringToBooleanValSanOptions extends ValSanOptions {
@@ -50,6 +51,8 @@ export interface StringToBooleanValSanOptions extends ValSanOptions {
  * ```
  */
 export class StringToBooleanValSan extends ValSan<string, boolean> {
+	override type: ValSanTypes = 'boolean';
+
 	private readonly trueValues: string[];
 	private readonly falseValues: string[];
 

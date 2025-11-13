@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult } from '../../valsan';
+import { ValSanTypes } from '../../types/types';
 import { isString } from './is-string';
 import { stringRule } from './string-rules';
 
@@ -16,6 +17,7 @@ import { stringRule } from './string-rules';
  * ```
  */
 export class TrimSanitizer extends ValSan<string, string> {
+	override type: ValSanTypes = 'string';
 	public override rules() {
 		return {
 			string: stringRule,

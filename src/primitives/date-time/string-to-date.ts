@@ -1,3 +1,4 @@
+import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
 
 /**
@@ -22,6 +23,8 @@ import { ValSan, ValidationResult } from '../../valsan';
  * ```
  */
 export class StringToDateValSan extends ValSan<string, Date> {
+	override type: ValSanTypes = 'date';
+
 	override rules() {
 		return {
 			date: {

@@ -1,3 +1,4 @@
+import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
 import { isString } from '../string/is-string';
 import { stringRule } from '../string/string-rules';
@@ -8,6 +9,8 @@ const ipv4Regex =
 const ipv6Regex = /^([\da-fA-F]{1,4}:){7}[\da-fA-F]{1,4}$/;
 
 export class IpAddressValSan extends ValSan<string, string> {
+	override type: ValSanTypes = 'string';
+
 	override rules() {
 		return {
 			string: stringRule,

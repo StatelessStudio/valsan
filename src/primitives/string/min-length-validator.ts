@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { ValSanTypes } from '../../types/types';
 import { isString } from './is-string';
 import { stringRule } from './string-rules';
 
@@ -31,6 +32,7 @@ export interface MinLengthValidatorOptions extends ValSanOptions {
  * ```
  */
 export class MinLengthValidator extends ValSan<string, string> {
+	override type: ValSanTypes = 'string';
 	private readonly minLength: number;
 
 	constructor(options: MinLengthValidatorOptions = {}) {

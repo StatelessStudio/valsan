@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { ValSanTypes } from '../../types/types';
 import { isString } from './is-string';
 import { stringRule } from './string-rules';
 
@@ -30,6 +31,7 @@ export interface MaxLengthValidatorOptions extends ValSanOptions {
  * ```
  */
 export class MaxLengthValidator extends ValSan<string, string> {
+	override type: ValSanTypes = 'string';
 	private readonly maxLength: number;
 
 	constructor(options: MaxLengthValidatorOptions) {

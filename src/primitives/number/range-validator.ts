@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { ValSanTypes } from '../../types/types';
 import { isNumeric } from './is-numeric';
 import { numberRule } from './number-rules';
 
@@ -35,6 +36,8 @@ export interface RangeValidatorOptions extends ValSanOptions {
  * ```
  */
 export class RangeValidator extends ValSan<number, number> {
+	override type: ValSanTypes = 'number';
+
 	private readonly min: number;
 	private readonly max: number;
 

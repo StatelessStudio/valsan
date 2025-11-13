@@ -1,6 +1,7 @@
 import { validationError } from './errors';
 import { Rule } from './rules';
 import { RuleSet } from './rules/rule';
+import { ValSanTypes } from './types/types';
 
 export interface ValidationError {
 	field?: string;
@@ -30,7 +31,9 @@ export interface ValSanOptions {
 }
 
 export interface RunsLikeAValSan<TInput = unknown, TOutput = TInput> {
+	readonly type: ValSanTypes;
 	readonly options: ValSanOptions;
+
 	rules(): RuleSet;
 	run(input: TInput): Promise<SanitizeResult<TOutput>>;
 }
@@ -41,6 +44,8 @@ export abstract class ValSan<
 	TNormalized = TInput | TOutput,
 > implements RunsLikeAValSan<TInput, TOutput> {
 	public constructor(public readonly options: ValSanOptions = {}) {}
+
+	public type: ValSanTypes = 'unknown';
 
 	public rules(): RuleSet {
 		return {};

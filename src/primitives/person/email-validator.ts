@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { ValSanTypes } from '../../types/types';
 import { isString } from '../string/is-string';
 import { stringRule } from '../string/string-rules';
 
@@ -31,6 +32,8 @@ export interface EmailValidatorOptions extends ValSanOptions {
  * ```
  */
 export class EmailValidator extends ValSan<string, string> {
+	override type: ValSanTypes = 'string';
+
 	protected readonly allowPlusAddress: boolean;
 	protected readonly allowedDomains?: string[];
 

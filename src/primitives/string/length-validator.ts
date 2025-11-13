@@ -4,6 +4,7 @@ import {
 	MinLengthValidatorOptions,
 } from './min-length-validator';
 import { MaxLengthValidator } from './max-length-validator';
+import { ValSanTypes } from '../../types/types';
 
 export interface LengthValidatorOptions
 	extends ComposedValSanOptions,
@@ -40,6 +41,8 @@ export interface LengthValidatorOptions
  * ```
  */
 export class LengthValidator extends ComposedValSan<string, string> {
+	override type: ValSanTypes = 'string';
+
 	constructor(options: LengthValidatorOptions = {}) {
 		const steps = [
 			new MinLengthValidator({ minLength: options.minLength ?? 1 }),

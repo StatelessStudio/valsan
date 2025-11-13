@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { ValSanTypes } from '../../types/types';
 import { stringRule } from './string-rules';
 import { isString } from './is-string';
 
@@ -37,6 +38,7 @@ export interface PatternValidatorOptions extends ValSanOptions {
  * ```
  */
 export class PatternValidator extends ValSan<string, string> {
+	override type: ValSanTypes = 'string';
 	private readonly pattern: RegExp;
 	private readonly errorMessage?: string;
 

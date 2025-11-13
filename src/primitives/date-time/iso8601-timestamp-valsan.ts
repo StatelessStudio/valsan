@@ -6,10 +6,13 @@
  * Validates and sanitizes input as an ISO 8601 timestamp string.
  * Accepts Date or string input. Returns a valid ISO 8601 string if possible.
  */
+import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
 import { isString } from '../string/is-string';
 
 export class Iso8601TimestampValSan extends ValSan<string | Date, Date> {
+	override type: ValSanTypes = 'date';
+
 	protected static readonly iso8601Regex =
 		// eslint-disable-next-line max-len
 		/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})$/;

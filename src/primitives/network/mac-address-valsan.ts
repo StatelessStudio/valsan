@@ -1,3 +1,4 @@
+import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
 import { isString } from '../string/is-string';
 import { stringRule } from '../string/string-rules';
@@ -8,6 +9,8 @@ const macRegex =
 	/^([0-9A-Fa-f]{2}([-:])){5}([0-9A-Fa-f]{2})$|^([0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4})$/;
 
 export class MacAddressValSan extends ValSan<string, string> {
+	override type: ValSanTypes = 'string';
+
 	override rules() {
 		return {
 			string: stringRule,

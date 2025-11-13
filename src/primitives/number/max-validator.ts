@@ -1,4 +1,5 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
+import { ValSanTypes } from '../../types/types';
 import { isNumeric } from './is-numeric';
 import { numberRule } from './number-rules';
 
@@ -30,6 +31,8 @@ export interface MaxValidatorOptions extends ValSanOptions {
  * ```
  */
 export class MaxValidator extends ValSan<number, number> {
+	override type: ValSanTypes = 'number';
+
 	private readonly max: number;
 
 	override rules() {
