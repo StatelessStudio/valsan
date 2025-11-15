@@ -23,7 +23,7 @@ import { ValSan, ValidationResult } from '../../valsan';
  * ```
  */
 export class StringToDateValSan extends ValSan<string, Date> {
-	override type: ValSanTypes = 'date';
+	override type: ValSanTypes = 'string';
 	override example = '2024-01-15';
 
 	override rules() {

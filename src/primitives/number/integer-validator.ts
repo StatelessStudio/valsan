@@ -23,7 +23,7 @@ import { numberRule } from './number-rules';
  * ```
  */
 export class IntegerValidator extends ValSan<number | string, number> {
-	override type: ValSanTypes = 'number';
+	override type: ValSanTypes = 'integer';
 	override example = '42';
 
 	override rules() {

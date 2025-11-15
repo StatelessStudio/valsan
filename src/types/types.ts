@@ -1,8 +1,9 @@
 export type ValSanTypes =
 	| 'string'
 	| 'number'
+	| 'integer'
 	| 'boolean'
-	| 'date'
 	| 'array'
 	| 'object'
+	| 'file'
 	| 'unknown';

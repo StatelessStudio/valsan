@@ -11,7 +11,7 @@ import { ValSan, ValidationResult } from '../../valsan';
 import { isString } from '../string/is-string';
 
 export class Iso8601TimestampValSan extends ValSan<string | Date, Date> {
-	override type: ValSanTypes = 'date';
+	override type: ValSanTypes = 'string';
 	override example = '2023-01-01T12:00:00Z';
 
 	protected static readonly iso8601Regex =
