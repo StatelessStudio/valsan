@@ -15,7 +15,7 @@ describe('ValSan - Normalization', () => {
 		const result = await valsan.run('  INVALID  ');
 
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_WORD');
+		expect(result.errors[0].code).toBe('invalid_word');
 	});
 
 	it('should use default normalize when not overridden', async () => {

@@ -1,5 +1,6 @@
-import { validationError, validationSuccess } from '../../errors';
 import { ValSan, ValidationResult, ValSanOptions } from '../../';
+import { ValSanTypes } from '../../types/types';
+import { stringRule } from '../string/string-rules';
 
 export interface StringToBooleanValSanOptions extends ValSanOptions {
 	/**
@@ -46,12 +47,37 @@ export interface StringToBooleanValSanOptions extends ValSanOptions {
  * const validator = new StringToBooleanValSan();
  * const result = await validator.run('maybe');
  * // result.success === false
- * // result.errors[0].code === 'INVALID_BOOLEAN'
+ * // result.errors[0].code === 'boolean'
  * ```
  */
 export class StringToBooleanValSan extends ValSan<string, boolean> {
+	override type: ValSanTypes = 'boolean';
+	override example = 'true';
+
 	private readonly trueValues: string[];
 	private readonly falseValues: string[];
+
+	override rules() {
+		return {
+			string: stringRule,
+			booleanString: {
+				code: 'boolean',
+				user: {
+					helperText: 'True or false',
+					errorMessage: 'Input must be true or false',
+				},
+				dev: {
+					helperText:
+						'Boolean string (true/false, 1/0, yes/no, on/off)',
+					errorMessage: 'Input must be a valid boolean string',
+				},
+				context: {
+					trueValues: this.trueValues,
+					falseValues: this.falseValues,
+				},
+			},
+		};
+	}
 
 	constructor(options: StringToBooleanValSanOptions = {}) {
 		super(options);
@@ -72,19 +98,10 @@ export class StringToBooleanValSan extends ValSan<string, boolean> {
 			!this.trueValues.includes(input) &&
 			!this.falseValues.includes(input)
 		) {
-			return validationError([
-				{
-					code: 'INVALID_BOOLEAN',
-					message: 'Input must be a valid boolean string',
-					context: {
-						allowedTrue: this.trueValues,
-						allowedFalse: this.falseValues,
-					},
-				},
-			]);
+			return this.fail([this.rules().booleanString]);
 		}
 
-		return validationSuccess();
+		return this.pass();
 	}
 
 	async sanitize(input: string): Promise<boolean> {

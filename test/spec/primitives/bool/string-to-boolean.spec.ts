@@ -80,15 +80,15 @@ describe('StringToBooleanValSan', () => {
 		const validator = new StringToBooleanValSan();
 		const result = await validator.run('maybe');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_BOOLEAN');
+		expect(result.errors[0].code).toBe('boolean');
 	});
 
 	it('should include allowed values in error context', async () => {
 		const validator = new StringToBooleanValSan();
 		const result = await validator.run('invalid');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].context?.['allowedTrue']).toBeDefined();
-		expect(result.errors[0].context?.['allowedFalse']).toBeDefined();
+		expect(result.errors[0].context?.['trueValues']).toBeDefined();
+		expect(result.errors[0].context?.['falseValues']).toBeDefined();
 	});
 
 	it('should support custom true values', async () => {

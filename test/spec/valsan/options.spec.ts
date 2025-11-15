@@ -33,9 +33,9 @@ describe('ValSan - Options', () => {
 			expect(result.success).toBe(false);
 			expect(result.errors).toEqual([
 				{
-					code: 'TOO_SHORT',
+					code: 'min_len',
 					message: 'Input must be at least 5 characters',
-					context: { minLength: 5, actualLength: 2 },
+					context: { minLength: 5 },
 				},
 			]);
 		});
@@ -150,7 +150,7 @@ describe('ValSan - Options', () => {
 			const result = await valsan.run('toolong');
 
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('TOO_LONG');
+			expect(result.errors[0].code).toBe('max_len');
 		});
 	});
 

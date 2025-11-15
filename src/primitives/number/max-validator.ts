@@ -1,6 +1,7 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
-import { validationError, validationSuccess } from '../../errors';
+import { ValSanTypes } from '../../types/types';
 import { isNumeric } from './is-numeric';
+import { numberRule } from './number-rules';
 
 export interface MaxValidatorOptions extends ValSanOptions {
 	/**
@@ -19,7 +20,7 @@ export interface MaxValidatorOptions extends ValSanOptions {
  * const validator = new MaxValidator({ max: 100 });
  * const result = await validator.run(150);
  * // result.success === false
- * // result.errors[0].code === 'NUMBER_TOO_LARGE'
+ * // result.errors[0].code === 'maximum'
  * ```
  *
  * @example Valid input
@@ -30,7 +31,25 @@ export interface MaxValidatorOptions extends ValSanOptions {
  * ```
  */
 export class MaxValidator extends ValSan<number, number> {
+	override type: ValSanTypes = 'number';
+
 	private readonly max: number;
+
+	override rules() {
+		return {
+			number: numberRule,
+			max: {
+				code: 'maximum',
+				user: {
+					helperText: `Maximum: ${this.max}`,
+					errorMessage: `Number must be at most ${this.max}`,
+				},
+				context: {
+					max: this.max,
+				},
+			},
+		};
+	}
 
 	constructor(options: MaxValidatorOptions) {
 		super(options);
@@ -39,28 +58,12 @@ export class MaxValidator extends ValSan<number, number> {
 
 	async validate(input: number): Promise<ValidationResult> {
 		if (!isNumeric(input)) {
-			return validationError([
-				{
-					code: 'INVALID_NUMBER',
-					message: 'Input must be a number',
-				},
-			]);
+			return this.fail([this.rules().number]);
 		}
-
 		if (input > this.max) {
-			return validationError([
-				{
-					code: 'NUMBER_TOO_LARGE',
-					message: `Number must be at most ${this.max}`,
-					context: {
-						max: this.max,
-						actual: input,
-					},
-				},
-			]);
+			return this.fail([this.rules().max]);
 		}
-
-		return validationSuccess();
+		return this.pass();
 	}
 
 	async sanitize(input: number): Promise<number> {

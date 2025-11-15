@@ -89,6 +89,7 @@ Compose your own validators from built-in primitives:
 - [Custom Validators](docs/custom-valsan.md)
 - [Composed Validators](docs/composed-valsan.md)
 - [Options](docs/using-options.md)
+- [Rules](docs/rules.md)
 
 ## Contributing & Development
 

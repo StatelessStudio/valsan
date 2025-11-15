@@ -1,6 +1,7 @@
 import { ValSan, ValidationResult } from '../../valsan';
-import { validationError, validationSuccess } from '../../errors';
+import { ValSanTypes } from '../../types/types';
 import { isString } from './is-string';
+import { stringRule } from './string-rules';
 
 /**
  * Converts a string to lowercase.
@@ -15,20 +16,26 @@ import { isString } from './is-string';
  *
  */
 export class LowercaseSanitizer extends ValSan<string, string> {
-	protected async validate(input: string): Promise<ValidationResult> {
-		if (!isString(input)) {
-			return validationError([
-				{
-					code: 'NOT_A_STRING',
-					message: 'Input must be a string',
-				},
-			]);
-		}
+	override type: ValSanTypes = 'string';
+	override example = 'HeLlO';
 
-		return validationSuccess();
+	public override rules() {
+		return {
+			string: stringRule,
+		};
 	}
 
-	async sanitize(input: string): Promise<string> {
+	protected override async validate(
+		input: string
+	): Promise<ValidationResult> {
+		if (!isString(input)) {
+			return this.fail([this.rules().string]);
+		}
+
+		return this.pass();
+	}
+
+	protected override async sanitize(input: string): Promise<string> {
 		return input.toLowerCase();
 	}
 }

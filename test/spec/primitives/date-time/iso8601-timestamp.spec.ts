@@ -21,14 +21,14 @@ describe('Iso8601TimestampValSan', () => {
 	it('should fail for an invalid ISO 8601 timestamp', async () => {
 		const result = await valSan.run('not-a-timestamp');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_ISO8601');
+		expect(result.errors[0].code).toBe('iso8601');
 	});
 
 	it('should fail for undefined input', async () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await valSan.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_ISO8601');
+		expect(result.errors[0].code).toBe('string_or_date');
 	});
 
 	it('should sanitize a Date to Date', async () => {
@@ -50,6 +50,6 @@ describe('Iso8601TimestampValSan', () => {
 	it('should fail for an invalid string', async () => {
 		const result = await valSan.run('not-a-timestamp');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_ISO8601');
+		expect(result.errors[0].code).toBe('iso8601');
 	});
 });

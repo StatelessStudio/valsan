@@ -35,7 +35,7 @@ describe('StringToNumberValSan', () => {
 		const validator = new StringToNumberValSan();
 		const result = await validator.run('not a number');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_NUMBER');
+		expect(result.errors[0].code).toBe('number');
 	});
 
 	it('should reject undefined input', async () => {
@@ -43,7 +43,7 @@ describe('StringToNumberValSan', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await validator.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_NUMBER');
+		expect(result.errors[0].code).toBe('number');
 	});
 
 	it('should convert empty strings to 0', async () => {

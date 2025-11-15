@@ -27,14 +27,14 @@ describe('StringToDateValSan', () => {
 		const validator = new StringToDateValSan();
 		const result = await validator.run('not a date');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_DATE');
+		expect(result.errors[0].code).toBe('date');
 	});
 
 	it('should reject empty strings', async () => {
 		const validator = new StringToDateValSan();
 		const result = await validator.run('');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_DATE');
+		expect(result.errors[0].code).toBe('date');
 	});
 
 	it('should reject invalid dates like 2024-13-45', async () => {

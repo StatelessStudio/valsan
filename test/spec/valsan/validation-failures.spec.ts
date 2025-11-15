@@ -11,9 +11,9 @@ describe('ValSan - Validation Failures', () => {
 		expect(result.data).toBeUndefined();
 		expect(result.errors).toEqual([
 			{
-				code: 'TOO_SHORT',
+				code: 'min_len',
 				message: 'Input must be at least 3 characters',
-				field: 'testField',
+				context: undefined,
 			},
 		]);
 	});

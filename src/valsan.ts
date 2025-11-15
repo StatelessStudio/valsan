@@ -1,3 +1,8 @@
+import { validationError } from './errors';
+import { Rule } from './rules';
+import { RuleSet } from './rules/rule';
+import { ValSanTypes } from './types/types';
+
 export interface ValidationError {
 	field?: string;
 	code: string;
@@ -26,6 +31,11 @@ export interface ValSanOptions {
 }
 
 export interface RunsLikeAValSan<TInput = unknown, TOutput = TInput> {
+	readonly type: ValSanTypes;
+	readonly example: string;
+	readonly options: ValSanOptions;
+
+	rules(): RuleSet;
 	run(input: TInput): Promise<SanitizeResult<TOutput>>;
 }
 
@@ -34,7 +44,14 @@ export abstract class ValSan<
 	TOutput = TInput,
 	TNormalized = TInput | TOutput,
 > implements RunsLikeAValSan<TInput, TOutput> {
-	public constructor(protected readonly options: ValSanOptions = {}) {}
+	public constructor(public readonly options: ValSanOptions = {}) {}
+
+	public type: ValSanTypes = 'unknown';
+	public example = '';
+
+	public rules(): RuleSet {
+		return {};
+	}
 
 	/**
 	 * Optional normalization step applied before validation.
@@ -89,5 +106,22 @@ export abstract class ValSan<
 				],
 			};
 		}
+	}
+
+	public async fail(rules: Rule[]): Promise<ValidationResult> {
+		return validationError(
+			rules.map((rule) => ({
+				code: rule.code,
+				message: rule.user.errorMessage,
+				context: rule.context,
+			}))
+		);
+	}
+
+	public async pass(): Promise<ValidationResult> {
+		return {
+			isValid: true,
+			errors: [],
+		};
 	}
 }

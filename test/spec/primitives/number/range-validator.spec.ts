@@ -27,10 +27,9 @@ describe('RangeValidator', () => {
 		const validator = new RangeValidator({ min: 0, max: 100 });
 		const result = await validator.run(-5);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('NUMBER_OUT_OF_RANGE');
+		expect(result.errors[0].code).toBe('number_range');
 		expect(result.errors[0].context?.['min']).toBe(0);
 		expect(result.errors[0].context?.['max']).toBe(100);
-		expect(result.errors[0].context?.['actual']).toBe(-5);
 	});
 
 	it('should reject undefined input', async () => {
@@ -38,14 +37,14 @@ describe('RangeValidator', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await validator.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_NUMBER');
+		expect(result.errors[0].code).toBe('number');
 	});
 
 	it('should reject numbers above maximum', async () => {
 		const validator = new RangeValidator({ min: 0, max: 100 });
 		const result = await validator.run(150);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('NUMBER_OUT_OF_RANGE');
+		expect(result.errors[0].code).toBe('number_range');
 	});
 
 	it('should work with negative ranges', async () => {

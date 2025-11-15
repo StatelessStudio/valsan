@@ -9,7 +9,7 @@ describe('validationError', () => {
 	it('should return a ValidationResult error', () => {
 		const errors: ValidationError[] = [
 			{ message: 'Field is required', code: 'REQUIRED' },
-			{ message: 'Invalid email', code: 'INVALID_EMAIL' },
+			{ message: 'Invalid email', code: 'invalid_email' },
 		];
 
 		const result: ValidationResult = validationError(errors);

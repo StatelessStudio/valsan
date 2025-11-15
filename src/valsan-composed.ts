@@ -1,3 +1,5 @@
+import { RuleSet } from './rules/rule';
+import { ValSanTypes } from './types/types';
 import {
 	RunsLikeAValSan as RunsLikeAValSan,
 	SanitizeResult,
@@ -40,6 +42,9 @@ export interface ComposedValSanOptions extends ValSanOptions {
  */
 export class ComposedValSan<TInput = unknown, TOutput = TInput>
 implements RunsLikeAValSan<TInput, TOutput> {
+	public type: ValSanTypes = 'unknown';
+	public example = '';
+
 	/**
 	 * Creates a composed validator from an array of ValSan steps.
 	 *
@@ -49,8 +54,8 @@ implements RunsLikeAValSan<TInput, TOutput> {
 	 */
 	constructor(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		protected readonly steps: RunsLikeAValSan<any, any>[],
-		protected readonly options: ComposedValSanOptions = {}
+		public readonly steps: RunsLikeAValSan<any, any>[],
+		public readonly options: ComposedValSanOptions = {}
 	) {
 		if (steps.length === 0) {
 			throw new Error('ComposedValSan requires at least one step');
@@ -64,6 +69,22 @@ implements RunsLikeAValSan<TInput, TOutput> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	getSteps(): readonly RunsLikeAValSan<any, any>[] {
 		return [...this.steps];
+	}
+
+	public rules(): RuleSet {
+		const combinedRules: RuleSet = {};
+
+		for (const step of this.steps) {
+			const stepRules = step.rules();
+
+			for (const [key, rule] of Object.entries(stepRules)) {
+				if (!(key in combinedRules)) {
+					combinedRules[key] = rule;
+				}
+			}
+		}
+
+		return combinedRules;
 	}
 
 	async run(input: TInput): Promise<SanitizeResult<TOutput>> {

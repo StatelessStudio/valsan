@@ -1,3 +1,4 @@
+import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
 
 /**
@@ -18,30 +19,38 @@ import { ValSan, ValidationResult } from '../../valsan';
  * const validator = new StringToDateValSan();
  * const result = await validator.run('not a date');
  * // result.success === false
- * // result.errors[0].code === 'INVALID_DATE'
+ * // result.errors[0].code === 'date'
  * ```
  */
 export class StringToDateValSan extends ValSan<string, Date> {
+	override type: ValSanTypes = 'date';
+	override example = '2024-01-15';
+
+	override rules() {
+		return {
+			date: {
+				code: 'date',
+				user: {
+					helperText: 'Date',
+					errorMessage: 'Input must be a valid date',
+				},
+				dev: {
+					helperText: 'Date string',
+					errorMessage: 'Input must be a valid date string',
+				},
+			},
+		};
+	}
+
 	override async normalize(input: string): Promise<Date> {
 		return new Date(input);
 	}
 
 	async validate(input: Date): Promise<ValidationResult> {
 		if (input.toString() === 'Invalid Date') {
-			return {
-				isValid: false,
-				errors: [
-					{
-						code: 'INVALID_DATE',
-						message: 'Input must be a valid date string',
-					},
-				],
-			};
+			return this.fail([this.rules().date]);
 		}
-		return {
-			isValid: true,
-			errors: [],
-		};
+		return this.pass();
 	}
 
 	async sanitize(input: Date): Promise<Date> {

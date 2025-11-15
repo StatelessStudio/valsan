@@ -1,6 +1,7 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
-import { validationError, validationSuccess } from '../../errors';
+import { ValSanTypes } from '../../types/types';
 import { isNumeric } from './is-numeric';
+import { numberRule } from './number-rules';
 
 export interface RangeValidatorOptions extends ValSanOptions {
 	/**
@@ -24,7 +25,7 @@ export interface RangeValidatorOptions extends ValSanOptions {
  * const validator = new RangeValidator({ min: 0, max: 100 });
  * const result = await validator.run(150);
  * // result.success === false
- * // result.errors[0].code === 'NUMBER_OUT_OF_RANGE'
+ * // result.errors[0].code === 'number_range'
  * ```
  *
  * @example Valid input
@@ -35,8 +36,32 @@ export interface RangeValidatorOptions extends ValSanOptions {
  * ```
  */
 export class RangeValidator extends ValSan<number, number> {
+	override type: ValSanTypes = 'number';
+
 	private readonly min: number;
 	private readonly max: number;
+
+	override rules() {
+		return {
+			number: numberRule,
+			range: {
+				code: 'number_range',
+				user: {
+					helperText: 'Range',
+					errorMessage:
+						`Number must be between ${this.min} ` +
+						`and ${this.max}`,
+				},
+				dev: {
+					helperText: 'Range',
+					errorMessage:
+						`Number must be between ${this.min} and ` +
+						`${this.max}`,
+				},
+				context: { min: this.min, max: this.max },
+			},
+		};
+	}
 
 	constructor(options: RangeValidatorOptions) {
 		super(options);
@@ -46,31 +71,12 @@ export class RangeValidator extends ValSan<number, number> {
 
 	async validate(input: number): Promise<ValidationResult> {
 		if (!isNumeric(input)) {
-			return validationError([
-				{
-					code: 'INVALID_NUMBER',
-					message: 'Input must be a number',
-				},
-			]);
+			return this.fail([this.rules().number]);
 		}
-
 		if (input < this.min || input > this.max) {
-			return validationError([
-				{
-					code: 'NUMBER_OUT_OF_RANGE',
-					message:
-						`Number must be between ${this.min} and ` +
-						`${this.max}`,
-					context: {
-						min: this.min,
-						max: this.max,
-						actual: input,
-					},
-				},
-			]);
+			return this.fail([this.rules().range]);
 		}
-
-		return validationSuccess();
+		return this.pass();
 	}
 
 	async sanitize(input: number): Promise<number> {

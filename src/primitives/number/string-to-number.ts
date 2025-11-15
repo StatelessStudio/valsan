@@ -1,5 +1,6 @@
 import { ValSan, ValidationResult } from '../../valsan';
-import { validationError, validationSuccess } from '../../errors';
+import { ValSanTypes } from '../../types/types';
+import { numberRule } from './number-rules';
 
 /**
  * Converts a string to a number.
@@ -18,25 +19,27 @@ import { validationError, validationSuccess } from '../../errors';
  * const validator = new StringToNumberValSan();
  * const result = await validator.run('not a number');
  * // result.success === false
- * // result.errors[0].code === 'INVALID_NUMBER'
+ * // result.errors[0].code === 'number'
  * ```
  */
 export class StringToNumberValSan extends ValSan<string, number> {
+	override type: ValSanTypes = 'number';
+
+	override rules() {
+		return {
+			number: numberRule,
+		};
+	}
+
 	protected override async normalize(input: string): Promise<number> {
 		return Number(input);
 	}
 
 	async validate(input: number): Promise<ValidationResult> {
 		if (isNaN(input)) {
-			return validationError([
-				{
-					code: 'INVALID_NUMBER',
-					message: 'Input must be a valid number',
-				},
-			]);
+			return this.fail([this.rules().number]);
 		}
-
-		return validationSuccess();
+		return this.pass();
 	}
 
 	async sanitize(input: number): Promise<number> {

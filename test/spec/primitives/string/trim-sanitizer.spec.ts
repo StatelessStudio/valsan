@@ -22,7 +22,7 @@ describe('TrimSanitizer', () => {
 		const result = await sanitizer.run(undefined as any);
 		expect(result.success).toBe(false);
 		expect(result.errors).toBeDefined();
-		expect(result.errors[0].code).toBe('INVALID_STRING');
+		expect(result.errors[0].code).toBe('string');
 	});
 
 	it('should handle empty strings', async () => {

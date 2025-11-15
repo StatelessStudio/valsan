@@ -22,7 +22,7 @@ describe('AlphanumericValidator', () => {
 			const result = await validator.run(input);
 			expect(result.success).toBe(false);
 			if (!result.success) {
-				expect(result.errors[0].code).toBe('STRING_NOT_ALPHANUMERIC');
+				expect(result.errors[0].code).toBe('alphanumeric');
 			}
 		}
 	});
@@ -31,7 +31,7 @@ describe('AlphanumericValidator', () => {
 		const result = await validator.run('');
 		expect(result.success).toBe(false);
 		if (!result.success) {
-			expect(result.errors[0].code).toBe('STRING_NOT_ALPHANUMERIC');
+			expect(result.errors[0].code).toBe('alphanumeric');
 		}
 	});
 
@@ -42,20 +42,8 @@ describe('AlphanumericValidator', () => {
 			const result = await validator.run(input);
 			expect(result.success).toBe(false);
 			if (!result.success) {
-				expect(result.errors[0].code).toBe('STRING_NOT_ALPHANUMERIC');
+				expect(result.errors[0].code).toBe('string');
 			}
-		}
-	});
-
-	it('should use custom error message if provided', async () => {
-		const customMsg = 'Only letters and numbers allowed!';
-		const customValidator = new AlphanumericValidator({
-			errorMessage: customMsg,
-		});
-		const result = await customValidator.run('abc-123');
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.errors[0].message).toBe(customMsg);
 		}
 	});
 });

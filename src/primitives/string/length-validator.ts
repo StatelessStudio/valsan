@@ -4,6 +4,7 @@ import {
 	MinLengthValidatorOptions,
 } from './min-length-validator';
 import { MaxLengthValidator } from './max-length-validator';
+import { ValSanTypes } from '../../types/types';
 
 export interface LengthValidatorOptions
 	extends ComposedValSanOptions,
@@ -21,7 +22,7 @@ export interface LengthValidatorOptions
  * const validator = new LengthValidator({ minLength: 3, maxLength: 10 });
  * const result = await validator.run('ab');
  * // result.success === false
- * // result.errors[0].code === 'STRING_TOO_SHORT'
+ * // result.errors[0].code === 'string_min_len'
  * ```
  *
  * @example Valid input
@@ -36,10 +37,13 @@ export interface LengthValidatorOptions
  * const validator = new LengthValidator({ minLength: 3, maxLength: 5 });
  * const result = await validator.run('toolongstring');
  * // result.success === false
- * // result.errors[0].code === 'STRING_TOO_LONG'
+ * // result.errors[0].code === 'string_max_len'
  * ```
  */
 export class LengthValidator extends ComposedValSan<string, string> {
+	override type: ValSanTypes = 'string';
+	override example = 'example';
+
 	constructor(options: LengthValidatorOptions = {}) {
 		const steps = [
 			new MinLengthValidator({ minLength: options.minLength ?? 1 }),

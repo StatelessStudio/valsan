@@ -165,7 +165,7 @@ const validator = new MinLengthValidator({ minLength: 3 });
 const result = await validator.run('hi');
 // result.success === false
 
-// result.errors[0].code === 'STRING_TOO_SHORT'
+// result.errors[0].code === 'string_min_len'
 ```
 
 ### MaxLengthValidator
@@ -179,7 +179,7 @@ const validator = new MaxLengthValidator({ maxLength: 10 });
 const result = await validator.run('this is way too long');
 // result.success === false
 
-// result.errors[0].code === 'STRING_TOO_LONG'
+// result.errors[0].code === 'string_max_len'
 ```
 
 ### LengthValidator
@@ -196,11 +196,11 @@ const result = await validator.run('abcd');
 
 const failShort = await validator.run('a');
 // failShort.success === false
-// failShort.errors[0].code === 'STRING_TOO_SHORT'
+// failShort.errors[0].code === 'string_min_len'
 
 const failLong = await validator.run('abcdef');
 // failLong.success === false
-// failLong.errors[0].code === 'STRING_TOO_LONG'
+// failLong.errors[0].code === 'string_max_len'
 ```
 
 ### PatternValidator
@@ -245,7 +245,7 @@ const validator = new MinValidator({ min: 0 });
 const result = await validator.run(-5);
 // result.success === false
 
-// result.errors[0].code === 'NUMBER_TOO_SMALL'
+// result.errors[0].code === 'minimum'
 ```
 
 ### MaxValidator
@@ -259,7 +259,7 @@ const validator = new MaxValidator({ max: 100 });
 const result = await validator.run(150);
 // result.success === false
 
-// result.errors[0].code === 'NUMBER_TOO_LARGE'
+// result.errors[0].code === 'maximum'
 ```
 
 ### RangeValidator
@@ -286,7 +286,7 @@ const validator = new IntegerValidator();
 const result = await validator.run(3.14);
 // result.success === false
 
-// result.errors[0].code === 'NUMBER_NOT_INTEGER'
+// result.errors[0].code === 'integer'
 ```
 
 ## Network Primitives
@@ -387,7 +387,7 @@ const result = await validator.run('mF_9.B5f-4.1JqM');
 
 const fail = await validator.run('Bearer ');
 // fail.success === false
-// fail.errors[0].code === 'INVALID_BEARER_TOKEN'
+// fail.errors[0].code === 'valid_bearer_token'
 ```
 
 ## Utility Primitives
@@ -411,42 +411,42 @@ All primitives use consistent, descriptive error codes:
 
 ### Bool Errors
 
-- `INVALID_BOOLEAN` - String is not a recognized boolean value
+- `boolean` - String is not a recognized boolean value
 
 ### DateTime Errors
 
-- `INVALID_DATE` - String cannot be converted to a valid date
-- `INVALID_ISO8601` - Not a valid ISO 8601 timestamp
+- `date` - String cannot be converted to a valid date
+- `iso8601` - Not a valid ISO 8601 timestamp
 
 ### String Errors
 
-- `EMPTY_STRING` - String is empty when empty strings are not allowed
-- `STRING_TOO_SHORT` - String is shorter than minimum length
-- `STRING_TOO_LONG` - String exceeds maximum length
-- `STRING_PATTERN_MISMATCH` - String doesn't match required pattern
-- `NOT_A_STRING` - Input is not a string
-- `STRING_EMAIL_INVALID` - Not a valid email address
-- `STRING_EMAIL_DOMAIN_NOT_ALLOWED` - Email domain not allowed
+- `empty_string` - String is empty when empty strings are not allowed
+- `string_min_len` - String is shorter than minimum length
+- `string_max_len` - String exceeds maximum length
+- `pattern` - String doesn't match required pattern
+- `string` - Input is not a string
+- `email_format` - Not a valid email address
+- `email_domain` - Email domain not allowed
 
 ### Number Errors
 
-- `INVALID_NUMBER` - String cannot be converted to a number
-- `NUMBER_TOO_SMALL` - Number is less than minimum value
-- `NUMBER_TOO_LARGE` - Number exceeds maximum value
-- `NUMBER_OUT_OF_RANGE` - Number is outside the allowed range
-- `NUMBER_NOT_INTEGER` - Number has decimal places when integer required
+- `number` - String cannot be converted to a number
+- `minimum` - Number is less than minimum value
+- `maximum` - Number exceeds maximum value
+- `number_range` - Number is outside the allowed range
+- `integer` - Number has decimal places when integer required
 
 ### Network Errors
 
-- `INVALID_IP` - Not a valid IPv4 or IPv6 address
-- `INVALID_MAC` - Not a valid MAC address
-- `INVALID_PORT` - Not a valid port number
-- `INVALID_URL` - Not a valid URL
-- `INVALID_FQDN` - Not a valid FQDN
+- `ip_address` - Not a valid IPv4 or IPv6 address
+- `mac` - Not a valid MAC address
+- `port_number` - Not a valid port_number number
+- `url` - Not a valid URL
+- `fqdn` - Not a valid FQDN
 
 ### Utility Errors
 
-- `ENUM_INVALID` - Value is not in the allowed set
+- `enum` - Value is not in the allowed set
 
 ## More Examples
 

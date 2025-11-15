@@ -1,6 +1,7 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
-import { validationError, validationSuccess } from '../../errors';
+import { ValSanTypes } from '../../types/types';
 import { isString } from './is-string';
+import { stringRule } from './string-rules';
 
 export interface MaxLengthValidatorOptions extends ValSanOptions {
 	/**
@@ -19,7 +20,7 @@ export interface MaxLengthValidatorOptions extends ValSanOptions {
  * const validator = new MaxLengthValidator({ maxLength: 10 });
  * const result = await validator.run('this is too long');
  * // result.success === false
- * // result.errors[0].code === 'STRING_TOO_LONG'
+ * // result.errors[0].code === 'string_max_len'
  * ```
  *
  * @example Valid input
@@ -30,6 +31,8 @@ export interface MaxLengthValidatorOptions extends ValSanOptions {
  * ```
  */
 export class MaxLengthValidator extends ValSan<string, string> {
+	override type: ValSanTypes = 'string';
+
 	private readonly maxLength: number;
 
 	constructor(options: MaxLengthValidatorOptions) {
@@ -37,32 +40,34 @@ export class MaxLengthValidator extends ValSan<string, string> {
 		this.maxLength = options.maxLength;
 	}
 
+	override rules() {
+		return {
+			string: stringRule,
+			maxLength: {
+				code: 'string_max_len',
+				user: {
+					helperText: `Max length: ${this.maxLength}`,
+					errorMessage:
+						`Input must be at most ${this.maxLength} ` +
+						'character(s)',
+				},
+				context: {
+					maxLength: this.maxLength,
+				},
+			},
+		};
+	}
+
 	async validate(input: string): Promise<ValidationResult> {
 		if (!isString(input)) {
-			return validationError([
-				{
-					code: 'INVALID_STRING',
-					message: 'Input must be a string',
-				},
-			]);
+			return this.fail([this.rules().string]);
 		}
 
 		if (input.length > this.maxLength) {
-			return validationError([
-				{
-					code: 'STRING_TOO_LONG',
-					message:
-						`Input must be at most ${this.maxLength} ` +
-						'character(s)',
-					context: {
-						maxLength: this.maxLength,
-						actualLength: input.length,
-					},
-				},
-			]);
+			return this.fail([this.rules().maxLength]);
 		}
 
-		return validationSuccess();
+		return this.pass();
 	}
 
 	async sanitize(input: string): Promise<string> {

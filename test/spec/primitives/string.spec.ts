@@ -45,7 +45,7 @@ describe('String Primitives', () => {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const result = await sanitizer.run(null as any);
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('NOT_A_STRING');
+			expect(result.errors[0].code).toBe('string');
 		});
 
 		it('should allow empty strings with isOptional', async () => {
@@ -76,7 +76,7 @@ describe('String Primitives', () => {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const result = await sanitizer.run(null as any);
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('NOT_A_STRING');
+			expect(result.errors[0].code).toBe('string');
 		});
 
 		it('should allow empty strings with isOptional', async () => {
@@ -113,9 +113,8 @@ describe('String Primitives', () => {
 			const validator = new MinLengthValidator({ minLength: 5 });
 			const result = await validator.run('hi');
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('STRING_TOO_SHORT');
+			expect(result.errors[0].code).toBe('string_min_len');
 			expect(result.errors[0].context?.['minLength']).toBe(5);
-			expect(result.errors[0].context?.['actualLength']).toBe(2);
 		});
 
 		it('should use default minLength of 1', async () => {
@@ -128,7 +127,7 @@ describe('String Primitives', () => {
 			const validator = new MinLengthValidator();
 			const result = await validator.run('');
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('STRING_TOO_SHORT');
+			expect(result.errors[0].code).toBe('string_min_len');
 		});
 	});
 
@@ -151,9 +150,8 @@ describe('String Primitives', () => {
 			const validator = new MaxLengthValidator({ maxLength: 5 });
 			const result = await validator.run('hello world');
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('STRING_TOO_LONG');
+			expect(result.errors[0].code).toBe('string_max_len');
 			expect(result.errors[0].context?.['maxLength']).toBe(5);
-			expect(result.errors[0].context?.['actualLength']).toBe(11);
 		});
 
 		it('should accept empty strings', async () => {
@@ -188,7 +186,7 @@ describe('String Primitives', () => {
 			});
 			const result = await validator.run('abc-defg');
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('STRING_PATTERN_MISMATCH');
+			expect(result.errors[0].code).toBe('pattern');
 		});
 
 		it('should use custom error message', async () => {
@@ -209,9 +207,7 @@ describe('String Primitives', () => {
 			});
 			const result = await validator.run('hello');
 			expect(result.success).toBe(false);
-			expect(result.errors[0].message).toBe(
-				'Input does not match required pattern'
-			);
+			expect(result.errors[0].message).toBe('Input format is incorrect');
 		});
 
 		it('should include pattern in context', async () => {

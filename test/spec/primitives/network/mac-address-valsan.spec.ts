@@ -59,6 +59,6 @@ describe('MacAddressValSan', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await valSan.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_MAC');
+		expect(result.errors[0].code).toBe('string');
 	});
 });

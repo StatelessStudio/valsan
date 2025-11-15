@@ -5,3 +5,4 @@ export { IntegerValidator } from './integer-validator';
 export { StringToNumberValSan } from './string-to-number';
 
 export { isNumeric } from './is-numeric';
+export * from './number-rules';

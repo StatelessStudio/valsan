@@ -14,3 +14,5 @@ export { PatternValidator, PatternValidatorOptions } from './pattern-validator';
 export { LengthValidator, LengthValidatorOptions } from './length-validator';
 
 export { isString } from './is-string';
+
+export * from './string-rules';

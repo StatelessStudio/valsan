@@ -26,9 +26,8 @@ describe('Number Primitives', () => {
 			const validator = new MinValidator({ min: 0 });
 			const result = await validator.run(-5);
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('NUMBER_TOO_SMALL');
+			expect(result.errors[0].code).toBe('minimum');
 			expect(result.errors[0].context?.['min']).toBe(0);
-			expect(result.errors[0].context?.['actual']).toBe(-5);
 		});
 
 		it('should work with negative minimums', async () => {
@@ -67,9 +66,8 @@ describe('Number Primitives', () => {
 			const validator = new MaxValidator({ max: 100 });
 			const result = await validator.run(150);
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('NUMBER_TOO_LARGE');
+			expect(result.errors[0].code).toBe('maximum');
 			expect(result.errors[0].context?.['max']).toBe(100);
-			expect(result.errors[0].context?.['actual']).toBe(150);
 		});
 
 		it('should work with negative maximums', async () => {
@@ -115,17 +113,16 @@ describe('Number Primitives', () => {
 			const validator = new RangeValidator({ min: 0, max: 100 });
 			const result = await validator.run(-5);
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('NUMBER_OUT_OF_RANGE');
+			expect(result.errors[0].code).toBe('number_range');
 			expect(result.errors[0].context?.['min']).toBe(0);
 			expect(result.errors[0].context?.['max']).toBe(100);
-			expect(result.errors[0].context?.['actual']).toBe(-5);
 		});
 
 		it('should reject numbers above maximum', async () => {
 			const validator = new RangeValidator({ min: 0, max: 100 });
 			const result = await validator.run(150);
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('NUMBER_OUT_OF_RANGE');
+			expect(result.errors[0].code).toBe('number_range');
 		});
 
 		it('should work with negative ranges', async () => {
@@ -171,15 +168,14 @@ describe('Number Primitives', () => {
 			const validator = new IntegerValidator();
 			const result = await validator.run(3.14);
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('NUMBER_NOT_INTEGER');
-			expect(result.errors[0].context?.['actual']).toBe(3.14);
+			expect(result.errors[0].code).toBe('integer');
 		});
 
 		it('should reject numbers with small decimal parts', async () => {
 			const validator = new IntegerValidator();
 			const result = await validator.run(42.001);
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('NUMBER_NOT_INTEGER');
+			expect(result.errors[0].code).toBe('integer');
 		});
 
 		it('should accept large integers', async () => {

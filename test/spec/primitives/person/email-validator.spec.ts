@@ -13,7 +13,7 @@ describe('EmailValidator', () => {
 		const validator = new EmailValidator();
 		const result = await validator.run('not-an-email');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('STRING_EMAIL_INVALID');
+		expect(result.errors[0].code).toBe('email_format');
 	});
 
 	it('rejects undefined input', async () => {
@@ -21,14 +21,14 @@ describe('EmailValidator', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await validator.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('INVALID_STRING');
+		expect(result.errors[0].code).toBe('string');
 	});
 
 	it('should reject plus addressing if not allowed', async () => {
 		const validator = new EmailValidator({ allowPlusAddress: false });
 		const result = await validator.run('user+tag@example.com');
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('STRING_EMAIL_INVALID');
+		expect(result.errors[0].code).toBe('email_format');
 	});
 
 	it('should allow plus addressing if allowed', async () => {
@@ -46,11 +46,28 @@ describe('EmailValidator', () => {
 		const result2 = await validator.run('user@notallowed.com');
 		expect(result1.success).toBe(true);
 		expect(result2.success).toBe(false);
-		expect(result2.errors[0].code).toBe('STRING_EMAIL_DOMAIN_NOT_ALLOWED');
+		expect(result2.errors[0].code).toBe('email_domain');
 	});
 
 	it('should allow custom error message', async () => {
-		const validator = new EmailValidator({ errorMessage: 'Custom error' });
+		const validator = new (class extends EmailValidator {
+			override rules() {
+				return {
+					...super.rules(),
+					invalid: {
+						code: 'email_format',
+						user: {
+							helperText: 'Email',
+							errorMessage: 'Custom error',
+						},
+						context: {
+							allowPlusAddress: this.allowPlusAddress,
+						},
+					},
+				};
+			}
+		})();
+
 		const result = await validator.run('bad@');
 		expect(result.success).toBe(false);
 		expect(result.errors[0].message).toBe('Custom error');
