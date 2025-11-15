@@ -30,7 +30,7 @@ describe('ValSan type property', () => {
 	});
 
 	it('number validators should report type = "number"', () => {
-		expect(new IntegerValidator().type).toBe('number');
+		expect(new IntegerValidator().type).toBe('integer');
 		expect(new StringToNumberValSan().type).toBe('number');
 	});
 
