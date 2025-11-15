@@ -32,6 +32,7 @@ export interface ValSanOptions {
 
 export interface RunsLikeAValSan<TInput = unknown, TOutput = TInput> {
 	readonly type: ValSanTypes;
+	readonly example: string;
 	readonly options: ValSanOptions;
 
 	rules(): RuleSet;
@@ -46,6 +47,7 @@ export abstract class ValSan<
 	public constructor(public readonly options: ValSanOptions = {}) {}
 
 	public type: ValSanTypes = 'unknown';
+	public example = '';
 
 	public rules(): RuleSet {
 		return {};

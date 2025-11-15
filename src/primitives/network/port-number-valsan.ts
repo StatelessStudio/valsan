@@ -5,6 +5,7 @@ import { numberRule } from '../number/number-rules';
 
 export class PortNumberValSan extends ValSan<number | string, number> {
 	override type: ValSanTypes = 'number';
+	override example = '8080';
 
 	override rules() {
 		return {

@@ -5,6 +5,7 @@ import { isString } from '../string/is-string';
 
 export class UrlValSan extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override example = 'https://example.com';
 
 	override rules() {
 		return {

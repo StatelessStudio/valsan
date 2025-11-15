@@ -10,6 +10,7 @@ const ipv6Regex = /^([\da-fA-F]{1,4}:){7}[\da-fA-F]{1,4}$/;
 
 export class IpAddressValSan extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override example = '192.168.0.1';
 
 	override rules() {
 		return {

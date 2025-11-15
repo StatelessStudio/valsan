@@ -52,6 +52,7 @@ export interface StringToBooleanValSanOptions extends ValSanOptions {
  */
 export class StringToBooleanValSan extends ValSan<string, boolean> {
 	override type: ValSanTypes = 'boolean';
+	override example = 'true';
 
 	private readonly trueValues: string[];
 	private readonly falseValues: string[];

@@ -30,6 +30,7 @@ export class BearerTokenValSan extends ValSan<
 	string
 > {
 	override type: ValSanTypes = 'string';
+	override example = 'Bearer mF_9.B5f-4.1JqM';
 
 	override rules() {
 		return {

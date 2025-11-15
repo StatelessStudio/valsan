@@ -42,6 +42,7 @@ export interface LengthValidatorOptions
  */
 export class LengthValidator extends ComposedValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override example = 'example';
 
 	constructor(options: LengthValidatorOptions = {}) {
 		const steps = [

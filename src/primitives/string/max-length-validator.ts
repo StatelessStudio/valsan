@@ -32,6 +32,7 @@ export interface MaxLengthValidatorOptions extends ValSanOptions {
  */
 export class MaxLengthValidator extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+
 	private readonly maxLength: number;
 
 	constructor(options: MaxLengthValidatorOptions) {

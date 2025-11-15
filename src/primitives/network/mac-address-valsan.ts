@@ -10,6 +10,7 @@ const macRegex =
 
 export class MacAddressValSan extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override example = '00:1A:2B:3C:4D:5E';
 
 	override rules() {
 		return {

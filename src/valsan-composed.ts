@@ -43,6 +43,7 @@ export interface ComposedValSanOptions extends ValSanOptions {
 export class ComposedValSan<TInput = unknown, TOutput = TInput>
 implements RunsLikeAValSan<TInput, TOutput> {
 	public type: ValSanTypes = 'unknown';
+	public example = '';
 
 	/**
 	 * Creates a composed validator from an array of ValSan steps.
