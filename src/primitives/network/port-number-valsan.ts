@@ -4,7 +4,9 @@ import { isNumeric } from '../number/is-numeric';
 import { numberRule } from '../number/number-rules';
 
 export class PortNumberValSan extends ValSan<number | string, number> {
-	override type: ValSanTypes = 'number';
+	// Represent port numbers as integers in OpenAPI
+	override type: ValSanTypes = 'integer';
+	override format = 'int32';
 	override example = '8080';
 
 	override rules() {

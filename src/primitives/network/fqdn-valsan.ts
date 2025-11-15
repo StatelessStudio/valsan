@@ -11,6 +11,7 @@ const fqdnRegex =
 
 export class FqdnValSan extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override format = 'hostname';
 	override example = 'host.example.com';
 
 	override rules() {
