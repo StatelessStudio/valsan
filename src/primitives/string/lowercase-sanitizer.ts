@@ -17,7 +17,6 @@ import { stringRule } from './string-rules';
  */
 export class LowercaseSanitizer extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
-	override example = 'HeLlO';
 
 	public override rules() {
 		return {
