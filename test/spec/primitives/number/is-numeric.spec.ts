@@ -5,18 +5,18 @@ describe('isNumeric', () => {
 		expect(isNumeric(0)).toBeTrue();
 		expect(isNumeric(123)).toBeTrue();
 		expect(isNumeric(-456)).toBeTrue();
-		expect(isNumeric(NaN)).toBeTrue();
+		expect(isNumeric(NaN)).toBeFalse();
 		expect(isNumeric(Infinity)).toBeTrue();
 	});
 
 	it('should return true for numeric strings', () => {
-		expect(isNumeric('123')).toBeTrue();
-		expect(isNumeric('-456')).toBeTrue();
-		expect(isNumeric('0')).toBeTrue();
-		expect(isNumeric('1.23')).toBeTrue();
-		expect(isNumeric('NaN')).toBeTrue();
-		expect(isNumeric('Infinity')).toBeTrue();
-		expect(isNumeric('')).toBeTrue();
+		expect(isNumeric('123')).withContext('123').toBeTrue();
+		expect(isNumeric('-456')).withContext('-456').toBeTrue();
+		expect(isNumeric('0')).withContext('0').toBeTrue();
+		expect(isNumeric('1.23')).withContext('1.23').toBeTrue();
+		expect(isNumeric('NaN')).withContext('NaN').toBeFalse();
+		expect(isNumeric('Infinity')).withContext('Infinity').toBeTrue();
+		expect(isNumeric('')).withContext('empty string').toBeFalse();
 	});
 
 	it('should return true for bigint values', () => {

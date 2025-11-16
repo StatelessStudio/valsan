@@ -22,7 +22,7 @@ describe('TrimSanitizer', () => {
 		const result = await sanitizer.run(undefined as any);
 		expect(result.success).toBe(false);
 		expect(result.errors).toBeDefined();
-		expect(result.errors[0].code).toBe('string');
+		expect(result.errors[0].code).toBe('required');
 	});
 
 	it('should handle empty strings', async () => {
@@ -30,5 +30,13 @@ describe('TrimSanitizer', () => {
 		const result = await sanitizer.run('');
 		expect(result.success).toBe(true);
 		expect(result.data).toBe('');
+	});
+
+	it('should reject non-string input', async () => {
+		const sanitizer = new TrimSanitizer();
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await sanitizer.run(123 as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('string');
 	});
 });

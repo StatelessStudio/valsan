@@ -90,12 +90,25 @@ implements RunsLikeAValSan<TInput, TOutput> {
 	async run(input: TInput): Promise<SanitizeResult<TOutput>> {
 		// Handle optional fields
 		const isOptional = this.options.isOptional;
-		if (isOptional && (input === undefined || input === null)) {
-			return {
-				success: true,
-				data: input as unknown as TOutput,
-				errors: [],
-			};
+		if (input === undefined || input === null) {
+			if (isOptional) {
+				return {
+					success: true,
+					data: input as unknown as TOutput,
+					errors: [],
+				};
+			}
+			else {
+				return {
+					success: false,
+					errors: [
+						{
+							code: 'required',
+							message: 'Value is required',
+						},
+					],
+				};
+			}
 		}
 
 		let value: TInput | TOutput = input;

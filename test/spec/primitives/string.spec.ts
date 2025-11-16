@@ -45,7 +45,7 @@ describe('String Primitives', () => {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const result = await sanitizer.run(null as any);
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('string');
+			expect(result.errors[0].code).toBe('required');
 		});
 
 		it('should allow empty strings with isOptional', async () => {
@@ -76,7 +76,7 @@ describe('String Primitives', () => {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const result = await sanitizer.run(null as any);
 			expect(result.success).toBe(false);
-			expect(result.errors[0].code).toBe('string');
+			expect(result.errors[0].code).toBe('required');
 		});
 
 		it('should allow empty strings with isOptional', async () => {
