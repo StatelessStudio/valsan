@@ -71,6 +71,18 @@ implements RunsLikeAValSan<TInput, TOutput> {
 		return [...this.steps];
 	}
 
+	public copy(
+		options: ComposedValSanOptions
+	): ComposedValSan<TInput, TOutput> {
+		const constructor = this.constructor as new (
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			steps: RunsLikeAValSan<any, any>[],
+			options: ComposedValSanOptions
+		) => ComposedValSan<TInput, TOutput>;
+
+		return new constructor(this.steps, { ...this.options, ...options });
+	}
+
 	public rules(): RuleSet {
 		const combinedRules: RuleSet = {};
 

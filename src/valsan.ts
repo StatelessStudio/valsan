@@ -55,6 +55,14 @@ export abstract class ValSan<
 		return {};
 	}
 
+	public copy(options: ValSanOptions): ValSan<TInput, TOutput, TNormalized> {
+		const constructor = this.constructor as new (
+			options: ValSanOptions
+		) => ValSan<TInput, TOutput, TNormalized>;
+
+		return new constructor({ ...this.options, ...options });
+	}
+
 	/**
 	 * Optional normalization step applied before validation.
 	 */
