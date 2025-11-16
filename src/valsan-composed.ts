@@ -1,10 +1,10 @@
 import { RuleSet } from './rules/rule';
-import { ValSanTypes } from './types/types';
 import {
 	RunsLikeAValSan as RunsLikeAValSan,
 	SanitizeResult,
 	ValSanOptions,
 } from './valsan';
+import { BaseValSan } from './valsan-base';
 
 export interface ComposedValSanOptions extends ValSanOptions {
 	/**
@@ -41,10 +41,8 @@ export interface ComposedValSanOptions extends ValSanOptions {
  * ```
  */
 export class ComposedValSan<TInput = unknown, TOutput = TInput>
-implements RunsLikeAValSan<TInput, TOutput> {
-	public type: ValSanTypes = 'unknown';
-	public example = '';
-
+	extends BaseValSan<TInput, TOutput>
+	implements RunsLikeAValSan<TInput, TOutput> {
 	/**
 	 * Creates a composed validator from an array of ValSan steps.
 	 *
@@ -55,8 +53,10 @@ implements RunsLikeAValSan<TInput, TOutput> {
 	constructor(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		public readonly steps: RunsLikeAValSan<any, any>[],
-		public readonly options: ComposedValSanOptions = {}
+		public override readonly options: ComposedValSanOptions = {}
 	) {
+		super();
+
 		if (steps.length === 0) {
 			throw new Error('ComposedValSan requires at least one step');
 		}
@@ -101,26 +101,8 @@ implements RunsLikeAValSan<TInput, TOutput> {
 
 	async run(input: TInput): Promise<SanitizeResult<TOutput>> {
 		// Handle optional fields
-		const isOptional = this.options.isOptional;
 		if (input === undefined || input === null) {
-			if (isOptional) {
-				return {
-					success: true,
-					data: input as unknown as TOutput,
-					errors: [],
-				};
-			}
-			else {
-				return {
-					success: false,
-					errors: [
-						{
-							code: 'required',
-							message: 'Value is required',
-						},
-					],
-				};
-			}
+			return this.checkRequired(input);
 		}
 
 		let value: TInput | TOutput = input;
