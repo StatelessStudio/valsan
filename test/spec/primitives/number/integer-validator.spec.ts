@@ -28,7 +28,7 @@ describe('IntegerValidator', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await validator.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('number');
+		expect(result.errors[0].code).toBe('required');
 	});
 
 	it('should reject decimal numbers', async () => {
@@ -50,5 +50,13 @@ describe('IntegerValidator', () => {
 		const result = await validator.run(1000000);
 		expect(result.success).toBe(true);
 		expect(result.data).toBe(1000000);
+	});
+
+	it('should reject non-number input', async () => {
+		const validator = new IntegerValidator();
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await validator.run('not a number' as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('number');
 	});
 });

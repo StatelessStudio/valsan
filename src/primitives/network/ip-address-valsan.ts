@@ -26,7 +26,7 @@ export class IpAddressValSan extends ValSan<string, string> {
 	}
 
 	protected override async normalize(input: string): Promise<string> {
-		return input?.trim();
+		return typeof input === 'string' ? input.trim() : input;
 	}
 
 	protected async validate(input: string): Promise<ValidationResult> {

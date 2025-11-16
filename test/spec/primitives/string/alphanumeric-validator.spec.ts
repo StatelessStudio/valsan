@@ -42,7 +42,12 @@ describe('AlphanumericValidator', () => {
 			const result = await validator.run(input);
 			expect(result.success).toBe(false);
 			if (!result.success) {
-				expect(result.errors[0].code).toBe('string');
+				// null and undefined return 'required'
+				const expectedCode =
+					input === null || input === undefined
+						? 'required'
+						: 'string';
+				expect(result.errors[0].code).toBe(expectedCode);
 			}
 		}
 	});

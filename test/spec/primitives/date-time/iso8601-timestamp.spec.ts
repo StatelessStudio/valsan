@@ -28,7 +28,7 @@ describe('Iso8601TimestampValSan', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await valSan.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('string_or_date');
+		expect(result.errors[0].code).toBe('required');
 	});
 
 	it('should sanitize a Date to Date', async () => {
@@ -51,5 +51,12 @@ describe('Iso8601TimestampValSan', () => {
 		const result = await valSan.run('not-a-timestamp');
 		expect(result.success).toBe(false);
 		expect(result.errors[0].code).toBe('iso8601');
+	});
+
+	it('should reject invalid Date objects', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await valSan.run(2 as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('string_or_date');
 	});
 });

@@ -59,4 +59,11 @@ describe('IpAddressValSan', () => {
 		const result = await valSan.run('2001:db8::1');
 		expect(result.success).toBe(false);
 	});
+
+	it('rejects non-string input', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await valSan.run(123 as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('string');
+	});
 });

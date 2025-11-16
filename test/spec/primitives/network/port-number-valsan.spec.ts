@@ -25,6 +25,11 @@ describe('PortNumberValSan', () => {
 		expect(result.success).toBe(false);
 	});
 
+	it('rejects non-numeric string', async () => {
+		const result = await valSan.run('invalidPort');
+		expect(result.success).toBe(false);
+	});
+
 	it('rejects port > 65535', async () => {
 		const result = await valSan.run(70000);
 		expect(result.success).toBe(false);

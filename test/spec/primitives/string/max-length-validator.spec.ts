@@ -36,7 +36,7 @@ describe('MaxLengthValidator', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await validator.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('string');
+		expect(result.errors[0].code).toBe('required');
 	});
 
 	it('should handle maxLength of 1', async () => {
@@ -46,5 +46,13 @@ describe('MaxLengthValidator', () => {
 		expect(result1.success).toBe(true);
 		expect(result2.success).toBe(false);
 		expect(result2.errors[0].message).toContain('1 character');
+	});
+
+	it('should reject non-string input', async () => {
+		const validator = new MaxLengthValidator({ maxLength: 10 });
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await validator.run(123 as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('string');
 	});
 });

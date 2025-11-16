@@ -1,6 +1,6 @@
 {
 	"name": "valsan",
-	"version": "2.1.1",
+	"version": "2.2.0",
 	"description": "Validation and sanitization library for TypeScript",
 	"private": "true",
 	"typescript-template": {

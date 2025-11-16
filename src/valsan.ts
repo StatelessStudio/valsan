@@ -2,6 +2,7 @@ import { validationError } from './errors';
 import { Rule } from './rules';
 import { RuleSet } from './rules/rule';
 import { ValSanTypes } from './types/types';
+import { BaseValSan } from './valsan-base';
 
 export interface ValidationError {
 	field?: string;
@@ -41,18 +42,26 @@ export interface RunsLikeAValSan<TInput = unknown, TOutput = TInput> {
 }
 
 export abstract class ValSan<
-	TInput = unknown,
-	TOutput = TInput,
-	TNormalized = TInput | TOutput,
-> implements RunsLikeAValSan<TInput, TOutput> {
-	public constructor(public readonly options: ValSanOptions = {}) {}
-
-	public type: ValSanTypes = 'unknown';
-	public example = '';
-	public format?: string;
+		TInput = unknown,
+		TOutput = TInput,
+		TNormalized = TInput | TOutput,
+	>
+	extends BaseValSan<TInput, TOutput>
+	implements RunsLikeAValSan<TInput, TOutput> {
+	public constructor(public override readonly options: ValSanOptions = {}) {
+		super();
+	}
 
 	public rules(): RuleSet {
 		return {};
+	}
+
+	public copy(options: ValSanOptions): ValSan<TInput, TOutput, TNormalized> {
+		const constructor = this.constructor as new (
+			options: ValSanOptions
+		) => ValSan<TInput, TOutput, TNormalized>;
+
+		return new constructor({ ...this.options, ...options });
 	}
 
 	/**
@@ -67,13 +76,8 @@ export abstract class ValSan<
 
 	public async run(input: TInput): Promise<SanitizeResult<TOutput>> {
 		// Handle optional fields
-		const isOptional = this.options.isOptional;
-		if (isOptional && (input === undefined || input === null)) {
-			return {
-				success: true,
-				data: input as unknown as TOutput,
-				errors: [],
-			};
+		if (input === undefined || input === null) {
+			return this.checkRequired(input);
 		}
 
 		// Apply normalization before validation

@@ -27,7 +27,7 @@ describe('BearerTokenValSan', () => {
 		const validator = new BearerTokenValSan();
 		const result = await validator.run(undefined);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('string');
+		expect(result.errors[0].code).toBe('required');
 	});
 
 	it('rejects string without Bearer prefix', async () => {
@@ -49,5 +49,13 @@ describe('BearerTokenValSan', () => {
 		const result = await validator.run('Bearer   mF_9.B5f-4.1JqM   ');
 		expect(result.success).toBe(true);
 		expect(result.data).toBe('mF_9.B5f-4.1JqM');
+	});
+
+	it('rejects array input', async () => {
+		const validator = new BearerTokenValSan();
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await validator.run(['Bearer token'] as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('string');
 	});
 });

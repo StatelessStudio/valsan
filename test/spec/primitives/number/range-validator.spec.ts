@@ -37,7 +37,7 @@ describe('RangeValidator', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await validator.run(undefined as any);
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('number');
+		expect(result.errors[0].code).toBe('required');
 	});
 
 	it('should reject numbers above maximum', async () => {
@@ -61,5 +61,13 @@ describe('RangeValidator', () => {
 		const result2 = await validator.run(2.0);
 		expect(result1.success).toBe(true);
 		expect(result2.success).toBe(false);
+	});
+
+	it('should reject non-number input', async () => {
+		const validator = new RangeValidator({ min: 0, max: 100 });
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const result = await validator.run('not a number' as any);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('number');
 	});
 });
