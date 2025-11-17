@@ -35,19 +35,16 @@ import {
     ComposedValSan
 } from 'valsan';
 
-class UsernameValSan extends ComposedValSan<string, string> {
-    public constructor() {
-        super([
-            new TrimSanitizer(),
-            new LengthValidator({ minLength: 5, maxLength: 10 }),
-            new LowercaseSanitizer(),
-        ]);
-    }
-}
+const usernameValSan = new ComposedValSan<string, string>([
+    new TrimSanitizer(),
+    new LengthValidator({ minLength: 5, maxLength: 10 }),
+    new LowercaseSanitizer(),
+]);
 
 // Create an object sanitizer
 const sanitizer = new ObjectSanitizer({
-  username: new UsernameValSan(),
+  username: usernameValSan,
+  optionalUsername: usernameValSan.copy({ isOptional: true }),
   email: new EmailValidator(),
 });
 

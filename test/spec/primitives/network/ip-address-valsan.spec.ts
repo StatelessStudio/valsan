@@ -1,5 +1,5 @@
 // eslint-disable-next-line max-len
-import { IpAddressValSan } from '../../../../src/primitives/network/ip-address-valsan';
+import { IpAddressValSan } from '../../../../src/primitives';
 
 describe('IpAddressValSan', () => {
 	const valSan = new IpAddressValSan();

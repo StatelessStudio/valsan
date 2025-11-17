@@ -1,5 +1,5 @@
 // eslint-disable-next-line max-len
-import { EnumValidator } from '../../../../src/primitives/utility/enum-validator';
+import { EnumValidator } from '../../../../src/primitives/utility';
 
 describe('EnumValidator', () => {
 	it('should pass for allowed values', async () => {
