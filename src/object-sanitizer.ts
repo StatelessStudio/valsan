@@ -1,7 +1,9 @@
-import { SanitizeResult, ValidationError, RunsLikeAValSan } from './valsan';
+import { ObjectSchema, ObjectValSan } from './primitives/object/object-valsan';
+import { SanitizeResult, ValidationError } from './valsan';
 
-export type ObjectSchema = Record<string, RunsLikeAValSan<unknown, unknown>>;
-
+/**
+ * @deprecated Use ObjectValSan instead.
+ */
 export interface ObjectSanitizationResult {
 	success: boolean;
 	data?: Record<string, unknown>;
@@ -11,44 +13,36 @@ export interface ObjectSanitizationResult {
 
 /**
  * Validates an object's properties using a schema of valsan validators.
+ *
+ * @deprecated Use ObjectValSan instead.
  */
 export class ObjectSanitizer {
 	public readonly schema: ObjectSchema;
+	protected valsan: ObjectValSan;
 
-	constructor(schema: ObjectSchema) {
+	constructor(schema: ObjectSchema, allowAdditionalProperties = true) {
 		this.schema = schema;
+		this.valsan = new ObjectValSan({
+			schema: this.schema,
+			allowAdditionalProperties,
+		});
 	}
 
 	async run(
 		input: Record<string, unknown>
 	): Promise<ObjectSanitizationResult> {
-		const errors: ValidationError[] = [];
-		const data: Record<string, unknown> = {};
-		const fieldResults: Record<string, SanitizeResult<unknown>> = {};
-		let success = true;
-
-		for (const key of Object.keys(this.schema)) {
-			const validator = this.schema[key];
-			const value = input[key];
-			const result = await validator.run(value);
-			fieldResults[key] = result;
-
-			if (result.success) {
-				data[key] = result.data;
-			}
-			else {
-				success = false;
-				for (const err of result.errors) {
-					errors.push({ ...err, field: key });
-				}
-			}
-		}
+		const result = await this.valsan.run(input);
 
 		return {
-			success,
-			data: success ? data : undefined,
-			errors,
-			fieldResults,
+			success: result.success,
+			data: result.data,
+			errors: result.errors,
+			fieldResults: {},
 		};
 	}
 }
+
+/**
+ * @deprecated Use ObjectValSan instead.
+ */
+export { ObjectSchema } from './primitives/object/object-valsan';
