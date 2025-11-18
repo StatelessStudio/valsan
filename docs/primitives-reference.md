@@ -11,6 +11,8 @@
 - [DateTime Primitives](#datetime-primitives)
   - [StringToDateValSan](#stringtodatevalsan)
   - [Iso8601TimestampValSan](#iso8601timestampvalsan)
+- [Object Primitives](#object-primitives)
+  - [ObjectValSan](#objectvalsan)
 - [String Primitives](#string-primitives)
   - [AlphanumericValidator](#alphanumericvalidator)
   - [TrimSanitizer](#trimsanitizer)
@@ -135,6 +137,100 @@ const result = await validator.run('2024-01-15T12:34:56Z');
 // result.success === true
 // result.data instanceof Date === true
 
+```
+
+## Object Primitives
+
+### ObjectValSan
+
+Validates and sanitizes objects, applying a schema of validators to object properties. Objects can be nested.
+
+```typescript
+import { ObjectValSan } from 'valsan'; // from 'valsan/object'
+
+// Basic object validation
+const userValidator = new ObjectValSan({
+  schema: {
+    name: new TrimSanitizer(),
+    email: new EmailValidator(),
+    age: new IntegerValidator()
+  }
+});
+
+const result = await userValidator.run({
+  name: '  John Doe  ',
+  email: 'john@example.com',
+  age: 30
+});
+// result.success === true
+// result.data === { name: 'John Doe', email: 'john@example.com', age: 30 }
+
+// Validation error in object property
+const fail = await userValidator.run({
+  name: 'Jane',
+  email: 'invalid-email',
+  age: 25
+});
+// fail.success === false
+// fail.errors[0].field === 'email'
+
+// Nested objects
+const addressValidator = new ObjectValSan({
+  schema: {
+    street: new TrimSanitizer(),
+    city: new TrimSanitizer(),
+    zipCode: new PatternValidator({ pattern: /^\d{5}$/ })
+  }
+});
+
+const userWithAddressValidator = new ObjectValSan({
+  schema: {
+    name: new TrimSanitizer(),
+    email: new EmailValidator(),
+    address: addressValidator
+  }
+});
+
+const result2 = await userWithAddressValidator.run({
+  name: '  John  ',
+  email: 'john@example.com',
+  address: {
+    street: '  123 Main St  ',
+    city: '  Springfield  ',
+    zipCode: '12345'
+  }
+});
+// result2.success === true
+// result2.data.address.street === '123 Main St'
+
+// Allow additional properties
+const permissiveValidator = new ObjectValSan({
+  schema: {
+    name: new TrimSanitizer()
+  },
+  allowAdditionalProperties: true
+});
+
+const result3 = await permissiveValidator.run({
+  name: 'John',
+  metadata: { key: 'value' },
+  count: 42
+});
+// result3.success === true
+// result3.data.metadata === { key: 'value' }
+// result3.data.count === 42
+
+// Optional object
+const optional = new ObjectValSan({
+  schema: {
+    name: new TrimSanitizer()
+  },
+  isOptional: true
+});
+
+const result4 = await optional.run(undefined);
+// result4.success === true
+// result4.data === undefined
 ```
 
 ## String Primitives
@@ -463,6 +559,12 @@ All primitives use consistent, descriptive error codes:
 
 - `array` - Input is not an array
 - `required` - Array is required but was not provided
+
+### Object Errors
+
+- `object` - Input is not a valid object
+- `required` - Object is required but was not provided
+- `unexpected_field` - Object contains a field not defined in schema
 
 ### Bool Errors
 
