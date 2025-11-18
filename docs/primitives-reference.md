@@ -2,6 +2,8 @@
 
 ## Table of Contents
 
+- [Array Primitives](#array-primitives)
+  - [ArrayValSan](#arrayvalsan)
 - [Auth Primitives](#auth-primitives)
   - [BearerTokenValSan](#bearertokenvalsan)
 - [Bool Primitives](#bool-primitives)
@@ -36,6 +38,54 @@
   - [EnumValidator](#enumvalidator)
 - [Error Codes](#error-codes)
 - [More Examples](#more-examples)
+
+## Array Primitives
+
+### ArrayValSan
+
+Validates and sanitizes arrays, applying a schema validator to each element.
+
+```typescript
+import { ArrayValSan } from 'valsan'; // from 'valsan/array'
+
+const emailListValidator = new ArrayValSan({
+  schema: new EmailValidator()
+});
+const result = await emailListValidator.run([
+  'user1@example.com',
+  'user2@example.com'
+]);
+// result.success === true
+// result.data === ['user1@example.com', 'user2@example.com']
+
+// Validation error in array element
+const fail = await emailListValidator.run([
+  'valid@example.com',
+  'invalid-email'
+]);
+// fail.success === false
+// fail.errors[0].field === '[1]' (array index)
+
+// Optional array
+const optional = new ArrayValSan({
+  schema: new IntegerValidator(),
+  isOptional: true
+});
+const result2 = await optional.run(undefined);
+// result2.success === true
+// result2.data === undefined
+
+// Array of objects with nested validation
+const addressValidator = new ArrayValSan({
+  schema: new ObjectValSan({
+    schema: {
+      street: new TrimSanitizer(),
+      city: new TrimSanitizer(),
+      zipCode: new PatternValidator({ pattern: /^\d{5}$/ })
+    }
+  })
+});
+```
 
 ## Bool Primitives
 
@@ -408,6 +458,11 @@ const result = await validator.run('red');
 ## Error Codes
 
 All primitives use consistent, descriptive error codes:
+
+### Array Errors
+
+- `array` - Input is not an array
+- `required` - Array is required but was not provided
 
 ### Bool Errors
 

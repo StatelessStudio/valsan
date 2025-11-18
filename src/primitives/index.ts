@@ -1,3 +1,6 @@
+// Array primitives
+export * from './array';
+
 // Auth primitives
 export * from './auth';
 
