@@ -20,9 +20,12 @@ export class ObjectSanitizer {
 	public readonly schema: ObjectSchema;
 	protected valsan: ObjectValSan;
 
-	constructor(schema: ObjectSchema) {
+	constructor(schema: ObjectSchema, allowAdditionalProperties = true) {
 		this.schema = schema;
-		this.valsan = new ObjectValSan({ schema: this.schema });
+		this.valsan = new ObjectValSan({
+			schema: this.schema,
+			allowAdditionalProperties,
+		});
 	}
 
 	async run(
