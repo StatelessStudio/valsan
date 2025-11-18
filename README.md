@@ -27,7 +27,7 @@ A ValSan is a Validator + Sanitizer. It checks input data, and returns it in a c
 
 ```typescript
 import {
-    ObjectSanitizer,
+    ObjectValSan,
     LengthValidator,
     LowercaseSanitizer,
     TrimSanitizer,
@@ -41,15 +41,17 @@ const usernameValSan = new ComposedValSan<string, string>([
     new LowercaseSanitizer(),
 ]);
 
-// Create an object sanitizer
-const sanitizer = new ObjectSanitizer({
-  username: usernameValSan,
-  optionalUsername: usernameValSan.copy({ isOptional: true }),
-  email: new EmailValidator(),
+// Create an object validator
+const validator = new ObjectValSan({
+  schema: {
+    username: usernameValSan,
+    optionalUsername: usernameValSan.copy({ isOptional: true }),
+    email: new EmailValidator(),
+  }
 });
 
 // Validate & sanitize input data
-const result = await sanitizer.run({
+const result = await validator.run({
     username: 'alice',
     email: 'alice@example.com'
 });
@@ -60,7 +62,25 @@ if (result.success) {
 else {
     console.error('Validation errors:', result.errors);
 }
+
+// ObjectValSan can also be nested for complex structures:
+const addressSchema = new ObjectValSan({
+  schema: {
+    street: new TrimSanitizer(),
+    city: new TrimSanitizer(),
+  }
+});
+
+const userValidator = new ObjectValSan({
+  schema: {
+    username: usernameValSan,
+    email: new EmailValidator(),
+    address: addressSchema, // Nested object
+  }
+});
 ```
+
+> **Note**: `ObjectSanitizer` is now deprecated in favor of `ObjectValSan`. `ObjectSanitizer` will be removed in a future major version.
 
 ### Using Built-in Primitives
 

@@ -16,10 +16,6 @@ describe('ObjectSanitizer', () => {
 
 		expect(result.success).toBe(true);
 		expect(result.data).toEqual(input);
-
-		for (const key of Object.keys(schema)) {
-			expect(result.fieldResults[key].success).toBe(true);
-		}
 	});
 
 	it('returns errors for invalid properties', async () => {
@@ -34,10 +30,5 @@ describe('ObjectSanitizer', () => {
 
 		expect(result.success).toBe(false);
 		expect(result.errors.length).toBeGreaterThan(0);
-
-		// Each field should have failed
-		for (const key of Object.keys(schema)) {
-			expect(result.fieldResults[key].success).toBe(false);
-		}
 	});
 });

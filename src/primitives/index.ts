@@ -12,6 +12,9 @@ export * from './network';
 // Number primitives
 export * from './number';
 
+// Object primitives
+export * from './object';
+
 // Person primitives
 export * from './person';
 
