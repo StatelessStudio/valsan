@@ -11,6 +11,11 @@
 - [DateTime Primitives](#datetime-primitives)
   - [StringToDateValSan](#stringtodatevalsan)
   - [Iso8601TimestampValSan](#iso8601timestampvalsan)
+- [Encoding Primitives](#encoding-primitives)
+  - [UuidValSan](#uuidvalsan)
+  - [SemverValSan](#semvervalsan)
+- [JSON Primitives](#json-primitives)
+  - [JsonValSan](#jsonvalsan)
 - [Object Primitives](#object-primitives)
   - [ObjectValSan](#objectvalsan)
 - [String Primitives](#string-primitives)
@@ -136,6 +141,133 @@ const validator = new Iso8601TimestampValSan();
 const result = await validator.run('2024-01-15T12:34:56Z');
 // result.success === true
 // result.data instanceof Date === true
+
+```
+
+## Encoding Primitives
+
+### UuidValSan
+
+Validates that a string is a valid UUID (RFC 4122). Supports UUID v1, v3, v4, and v5 formats. Input is normalized to lowercase.
+
+```typescript
+import { UuidValSan } from 'valsan'; // from 'valsan/encoding'
+
+const validator = new UuidValSan();
+const result = await validator.run('550e8400-e29b-41d4-a716-446655440000');
+// result.success === true
+// result.data === '550e8400-e29b-41d4-a716-446655440000'
+
+// Invalid UUID
+const fail = await validator.run('550e8400e29b41d4a716446655440000');
+// fail.success === false
+// fail.errors[0].code === 'uuid'
+
+```
+
+### SemverValSan
+
+Validates that a string is a valid semantic version (SemVer 2.0.0). Supports major.minor.patch with optional prerelease and build metadata.
+
+```typescript
+import { SemverValSan } from 'valsan'; // from 'valsan/encoding'
+
+const validator = new SemverValSan();
+
+// Valid semantic version
+const result = await validator.run('1.0.0');
+// result.success === true
+// result.data === '1.0.0'
+
+// With prerelease identifier
+const preResult = await validator.run('1.0.0-alpha');
+// preResult.success === true
+// preResult.data === '1.0.0-alpha'
+
+// With multiple prerelease identifiers
+const multiPreResult = await validator.run('1.0.0-alpha.beta.1');
+// multiPreResult.success === true
+// multiPreResult.data === '1.0.0-alpha.beta.1'
+
+// With build metadata
+const buildResult = await validator.run('1.0.0+build.1');
+// buildResult.success === true
+// buildResult.data === '1.0.0+build.1'
+
+// With both prerelease and build
+const bothResult = await validator.run('2.0.0-rc.1+build.123');
+// bothResult.success === true
+// bothResult.data === '2.0.0-rc.1+build.123'
+
+// Trims whitespace
+const trimResult = await validator.run('  1.0.0  ');
+// trimResult.success === true
+// trimResult.data === '1.0.0'
+
+// Invalid version with leading zeros
+const fail = await validator.run('01.0.0');
+// fail.success === false
+// fail.errors[0].code === 'semver'
+
+```
+
+## JSON Primitives
+
+### JsonValSan
+
+Validates that a string is valid JSON (RFC 8259). Parses the JSON string and returns the parsed value (object, array, string, number, boolean, or null).
+
+```typescript
+import { JsonValSan } from 'valsan'; // from 'valsan/json'
+
+const validator = new JsonValSan();
+
+// Valid JSON object
+const result = await validator.run('{"key": "value"}');
+// result.success === true
+// result.data === { key: 'value' }
+
+// Valid JSON array
+const arrayResult = await validator.run('[1, 2, 3]');
+// arrayResult.success === true
+// arrayResult.data === [1, 2, 3]
+
+// Valid JSON string
+const stringResult = await validator.run('"hello"');
+// stringResult.success === true
+// stringResult.data === 'hello'
+
+// Valid JSON number
+const numberResult = await validator.run('42');
+// numberResult.success === true
+// numberResult.data === 42
+
+// Valid JSON boolean
+const boolResult = await validator.run('true');
+// boolResult.success === true
+// boolResult.data === true
+
+// Valid JSON null
+const nullResult = await validator.run('null');
+// nullResult.success === true
+// nullResult.data === null
+
+// Complex nested JSON
+const complexResult = await validator.run(
+	'{"users": [{"id": 1, "name": "John"}]}'
+);
+// complexResult.success === true
+// complexResult.data === { users: [{ id: 1, name: 'John' }] }
+
+// Trims whitespace
+const trimResult = await validator.run('  {"key": "value"}  ');
+// trimResult.success === true
+// trimResult.data === { key: 'value' }
+
+// Invalid JSON
+const fail = await validator.run('{"key": "value"');
+// fail.success === false
+// fail.errors[0].code === 'json'
 
 ```
 
@@ -574,6 +706,17 @@ All primitives use consistent, descriptive error codes:
 
 - `date` - String cannot be converted to a valid date
 - `iso8601` - Not a valid ISO 8601 timestamp
+
+### Encoding Errors
+
+- `uuid` - Not a valid UUID format
+- `semver` - Not a valid semantic version format
+- `string` - Input is not a string
+
+### JSON Errors
+
+- `json` - Input is not valid JSON
+- `string` - Input is not a string
 
 ### String Errors
 
