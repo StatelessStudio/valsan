@@ -11,6 +11,8 @@
 - [DateTime Primitives](#datetime-primitives)
   - [StringToDateValSan](#stringtodatevalsan)
   - [Iso8601TimestampValSan](#iso8601timestampvalsan)
+- [Encoding Primitives](#encoding-primitives)
+  - [UuidValSan](#uuidvalsan)
 - [Object Primitives](#object-primitives)
   - [ObjectValSan](#objectvalsan)
 - [String Primitives](#string-primitives)
@@ -136,6 +138,27 @@ const validator = new Iso8601TimestampValSan();
 const result = await validator.run('2024-01-15T12:34:56Z');
 // result.success === true
 // result.data instanceof Date === true
+
+```
+
+## Encoding Primitives
+
+### UuidValSan
+
+Validates that a string is a valid UUID (RFC 4122). Supports UUID v1, v3, v4, and v5 formats. Input is normalized to lowercase.
+
+```typescript
+import { UuidValSan } from 'valsan'; // from 'valsan/encoding'
+
+const validator = new UuidValSan();
+const result = await validator.run('550e8400-e29b-41d4-a716-446655440000');
+// result.success === true
+// result.data === '550e8400-e29b-41d4-a716-446655440000'
+
+// Invalid UUID
+const fail = await validator.run('550e8400e29b41d4a716446655440000');
+// fail.success === false
+// fail.errors[0].code === 'uuid'
 
 ```
 
@@ -574,6 +597,10 @@ All primitives use consistent, descriptive error codes:
 
 - `date` - String cannot be converted to a valid date
 - `iso8601` - Not a valid ISO 8601 timestamp
+
+### Encoding Errors
+
+- `uuid` - Not a valid UUID format
 
 ### String Errors
 
