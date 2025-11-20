@@ -13,6 +13,7 @@
   - [Iso8601TimestampValSan](#iso8601timestampvalsan)
 - [Encoding Primitives](#encoding-primitives)
   - [UuidValSan](#uuidvalsan)
+  - [SemverValSan](#semvervalsan)
 - [JSON Primitives](#json-primitives)
   - [JsonValSan](#jsonvalsan)
 - [Object Primitives](#object-primitives)
@@ -161,6 +162,52 @@ const result = await validator.run('550e8400-e29b-41d4-a716-446655440000');
 const fail = await validator.run('550e8400e29b41d4a716446655440000');
 // fail.success === false
 // fail.errors[0].code === 'uuid'
+
+```
+
+### SemverValSan
+
+Validates that a string is a valid semantic version (SemVer 2.0.0). Supports major.minor.patch with optional prerelease and build metadata.
+
+```typescript
+import { SemverValSan } from 'valsan'; // from 'valsan/encoding'
+
+const validator = new SemverValSan();
+
+// Valid semantic version
+const result = await validator.run('1.0.0');
+// result.success === true
+// result.data === '1.0.0'
+
+// With prerelease identifier
+const preResult = await validator.run('1.0.0-alpha');
+// preResult.success === true
+// preResult.data === '1.0.0-alpha'
+
+// With multiple prerelease identifiers
+const multiPreResult = await validator.run('1.0.0-alpha.beta.1');
+// multiPreResult.success === true
+// multiPreResult.data === '1.0.0-alpha.beta.1'
+
+// With build metadata
+const buildResult = await validator.run('1.0.0+build.1');
+// buildResult.success === true
+// buildResult.data === '1.0.0+build.1'
+
+// With both prerelease and build
+const bothResult = await validator.run('2.0.0-rc.1+build.123');
+// bothResult.success === true
+// bothResult.data === '2.0.0-rc.1+build.123'
+
+// Trims whitespace
+const trimResult = await validator.run('  1.0.0  ');
+// trimResult.success === true
+// trimResult.data === '1.0.0'
+
+// Invalid version with leading zeros
+const fail = await validator.run('01.0.0');
+// fail.success === false
+// fail.errors[0].code === 'semver'
 
 ```
 
@@ -663,6 +710,7 @@ All primitives use consistent, descriptive error codes:
 ### Encoding Errors
 
 - `uuid` - Not a valid UUID format
+- `semver` - Not a valid semantic version format
 - `string` - Input is not a string
 
 ### JSON Errors
