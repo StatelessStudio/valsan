@@ -13,6 +13,9 @@ export * from './date-time';
 // Encoding primitives
 export * from './encoding';
 
+// JSON primitives
+export * from './json';
+
 // Network primitives
 export * from './network';
 

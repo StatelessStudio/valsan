@@ -13,6 +13,8 @@
   - [Iso8601TimestampValSan](#iso8601timestampvalsan)
 - [Encoding Primitives](#encoding-primitives)
   - [UuidValSan](#uuidvalsan)
+- [JSON Primitives](#json-primitives)
+  - [JsonValSan](#jsonvalsan)
 - [Object Primitives](#object-primitives)
   - [ObjectValSan](#objectvalsan)
 - [String Primitives](#string-primitives)
@@ -159,6 +161,66 @@ const result = await validator.run('550e8400-e29b-41d4-a716-446655440000');
 const fail = await validator.run('550e8400e29b41d4a716446655440000');
 // fail.success === false
 // fail.errors[0].code === 'uuid'
+
+```
+
+## JSON Primitives
+
+### JsonValSan
+
+Validates that a string is valid JSON (RFC 8259). Parses the JSON string and returns the parsed value (object, array, string, number, boolean, or null).
+
+```typescript
+import { JsonValSan } from 'valsan'; // from 'valsan/json'
+
+const validator = new JsonValSan();
+
+// Valid JSON object
+const result = await validator.run('{"key": "value"}');
+// result.success === true
+// result.data === { key: 'value' }
+
+// Valid JSON array
+const arrayResult = await validator.run('[1, 2, 3]');
+// arrayResult.success === true
+// arrayResult.data === [1, 2, 3]
+
+// Valid JSON string
+const stringResult = await validator.run('"hello"');
+// stringResult.success === true
+// stringResult.data === 'hello'
+
+// Valid JSON number
+const numberResult = await validator.run('42');
+// numberResult.success === true
+// numberResult.data === 42
+
+// Valid JSON boolean
+const boolResult = await validator.run('true');
+// boolResult.success === true
+// boolResult.data === true
+
+// Valid JSON null
+const nullResult = await validator.run('null');
+// nullResult.success === true
+// nullResult.data === null
+
+// Complex nested JSON
+const complexResult = await validator.run(
+	'{"users": [{"id": 1, "name": "John"}]}'
+);
+// complexResult.success === true
+// complexResult.data === { users: [{ id: 1, name: 'John' }] }
+
+// Trims whitespace
+const trimResult = await validator.run('  {"key": "value"}  ');
+// trimResult.success === true
+// trimResult.data === { key: 'value' }
+
+// Invalid JSON
+const fail = await validator.run('{"key": "value"');
+// fail.success === false
+// fail.errors[0].code === 'json'
 
 ```
 
@@ -601,6 +663,12 @@ All primitives use consistent, descriptive error codes:
 ### Encoding Errors
 
 - `uuid` - Not a valid UUID format
+- `string` - Input is not a string
+
+### JSON Errors
+
+- `json` - Input is not valid JSON
+- `string` - Input is not a string
 
 ### String Errors
 
