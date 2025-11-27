@@ -21,6 +21,7 @@
 - [Object Primitives](#object-primitives)
   - [ObjectValSan](#objectvalsan)
 - [String Primitives](#string-primitives)
+  - [AlphaValidator](#alphavalidator)
   - [AlphanumericValidator](#alphanumericvalidator)
   - [TrimSanitizer](#trimsanitizer)
   - [LowercaseSanitizer](#lowercasesanitizer)
@@ -431,6 +432,36 @@ const result4 = await optional.run(undefined);
 ```
 
 ## String Primitives
+
+### AlphaValidator
+
+Validates that a string contains only alphabetic characters (letters only).
+Spaces can optionally be allowed by using the `allowSpaces` option.
+
+```typescript
+import { AlphaValidator } from 'valsan';
+
+const validator = new AlphaValidator();
+const result = await validator.run('hello');
+// result.success === true
+// result.data === 'hello'
+
+// With numbers (fails)
+const fail = await validator.run('abc123');
+// fail.success === false
+// fail.errors[0].code === 'alpha'
+
+// Allow spaces
+const validatorWithSpaces = new AlphaValidator({ allowSpaces: true });
+const result2 = await validatorWithSpaces.run('hello world');
+// result2.success === true
+// result2.data === 'hello world'
+
+// With numbers when spaces allowed (still fails)
+const fail2 = await validatorWithSpaces.run('hello 123');
+// fail2.success === false
+// fail2.errors[0].code === 'alpha'
+```
 
 ### AlphanumericValidator
 
