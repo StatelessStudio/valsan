@@ -8,6 +8,8 @@
   - [BearerTokenValSan](#bearertokenvalsan)
 - [Bool Primitives](#bool-primitives)
   - [StringToBooleanValSan](#stringtobooleanvalsan)
+- [Color Primitives](#color-primitives)
+  - [HexColorValSan](#hexcolorvalsan)
 - [DateTime Primitives](#datetime-primitives)
   - [StringToDateValSan](#stringtodatevalsan)
   - [Iso8601TimestampValSan](#iso8601timestampvalsan)
@@ -114,6 +116,69 @@ const custom = new StringToBooleanValSan({
   trueValues: ['y', 'yes'],
   falseValues: ['n', 'no']
 });
+```
+
+## Color Primitives
+
+### HexColorValSan
+
+Validates hexadecimal color codes. Supports 3-digit (#RGB), 4-digit (#RGBA), 6-digit (#RRGGBB), and 8-digit (#RRGGBBAA) formats. Input is normalized to uppercase.
+
+```typescript
+import { HexColorValSan } from 'valsan'; // from 'valsan/color'
+
+const validator = new HexColorValSan();
+
+// Valid 6-digit hex color
+const result = await validator.run('#FF0000');
+// result.success === true
+// result.data === '#FF0000'
+
+// Valid 3-digit short format
+const shortResult = await validator.run('#F00');
+// shortResult.success === true
+// shortResult.data === '#F00'
+
+// Valid 8-digit with alpha channel
+const alphaResult = await validator.run('#FF0000FF');
+// alphaResult.success === true
+// alphaResult.data === '#FF0000FF'
+
+// Valid 4-digit short format with alpha
+const alphaShortResult = await validator.run('#F00F');
+// alphaShortResult.success === true
+// alphaShortResult.data === '#F00F'
+
+// Lowercase is converted to uppercase
+const lowerResult = await validator.run('#ff0000');
+// lowerResult.success === true
+// lowerResult.data === '#FF0000'
+
+// Whitespace is trimmed
+const trimResult = await validator.run('  #FF0000  ');
+// trimResult.success === true
+// trimResult.data === '#FF0000'
+
+// Mixed case is normalized
+const mixedResult = await validator.run('#FfAa00');
+// mixedResult.success === true
+// mixedResult.data === '#FFAA00'
+
+// Invalid: missing hash
+const fail = await validator.run('FF0000');
+// fail.success === false
+// fail.errors[0].code === 'hex_color'
+
+// Invalid: invalid characters
+const fail2 = await validator.run('#GG0000');
+// fail2.success === false
+// fail2.errors[0].code === 'hex_color'
+
+// Invalid: wrong length (5 digits)
+const fail3 = await validator.run('#FF000');
+// fail3.success === false
+// fail3.errors[0].code === 'hex_color'
+
 ```
 
 ## DateTime Primitives
@@ -701,6 +766,11 @@ All primitives use consistent, descriptive error codes:
 ### Bool Errors
 
 - `boolean` - String is not a recognized boolean value
+
+### Color Errors
+
+- `hex_color` - Not a valid hex color format
+- `string` - Input is not a string
 
 ### DateTime Errors
 
