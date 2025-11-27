@@ -7,6 +7,9 @@ export * from './auth';
 // Boolean primitives
 export * from './bool';
 
+// Color primitives
+export * from './color';
+
 // Date-time primitives
 export * from './date-time';
 

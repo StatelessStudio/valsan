@@ -8,6 +8,8 @@
   - [BearerTokenValSan](#bearertokenvalsan)
 - [Bool Primitives](#bool-primitives)
   - [StringToBooleanValSan](#stringtobooleanvalsan)
+- [Color Primitives](#color-primitives)
+  - [HexColorValSan](#hexcolorvalsan)
 - [DateTime Primitives](#datetime-primitives)
   - [StringToDateValSan](#stringtodatevalsan)
   - [Iso8601TimestampValSan](#iso8601timestampvalsan)
@@ -19,7 +21,9 @@
 - [Object Primitives](#object-primitives)
   - [ObjectValSan](#objectvalsan)
 - [String Primitives](#string-primitives)
+  - [AlphaValidator](#alphavalidator)
   - [AlphanumericValidator](#alphanumericvalidator)
+  - [SlugValSan](#slugvalsan)
   - [TrimSanitizer](#trimsanitizer)
   - [LowercaseSanitizer](#lowercasesanitizer)
   - [UppercaseSanitizer](#uppercasesanitizer)
@@ -29,6 +33,7 @@
   - [PatternValidator](#patternvalidator)
 - [Number Primitives](#number-primitives)
   - [StringToNumberValSan](#stringtonumbervalsan)
+  - [DecimalValidator](#decimalvalidator)
   - [MinValidator](#minvalidator)
   - [MaxValidator](#maxvalidator)
   - [RangeValidator](#rangevalidator)
@@ -114,6 +119,69 @@ const custom = new StringToBooleanValSan({
   trueValues: ['y', 'yes'],
   falseValues: ['n', 'no']
 });
+```
+
+## Color Primitives
+
+### HexColorValSan
+
+Validates hexadecimal color codes. Supports 3-digit (#RGB), 4-digit (#RGBA), 6-digit (#RRGGBB), and 8-digit (#RRGGBBAA) formats. Input is normalized to uppercase.
+
+```typescript
+import { HexColorValSan } from 'valsan'; // from 'valsan/color'
+
+const validator = new HexColorValSan();
+
+// Valid 6-digit hex color
+const result = await validator.run('#FF0000');
+// result.success === true
+// result.data === '#FF0000'
+
+// Valid 3-digit short format
+const shortResult = await validator.run('#F00');
+// shortResult.success === true
+// shortResult.data === '#F00'
+
+// Valid 8-digit with alpha channel
+const alphaResult = await validator.run('#FF0000FF');
+// alphaResult.success === true
+// alphaResult.data === '#FF0000FF'
+
+// Valid 4-digit short format with alpha
+const alphaShortResult = await validator.run('#F00F');
+// alphaShortResult.success === true
+// alphaShortResult.data === '#F00F'
+
+// Lowercase is converted to uppercase
+const lowerResult = await validator.run('#ff0000');
+// lowerResult.success === true
+// lowerResult.data === '#FF0000'
+
+// Whitespace is trimmed
+const trimResult = await validator.run('  #FF0000  ');
+// trimResult.success === true
+// trimResult.data === '#FF0000'
+
+// Mixed case is normalized
+const mixedResult = await validator.run('#FfAa00');
+// mixedResult.success === true
+// mixedResult.data === '#FFAA00'
+
+// Invalid: missing hash
+const fail = await validator.run('FF0000');
+// fail.success === false
+// fail.errors[0].code === 'hex_color'
+
+// Invalid: invalid characters
+const fail2 = await validator.run('#GG0000');
+// fail2.success === false
+// fail2.errors[0].code === 'hex_color'
+
+// Invalid: wrong length (5 digits)
+const fail3 = await validator.run('#FF000');
+// fail3.success === false
+// fail3.errors[0].code === 'hex_color'
+
 ```
 
 ## DateTime Primitives
@@ -367,6 +435,36 @@ const result4 = await optional.run(undefined);
 
 ## String Primitives
 
+### AlphaValidator
+
+Validates that a string contains only alphabetic characters (letters only).
+Spaces can optionally be allowed by using the `allowSpaces` option.
+
+```typescript
+import { AlphaValidator } from 'valsan';
+
+const validator = new AlphaValidator();
+const result = await validator.run('hello');
+// result.success === true
+// result.data === 'hello'
+
+// With numbers (fails)
+const fail = await validator.run('abc123');
+// fail.success === false
+// fail.errors[0].code === 'alpha'
+
+// Allow spaces
+const validatorWithSpaces = new AlphaValidator({ allowSpaces: true });
+const result2 = await validatorWithSpaces.run('hello world');
+// result2.success === true
+// result2.data === 'hello world'
+
+// With numbers when spaces allowed (still fails)
+const fail2 = await validatorWithSpaces.run('hello 123');
+// fail2.success === false
+// fail2.errors[0].code === 'alpha'
+```
+
 ### AlphanumericValidator
 
 Validates that a string contains only alphanumeric characters (letters and numbers).
@@ -388,6 +486,46 @@ const custom = new AlphanumericValidator({ errorMessage: 'Only letters and numbe
 const fail2 = await custom.run('abc-123');
 // fail2.success === false
 // fail2.errors[0].message === 'Only letters and numbers allowed!'
+```
+
+### SlugValSan
+
+Validates and sanitizes strings to slug format (lowercase, alphanumeric with
+hyphens). Optionally converts strings to valid slug format.
+
+```typescript
+import { SlugValSan } from 'valsan';
+
+const validator = new SlugValSan();
+const result = await validator.run('hello-world');
+// result.success === true
+// result.data === 'hello-world'
+
+// Uppercase fails
+const fail = await validator.run('Hello-World');
+// fail.success === false
+// fail.errors[0].code === 'slug'
+
+// Spaces are not allowed
+const fail2 = await validator.run('hello world');
+// fail2.success === false
+// fail2.errors[0].code === 'slug'
+
+// Auto-convert to slug format
+const autoValidator = new SlugValSan({ autoConvert: true });
+const result2 = await autoValidator.run('Hello World');
+// result2.success === true
+// result2.data === 'hello-world'
+
+// Underscores are converted to hyphens
+const result3 = await autoValidator.run('hello_world_test');
+// result3.success === true
+// result3.data === 'hello-world-test'
+
+// Special characters are removed
+const result4 = await autoValidator.run('Hello@World!');
+// result4.success === true
+// result4.data === 'helloworld'
 ```
 
 ### TrimSanitizer
@@ -510,6 +648,45 @@ const result = await validator.run('42');
 // result.success === true
 // result.data === 42 (number type)
 
+```
+
+### DecimalValidator
+
+Validates that a number is a decimal (has decimal places).
+Optionally validates the number of decimal places.
+
+```typescript
+import { DecimalValidator } from 'valsan'; // from 'valsan/number'
+
+const validator = new DecimalValidator();
+const result = await validator.run(3.14);
+// result.success === true
+// result.data === 3.14
+
+// Integers are rejected
+const fail = await validator.run(42);
+// fail.success === false
+// fail.errors[0].code === 'decimal'
+
+// With max decimal places
+const validator2 = new DecimalValidator({ maxDecimalPlaces: 2 });
+const result2 = await validator2.run(3.14);
+// result2.success === true
+// result2.data === 3.14
+
+const fail2 = await validator2.run(3.14159);
+// fail2.success === false
+// fail2.errors[0].code === 'max_decimal_places'
+
+// With exact decimal places
+const validator3 = new DecimalValidator({ decimalPlaces: 2 });
+const result3 = await validator3.run(3.14);
+// result3.success === true
+// result3.data === 3.14
+
+const fail3 = await validator3.run(3.1);
+// fail3.success === false
+// fail3.errors[0].code === 'exact_decimal_places'
 ```
 
 ### MinValidator
@@ -701,6 +878,11 @@ All primitives use consistent, descriptive error codes:
 ### Bool Errors
 
 - `boolean` - String is not a recognized boolean value
+
+### Color Errors
+
+- `hex_color` - Not a valid hex color format
+- `string` - Input is not a string
 
 ### DateTime Errors
 
