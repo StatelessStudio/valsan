@@ -23,6 +23,7 @@
 - [String Primitives](#string-primitives)
   - [AlphaValidator](#alphavalidator)
   - [AlphanumericValidator](#alphanumericvalidator)
+  - [SlugValSan](#slugvalsan)
   - [TrimSanitizer](#trimsanitizer)
   - [LowercaseSanitizer](#lowercasesanitizer)
   - [UppercaseSanitizer](#uppercasesanitizer)
@@ -484,6 +485,46 @@ const custom = new AlphanumericValidator({ errorMessage: 'Only letters and numbe
 const fail2 = await custom.run('abc-123');
 // fail2.success === false
 // fail2.errors[0].message === 'Only letters and numbers allowed!'
+```
+
+### SlugValSan
+
+Validates and sanitizes strings to slug format (lowercase, alphanumeric with
+hyphens). Optionally converts strings to valid slug format.
+
+```typescript
+import { SlugValSan } from 'valsan';
+
+const validator = new SlugValSan();
+const result = await validator.run('hello-world');
+// result.success === true
+// result.data === 'hello-world'
+
+// Uppercase fails
+const fail = await validator.run('Hello-World');
+// fail.success === false
+// fail.errors[0].code === 'slug'
+
+// Spaces are not allowed
+const fail2 = await validator.run('hello world');
+// fail2.success === false
+// fail2.errors[0].code === 'slug'
+
+// Auto-convert to slug format
+const autoValidator = new SlugValSan({ autoConvert: true });
+const result2 = await autoValidator.run('Hello World');
+// result2.success === true
+// result2.data === 'hello-world'
+
+// Underscores are converted to hyphens
+const result3 = await autoValidator.run('hello_world_test');
+// result3.success === true
+// result3.data === 'hello-world-test'
+
+// Special characters are removed
+const result4 = await autoValidator.run('Hello@World!');
+// result4.success === true
+// result4.data === 'helloworld'
 ```
 
 ### TrimSanitizer
