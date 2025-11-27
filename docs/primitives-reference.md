@@ -33,6 +33,7 @@
   - [PatternValidator](#patternvalidator)
 - [Number Primitives](#number-primitives)
   - [StringToNumberValSan](#stringtonumbervalsan)
+  - [DecimalValidator](#decimalvalidator)
   - [MinValidator](#minvalidator)
   - [MaxValidator](#maxvalidator)
   - [RangeValidator](#rangevalidator)
@@ -647,6 +648,45 @@ const result = await validator.run('42');
 // result.success === true
 // result.data === 42 (number type)
 
+```
+
+### DecimalValidator
+
+Validates that a number is a decimal (has decimal places).
+Optionally validates the number of decimal places.
+
+```typescript
+import { DecimalValidator } from 'valsan'; // from 'valsan/number'
+
+const validator = new DecimalValidator();
+const result = await validator.run(3.14);
+// result.success === true
+// result.data === 3.14
+
+// Integers are rejected
+const fail = await validator.run(42);
+// fail.success === false
+// fail.errors[0].code === 'decimal'
+
+// With max decimal places
+const validator2 = new DecimalValidator({ maxDecimalPlaces: 2 });
+const result2 = await validator2.run(3.14);
+// result2.success === true
+// result2.data === 3.14
+
+const fail2 = await validator2.run(3.14159);
+// fail2.success === false
+// fail2.errors[0].code === 'max_decimal_places'
+
+// With exact decimal places
+const validator3 = new DecimalValidator({ decimalPlaces: 2 });
+const result3 = await validator3.run(3.14);
+// result3.success === true
+// result3.data === 3.14
+
+const fail3 = await validator3.run(3.1);
+// fail3.success === false
+// fail3.errors[0].code === 'exact_decimal_places'
 ```
 
 ### MinValidator
