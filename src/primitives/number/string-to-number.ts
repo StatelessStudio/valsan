@@ -32,6 +32,10 @@ export class StringToNumberValSan extends ValSan<string, number> {
 	}
 
 	protected override async normalize(input: string): Promise<number> {
+		if (input.trim() === '') {
+			return NaN;
+		}
+
 		return Number(input);
 	}
 
