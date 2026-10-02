@@ -61,23 +61,17 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 		const options = this.options as ArrayValSanOptions;
 		if (input === undefined || input === null) {
 			if (options.isOptional) {
-				return {
-					success: true,
-					data: undefined,
-					errors: [],
-				};
+				return this.checkRequired(input);
 			}
-			else {
-				return {
-					success: false,
-					errors: [
-						{
-							code: requiredRule.code,
-							message: requiredRule.user.errorMessage,
-						},
-					],
-				};
-			}
+			return {
+				success: false,
+				errors: [
+					{
+						code: requiredRule.code,
+						message: requiredRule.user.errorMessage,
+					},
+				],
+			};
 		}
 
 		if (!Array.isArray(input)) {

@@ -120,7 +120,9 @@ describe('ObjectValSan', () => {
 		const result = await valsan.run(null as any);
 
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('required');
+		expect(result.errors).toEqual([
+			{ code: 'required', message: 'Value is empty' },
+		]);
 	});
 
 	it('should handle undefined input when not optional', async () => {
@@ -134,22 +136,59 @@ describe('ObjectValSan', () => {
 		const result = await valsan.run(undefined as any);
 
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('required');
+		expect(result.errors).toEqual([
+			{ code: 'required', message: 'Value is empty' },
+		]);
 	});
 
-	it('should handle undefined input when optional', async () => {
-		const valsan = new ObjectValSan({
-			schema: {
-				name: new TrimSanitizer(),
-			},
+	for (const input of [undefined, null]) {
+		it(`should preserve optional ${input} and skip schema`, async () => {
+			const nameValSan = new TrimSanitizer();
+			const runSpy = spyOn(nameValSan, 'run').and.callThrough();
+			const valsan = new ObjectValSan({
+				schema: {
+					name: nameValSan,
+				},
+				isOptional: true,
+			});
+
+			const result = await valsan.run(input);
+
+			expect(result.success).toBe(true);
+			expect<unknown>(result.data).toBe(input);
+			expect(result.errors).toEqual([]);
+			expect(runSpy).not.toHaveBeenCalled();
+		});
+	}
+
+	it('should preserve optional nested object values', async () => {
+		const optionalObject = new ObjectValSan({
+			schema: { name: new TrimSanitizer() },
 			isOptional: true,
 		});
+		const valsan = new ObjectValSan({
+			schema: {
+				nullObject: optionalObject,
+				undefinedObject: optionalObject,
+				validObject: optionalObject,
+			},
+		});
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const result = await valsan.run(undefined as any);
+		const result = await valsan.run({
+			nullObject: null,
+			undefinedObject: undefined,
+			validObject: { name: '  Alice  ' },
+		});
 
-		expect(result.success).toBe(true);
-		expect(result.data).toBe(undefined);
+		expect(result).toEqual({
+			success: true,
+			data: {
+				nullObject: null,
+				undefinedObject: undefined,
+				validObject: { name: 'Alice' },
+			},
+			errors: [],
+		});
 	});
 
 	it('should support deeply nested objects', async () => {

@@ -63,7 +63,9 @@ describe('ArrayValSan', () => {
 		const result = await arrayValSan.run(null as any);
 
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('required');
+		expect(result.errors).toEqual([
+			{ code: 'required', message: 'Value is empty' },
+		]);
 	});
 
 	it('should handle undefined input when not optional', async () => {
@@ -75,20 +77,57 @@ describe('ArrayValSan', () => {
 		const result = await arrayValSan.run(undefined as any);
 
 		expect(result.success).toBe(false);
-		expect(result.errors[0].code).toBe('required');
+		expect(result.errors).toEqual([
+			{ code: 'required', message: 'Value is empty' },
+		]);
 	});
 
-	it('should handle undefined input when optional', async () => {
-		const arrayValSan = new ArrayValSan({
-			schema: new IntegerValidator(),
+	for (const input of [undefined, null]) {
+		it(`should preserve optional ${input} and skip schema`, async () => {
+			const itemValSan = new IntegerValidator();
+			const runSpy = spyOn(itemValSan, 'run').and.callThrough();
+			const arrayValSan = new ArrayValSan({
+				schema: itemValSan,
+				isOptional: true,
+			});
+
+			const result = await arrayValSan.run(input);
+
+			expect(result.success).toBe(true);
+			expect<unknown>(result.data).toBe(input);
+			expect(result.errors).toEqual([]);
+			expect(runSpy).not.toHaveBeenCalled();
+		});
+	}
+
+	it('should preserve nested optional arrays', async () => {
+		const optionalArray = new ArrayValSan({
+			schema: new TrimSanitizer(),
 			isOptional: true,
 		});
+		const valsan = new ObjectValSan({
+			schema: {
+				nullArray: optionalArray,
+				undefinedArray: optionalArray,
+				arrays: new ArrayValSan({ schema: optionalArray }),
+			},
+		});
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const result = await arrayValSan.run(undefined as any);
+		const result = await valsan.run({
+			nullArray: null,
+			undefinedArray: undefined,
+			arrays: [null, undefined, ['  hello  ']],
+		});
 
-		expect(result.success).toBe(true);
-		expect(result.data).toBe(undefined);
+		expect(result).toEqual({
+			success: true,
+			data: {
+				nullArray: null,
+				undefinedArray: undefined,
+				arrays: [null, undefined, ['hello']],
+			},
+			errors: [],
+		});
 	});
 
 	it('should handle empty array', async () => {
@@ -230,11 +269,11 @@ describe('ArrayValSan', () => {
 			isOptional: true,
 		});
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const result = await arrayValSan.run(null as any);
+		const result = await arrayValSan.run(null);
 
 		expect(result.success).toBe(true);
-		expect(result.data).toBe(undefined);
+		expect(result.data).toBeNull();
+		expect(result.errors).toEqual([]);
 	});
 
 	it('should handle field errors with nested field paths', async () => {

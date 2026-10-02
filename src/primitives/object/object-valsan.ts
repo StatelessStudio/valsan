@@ -72,28 +72,22 @@ export class ObjectValSan extends ValSan<
 	}
 
 	public override async run(
-		input: Record<string, unknown>
+		input: Record<string, unknown> | null | undefined
 	): Promise<SanitizeResult<Record<string, unknown>>> {
 		const options = this.options as ObjectValSanOptions;
 		if (input === undefined || input === null) {
 			if (options.isOptional) {
-				return {
-					success: true,
-					data: undefined,
-					errors: [],
-				};
+				return this.checkRequired(input);
 			}
-			else {
-				return {
-					success: false,
-					errors: [
-						{
-							code: requiredRule.code,
-							message: requiredRule.user.errorMessage,
-						},
-					],
-				};
-			}
+			return {
+				success: false,
+				errors: [
+					{
+						code: requiredRule.code,
+						message: requiredRule.user.errorMessage,
+					},
+				],
+			};
 		}
 
 		if (

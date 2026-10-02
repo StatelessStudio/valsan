@@ -15,6 +15,11 @@ You can use options to:
 
 All options are optional and have sensible defaults. See validator docs for details.
 
+## Optional Values
+
+Set `isOptional: true` to accept `null` and `undefined` without running validation
+or sanitization. Empty values (null & undefined) will pass through.
+
 ## Copying
 
 You can copy an existing validator or sanitizer and override its options or rules using the `.copy()` method. This is handy when you want a slightly different behavior (for example making a validator optional) without recreating the instance.
