@@ -46,11 +46,18 @@ describe('StringToNumberValSan', () => {
 		expect(result.errors[0].code).toBe('required');
 	});
 
-	it('should convert empty strings to 0', async () => {
+	it('should reject empty strings', async () => {
 		const validator = new StringToNumberValSan();
 		const result = await validator.run('');
-		expect(result.success).toBe(true);
-		expect(result.data).toBe(0);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('number');
+	});
+
+	it('should reject whitespace-only strings', async () => {
+		const validator = new StringToNumberValSan();
+		const result = await validator.run('  ');
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('number');
 	});
 
 	it('should handle scientific notation', async () => {
