@@ -44,7 +44,7 @@ export class PatternValidator extends ValSan<string, string> {
 
 	constructor(options: PatternValidatorOptions) {
 		super(options);
-		this.pattern = options.pattern;
+		this.pattern = new RegExp(options.pattern);
 		this.errorMessage = options.errorMessage;
 	}
 
@@ -75,6 +75,7 @@ export class PatternValidator extends ValSan<string, string> {
 			return this.fail([this.rules().string]);
 		}
 
+		this.pattern.lastIndex = 0;
 		if (!this.pattern.test(input)) {
 			return this.fail([this.rules().pattern]);
 		}

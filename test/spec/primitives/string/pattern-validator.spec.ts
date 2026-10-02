@@ -11,6 +11,21 @@ describe('PatternValidator', () => {
 		expect(result.data).toBe('123-4567');
 	});
 
+	it('should reset stateful regex flags before each validation', async () => {
+		for (const flag of ['g', 'y']) {
+			const pattern = new RegExp('^a$', flag);
+			pattern.lastIndex = 1;
+			const validator = new PatternValidator({ pattern });
+
+			const first = await validator.run('a');
+			const second = await validator.run('a');
+
+			expect(first.success).toBe(true);
+			expect(second.success).toBe(true);
+			expect(pattern.lastIndex).toBe(1);
+		}
+	});
+
 	it('should reject strings not matching pattern', async () => {
 		const validator = new PatternValidator({
 			pattern: /^\d{3}-\d{4}$/,
