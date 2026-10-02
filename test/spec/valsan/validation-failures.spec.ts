@@ -8,6 +8,7 @@ describe('ValSan - Validation Failures', () => {
 		const result = await valsan.run('ab');
 
 		expect(result.success).toBe(false);
+		expect('data' in result).toBe(false);
 		expect(result.data).toBeUndefined();
 		expect(result.errors).toEqual([
 			{
