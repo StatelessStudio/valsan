@@ -129,7 +129,7 @@ export class ObjectValSan extends ValSan<
 
 		if (!(this.options as ObjectValSanOptions).allowAdditionalProperties) {
 			for (const key of Object.keys(input)) {
-				if (!(key in schema)) {
+				if (!Object.hasOwn(schema, key)) {
 					errors.push({
 						field: key,
 						code: 'unexpected_field',
