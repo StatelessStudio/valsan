@@ -30,6 +30,56 @@ describe('ObjectValSan', () => {
 		expect(result.errors.length).toBe(0);
 	});
 
+	it('should sanitize into a copy without modifying the input', async () => {
+		const valsan = new ObjectValSan({
+			schema: {
+				name: new TrimSanitizer(),
+				address: new ObjectValSan({
+					schema: {
+						city: new TrimSanitizer(),
+					},
+				}),
+			},
+			allowAdditionalProperties: true,
+		});
+		const input = {
+			name: '  Alice  ',
+			address: { city: '  Springfield  ' },
+			metadata: { source: 'form' },
+		};
+		const originalAddress = input.address;
+
+		const result = await valsan.run(input);
+
+		expect(result.success).toBe(true);
+		expect(input).toEqual({
+			name: '  Alice  ',
+			address: { city: '  Springfield  ' },
+			metadata: { source: 'form' },
+		});
+		expect(result.data).not.toBe(input);
+		expect(result.data?.['address']).not.toBe(originalAddress);
+		expect(result.data).toEqual({
+			name: 'Alice',
+			address: { city: 'Springfield' },
+			metadata: { source: 'form' },
+		});
+	});
+
+	it('should preserve input when field validation fails', async () => {
+		const valsan = new ObjectValSan({
+			schema: {
+				name: new TrimSanitizer(),
+				age: new IntegerValidator(),
+			},
+		});
+		const input = { name: '  Alice  ', age: 'not a number' };
+
+		const result = await valsan.run(input);
+		expect(result.success).toBe(false);
+		expect(input).toEqual({ name: '  Alice  ', age: 'not a number' });
+	});
+
 	it('should fail for invalid nested object data', async () => {
 		const addressValSan = new ObjectValSan({
 			schema: {

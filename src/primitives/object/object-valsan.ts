@@ -108,6 +108,18 @@ export class ObjectValSan extends ValSan<
 
 		const errors: ValidationError[] = [];
 		const schema = options.schema;
+		const output = Object.create(
+			Object.getPrototypeOf(input)
+		) as Record<string, unknown>;
+
+		for (const key of Object.keys(input)) {
+			Object.defineProperty(output, key, {
+				configurable: true,
+				enumerable: true,
+				value: input[key],
+				writable: true,
+			});
+		}
 
 		for (const key of Object.keys(schema)) {
 			const validator = schema[key];
@@ -115,7 +127,12 @@ export class ObjectValSan extends ValSan<
 			const result = await validator.run(value);
 
 			if (result.success) {
-				input[key] = result.data;
+				Object.defineProperty(output, key, {
+					configurable: true,
+					enumerable: true,
+					value: result.data,
+					writable: true,
+				});
 			}
 			else {
 				errors.push(
@@ -128,7 +145,7 @@ export class ObjectValSan extends ValSan<
 		}
 
 		if (!(this.options as ObjectValSanOptions).allowAdditionalProperties) {
-			for (const key of Object.keys(input)) {
+			for (const key of Object.keys(output)) {
 				if (!Object.hasOwn(schema, key)) {
 					errors.push({
 						field: key,
@@ -148,7 +165,7 @@ export class ObjectValSan extends ValSan<
 
 		return {
 			success: true,
-			data: input,
+			data: output,
 			errors: [],
 		};
 	}
