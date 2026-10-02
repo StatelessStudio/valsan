@@ -16,11 +16,17 @@ export interface ValidationResult {
 	errors: ValidationError[];
 }
 
-export interface SanitizeResult<T> {
-	success: boolean;
-	data?: T;
-	errors: ValidationError[];
-}
+export type SanitizeResult<T> =
+	| {
+		success: true;
+		data: T;
+		errors: [];
+	}
+	| {
+		success: false;
+		data?: never;
+		errors: ValidationError[];
+	};
 
 export interface ValSanOptions {
 	/**
