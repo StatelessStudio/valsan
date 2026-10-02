@@ -461,6 +461,57 @@ describe('ObjectValSan', () => {
 		);
 	});
 
+	it('should reject inherited schema member names as extras', async () => {
+		const valsan = new ObjectValSan({
+			schema: {
+				name: new TrimSanitizer(),
+			},
+		});
+
+		for (const key of ['constructor', 'toString']) {
+			const result = await valsan.run({
+				name: 'John',
+				[key]: 'unexpected',
+			});
+
+			expect(result.success).toBe(false);
+			expect(result.errors).toContain(
+				jasmine.objectContaining({
+					field: key,
+					code: 'unexpected_field',
+				})
+			);
+		}
+	});
+
+	it('should validate class instances with inherited fields', async () => {
+		class BaseInput {
+			[key: string]: unknown;
+
+			name = '  John  ';
+		}
+
+		class UserInput extends BaseInput {
+			age = 42;
+		}
+
+		const valsan = new ObjectValSan({
+			schema: {
+				name: new TrimSanitizer(),
+				age: new IntegerValidator(),
+			},
+		});
+
+		const result = await valsan.run(new UserInput());
+
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data).toBeInstanceOf(UserInput);
+			expect(result.data['name']).toBe('John');
+			expect(result.data['age']).toBe(42);
+		}
+	});
+
 	it('should allow additional properties when enabled', async () => {
 		const valsan = new ObjectValSan({
 			schema: {
