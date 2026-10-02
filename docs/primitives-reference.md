@@ -344,6 +344,7 @@ const fail = await validator.run('{"key": "value"');
 ### ObjectValSan
 
 Validates and sanitizes objects, applying a schema of validators to object properties. Objects can be nested.
+The result contains a sanitized copy; the input object is not modified.
 
 ```typescript
 import { ObjectValSan } from 'valsan'; // from 'valsan/object'
