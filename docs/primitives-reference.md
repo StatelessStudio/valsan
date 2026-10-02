@@ -749,7 +749,7 @@ const result = await validator.run(3.14);
 
 ### IpAddressValSan
 
-Validates that a string is a valid IPv4 or IPv6 address.
+Validates that a string is a valid IPv4 or IPv6 address, including compressed IPv6 forms such as `::1` and IPv4-mapped IPv6 addresses such as `::ffff:192.0.2.1`. IPv6 zone identifiers (for example, `fe80::1%eth0`) are not accepted.
 
 ```typescript
 import { IpAddressValSan } from 'valsan'; // from 'valsan/network'

@@ -17,6 +17,18 @@ describe('IpAddressValSan', () => {
 		expect(result.success).toBe(true);
 	});
 
+	it('validates compressed IPv6', async () => {
+		for (const address of ['::', '::1', '2001:db8::1', 'fe80::1']) {
+			const result = await valSan.run(address);
+			expect(result.success).withContext(address).toBe(true);
+		}
+	});
+
+	it('validates IPv4-mapped IPv6', async () => {
+		const result = await valSan.run('::ffff:192.0.2.1');
+		expect(result.success).toBe(true);
+	});
+
 	it('rejects invalid IP', async () => {
 		const result = await valSan.run('999.999.999.999');
 		expect(result.success).toBe(false);
@@ -54,10 +66,20 @@ describe('IpAddressValSan', () => {
 		expect(result.success).toBe(false);
 	});
 
-	it('accepts valid IPv6 shorthand', async () => {
-		// This will fail unless regex is updated for shorthand, so expect false
-		const result = await valSan.run('2001:db8::1');
-		expect(result.success).toBe(false);
+	it('rejects malformed IPv6', async () => {
+		for (const address of [
+			'2001:db8::1::1',
+			'2001:db8:::1',
+			'1:2:3:4:5:6:7:8:9',
+			'1:2:3:4:5:6:7::8',
+			'1:2:3:4:5:6:192.0.2.1:8',
+			'192.0.2.1::',
+			'::ffff:999.0.2.1',
+			'fe80::1%eth0',
+		]) {
+			const result = await valSan.run(address);
+			expect(result.success).withContext(address).toBe(false);
+		}
 	});
 
 	it('rejects non-string input', async () => {
