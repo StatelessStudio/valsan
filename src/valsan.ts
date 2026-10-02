@@ -74,7 +74,9 @@ export abstract class ValSan<
 	protected abstract validate(input: TNormalized): Promise<ValidationResult>;
 	protected abstract sanitize(input: TNormalized): Promise<TOutput>;
 
-	public async run(input: TInput): Promise<SanitizeResult<TOutput>> {
+	public async run(
+		input: TInput | null | undefined
+	): Promise<SanitizeResult<TOutput>> {
 		// Handle optional fields
 		if (input === undefined || input === null) {
 			return this.checkRequired(input);

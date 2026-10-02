@@ -16,11 +16,11 @@ describe('ValSan - Copy', () => {
 		const copy = original.copy({ isOptional: true });
 
 		const originalResult = await original.run(
-			undefined as unknown as string
+			undefined
 		);
 		expect(originalResult.success).toBe(false);
 
-		const copyResult = await copy.run(undefined as unknown as string);
+		const copyResult = await copy.run(undefined);
 		expect(copyResult.success).toBe(true);
 		expect(copyResult.data).toBeUndefined();
 	});
@@ -49,11 +49,11 @@ describe('ComposedValSan - Copy', () => {
 
 		const copy = original.copy({ isOptional: true });
 		const originalResult = await original.run(
-			undefined as unknown as string
+			undefined
 		);
 
 		expect(originalResult.success).toBe(false);
-		const copyResult = await copy.run(undefined as unknown as string);
+		const copyResult = await copy.run(undefined);
 		expect(copyResult.success).toBe(true);
 		expect(copyResult.data).toBeUndefined();
 	});

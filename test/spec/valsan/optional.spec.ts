@@ -27,7 +27,7 @@ describe('ValSan - isOptional Option', () => {
 	describe('ValSan with isOptional', () => {
 		it('should allow undefined when isOptional is true', async () => {
 			const valsan = new SimpleStringValSan({ isOptional: true });
-			const result = await valsan.run(undefined as unknown as string);
+			const result = await valsan.run(undefined);
 
 			expect(result.success).toBe(true);
 			expect(result.data).toBeUndefined();
@@ -36,7 +36,7 @@ describe('ValSan - isOptional Option', () => {
 
 		it('should allow null when isOptional is true', async () => {
 			const valsan = new SimpleStringValSan({ isOptional: true });
-			const result = await valsan.run(null as unknown as string);
+			const result = await valsan.run(null);
 
 			expect(result.success).toBe(true);
 			expect(result.data).toBeNull();
@@ -54,7 +54,7 @@ describe('ValSan - isOptional Option', () => {
 
 		it('should reject undefined when isOptional is false', async () => {
 			const valsan = new SimpleStringValSan({ isOptional: false });
-			const result = await valsan.run(undefined as unknown as string);
+			const result = await valsan.run(undefined);
 
 			expect(result.success).toBe(false);
 			expect(result.errors.length).toBeGreaterThan(0);
@@ -62,7 +62,7 @@ describe('ValSan - isOptional Option', () => {
 
 		it('should reject null when isOptional is false', async () => {
 			const valsan = new SimpleStringValSan({ isOptional: false });
-			const result = await valsan.run(null as unknown as string);
+			const result = await valsan.run(null);
 
 			expect(result.success).toBe(false);
 			expect(result.errors.length).toBeGreaterThan(0);
@@ -70,7 +70,7 @@ describe('ValSan - isOptional Option', () => {
 
 		it('should default to false when not specified', async () => {
 			const valsan = new SimpleStringValSan();
-			const result = await valsan.run(undefined as unknown as string);
+			const result = await valsan.run(undefined);
 
 			expect(result.success).toBe(false);
 			expect(result.errors.length).toBeGreaterThan(0);
@@ -90,7 +90,7 @@ describe('ValSan - isOptional Option', () => {
 			const composed = new ComposedValSan([new TestValSan()], {
 				isOptional: true,
 			});
-			const result = await composed.run(undefined as unknown as string);
+			const result = await composed.run(undefined);
 
 			expect(result.success).toBe(true);
 			expect(result.data).toBeUndefined();
@@ -101,7 +101,7 @@ describe('ValSan - isOptional Option', () => {
 			const composed = new ComposedValSan([new TestValSan()], {
 				isOptional: true,
 			});
-			const result = await composed.run(null as unknown as string);
+			const result = await composed.run(null);
 
 			expect(result.success).toBe(true);
 			expect(result.data).toBeNull();
@@ -123,7 +123,7 @@ describe('ValSan - isOptional Option', () => {
 			const composed = new ComposedValSan([new SimpleStringValSan()], {
 				isOptional: false,
 			});
-			const result = await composed.run(undefined as unknown as string);
+			const result = await composed.run(undefined);
 
 			expect(result.success).toBe(false);
 			expect(result.errors.length).toBeGreaterThan(0);
@@ -131,7 +131,7 @@ describe('ValSan - isOptional Option', () => {
 
 		it('should default to false when not specified', async () => {
 			const composed = new ComposedValSan([new SimpleStringValSan()]);
-			const result = await composed.run(undefined as unknown as string);
+			const result = await composed.run(undefined);
 
 			expect(result.success).toBe(false);
 			expect(result.errors.length).toBeGreaterThan(0);
@@ -142,7 +142,7 @@ describe('ValSan - isOptional Option', () => {
 				[new TestValSan(), new TestValSan()],
 				{ isOptional: true }
 			);
-			const result = await composed.run(undefined as unknown as string);
+			const result = await composed.run(undefined);
 
 			expect(result.success).toBe(true);
 			expect(result.data).toBeUndefined();
@@ -179,7 +179,7 @@ describe('ValSan - isOptional Option', () => {
 				{ isOptional: true }
 			);
 
-			await composed.run(undefined as unknown as string);
+			await composed.run(undefined);
 
 			expect(step1Called).toBe(false);
 			expect(step2Called).toBe(false);

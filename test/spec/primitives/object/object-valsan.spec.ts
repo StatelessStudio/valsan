@@ -293,7 +293,7 @@ describe('ObjectValSan', () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await valsan.run({
 			name: 'John',
-			nullField: null as unknown,
+			nullField: null,
 		});
 
 		expect(result.success).toBe(false);
