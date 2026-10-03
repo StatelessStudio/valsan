@@ -9,6 +9,14 @@ describe('MaxValidator', () => {
 		expect(result.data).toBe(50);
 	});
 
+	it('normalizes numeric strings to numbers', async () => {
+		const validator = new MaxValidator({ max: 100 });
+		const result = await validator.run('50');
+		expect(result.success).toBe(true);
+		expect(result.data).toBe(50);
+		expect(typeof result.data).toBe('number');
+	});
+
 	it('should accept numbers at exact maximum', async () => {
 		const validator = new MaxValidator({ max: 100 });
 		const result = await validator.run(100);

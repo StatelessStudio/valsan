@@ -9,6 +9,19 @@ describe('RangeValidator', () => {
 		expect(result.data).toBe(50);
 	});
 
+	it('normalizes numeric strings and rejects objects', async () => {
+		const validator = new RangeValidator({ min: 0, max: 100 });
+		const stringResult = await validator.run('50');
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const objectResult = await validator.run({} as any);
+
+		expect(stringResult.success).toBe(true);
+		expect(stringResult.data).toBe(50);
+		expect(typeof stringResult.data).toBe('number');
+		expect(objectResult.success).toBe(false);
+		expect(objectResult.errors[0].code).toBe('number');
+	});
+
 	it('should accept numbers at minimum bound', async () => {
 		const validator = new RangeValidator({ min: 0, max: 100 });
 		const result = await validator.run(0);

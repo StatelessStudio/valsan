@@ -188,6 +188,8 @@ const fail3 = await validator.run('#FF000');
 
 ### StringToDateValSan
 
+Accepts date strings, epoch milliseconds, and `Date` instances. Successful output is a valid `Date` object
+
 ```typescript
 import { StringToDateValSan } from 'valsan'; // from 'valsan/date-time'
 
@@ -200,7 +202,8 @@ const result = await validator.run('2024-01-15');
 
 ### Iso8601TimestampValSan
 
-Validates and sanitizes input as an ISO 8601 timestamp string. Accepts Date or string input. Returns a valid ISO 8601 string if possible.
+Accepts a valid `Date` or an ISO 8601 timestamp string and returns a valid
+`Date`. Timestamp strings are trimmed and checked for valid calendar dates.
 
 ```typescript
 import { Iso8601TimestampValSan } from 'valsan'; // from 'valsan/date-time'

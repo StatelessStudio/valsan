@@ -1,6 +1,7 @@
 import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
 import { numberRule } from './number-rules';
+import { normalizeNumber } from './normalize-number';
 
 export interface DecimalValidatorOptions extends ValSanOptions {
 	/**
@@ -62,7 +63,11 @@ export interface DecimalValidatorOptions extends ValSanOptions {
  * // fail.errors[0].code === 'exact_decimal_places'
  * ```
  */
-export class DecimalValidator extends ValSan<number | string, number> {
+export class DecimalValidator extends ValSan<
+	number | string | bigint,
+	number,
+	number
+> {
 	override type: ValSanTypes = 'number';
 	override example = '3.14';
 
@@ -119,16 +124,23 @@ export class DecimalValidator extends ValSan<number | string, number> {
 	}
 
 	private getDecimalPlaces(num: number): number {
-		const str = num.toString();
-		const dotIndex = str.indexOf('.');
-		if (dotIndex === -1) {
-			return 0;
-		}
-		// Return the number of digits after the decimal point
-		return str.length - dotIndex - 1;
+		const [coefficient, exponentString] = num.toString().toLowerCase()
+			.split('e');
+		const exponent = Number(exponentString ?? 0);
+		const decimalIndex = coefficient.indexOf('.');
+		const coefficientPlaces =
+			decimalIndex === -1 ? 0 : coefficient.length - decimalIndex - 1;
+
+		return Math.max(0, coefficientPlaces - exponent);
 	}
 
-	async validate(input: number | string): Promise<ValidationResult> {
+	protected override async normalize(
+		input: number | string | bigint
+	): Promise<number> {
+		return normalizeNumber(input);
+	}
+
+	async validate(input: number): Promise<ValidationResult> {
 		if (typeof input !== 'number' || isNaN(input)) {
 			return this.fail([this.rules().number]);
 		}

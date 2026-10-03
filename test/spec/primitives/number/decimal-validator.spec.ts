@@ -12,6 +12,14 @@ describe('DecimalValidator', () => {
 		}
 	});
 
+	it('converts numeric strings to numbers', async () => {
+		const validator = new DecimalValidator();
+		const result = await validator.run('3.14');
+		expect(result.success).toBe(true);
+		expect(result.data).toBe(3.14);
+		expect(typeof result.data).toBe('number');
+	});
+
 	it('should reject integers', async () => {
 		const validator = new DecimalValidator();
 		const inputs = [0, 1, 42, -10, 1000];
@@ -45,6 +53,13 @@ describe('DecimalValidator', () => {
 		const result = await validator.run(0.001);
 		expect(result.success).toBe(true);
 		expect(result.data).toBe(0.001);
+	});
+
+	it('should count decimal places in scientific notation', async () => {
+		const validator = new DecimalValidator({ decimalPlaces: 7 });
+		const result = await validator.run(1e-7);
+		expect(result.success).toBe(true);
+		expect(result.data).toBe(1e-7);
 	});
 
 	it('should accept negative decimals', async () => {

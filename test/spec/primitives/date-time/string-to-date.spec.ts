@@ -30,6 +30,16 @@ describe('StringToDateValSan', () => {
 		expect(result.errors[0].code).toBe('date');
 	});
 
+	it('rejects unsupported input without throwing', async () => {
+		const validator = new StringToDateValSan();
+		const result = await validator.run(
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			Symbol('date') as any
+		);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('date');
+	});
+
 	it('should reject empty strings', async () => {
 		const validator = new StringToDateValSan();
 		const result = await validator.run('');

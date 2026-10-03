@@ -38,6 +38,16 @@ describe('StringToNumberValSan', () => {
 		expect(result.errors[0].code).toBe('number');
 	});
 
+	it('rejects unsupported input without throwing', async () => {
+		const validator = new StringToNumberValSan();
+		const result = await validator.run(
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			{ trim: 'not a function' } as any
+		);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('number');
+	});
+
 	it('should reject undefined input', async () => {
 		const validator = new StringToNumberValSan();
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
