@@ -6,7 +6,7 @@ import { stringRule } from './string-rules';
 export interface SlugValSanOptions extends ValSanOptions {
 	/**
 	 * Whether to automatically convert the string to a valid slug.
-	 * If true, sanitize will convert the input to lowercase and
+	 * If true, normalize will convert the input to lowercase and
 	 * replace spaces/underscores with hyphens.
 	 * @default false
 	 */
@@ -74,28 +74,8 @@ export class SlugValSan extends ValSan<string, string> {
 		};
 	}
 
-	async validate(input: string): Promise<ValidationResult> {
-		if (!isString(input)) {
-			return this.fail([this.rules().string]);
-		}
-
-		const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-		// If autoConvert is enabled, we allow any string (will be converted)
-		if (this.autoConvert) {
-			return this.pass();
-		}
-
-		// Otherwise, validate that it's already a proper slug
-		if (!slugPattern.test(input)) {
-			return this.fail([this.rules().slug]);
-		}
-
-		return this.pass();
-	}
-
-	async sanitize(input: string): Promise<string> {
-		if (!this.autoConvert) {
+	protected override async normalize(input: string): Promise<string> {
+		if (!this.autoConvert || typeof input !== 'string') {
 			return input;
 		}
 
@@ -112,5 +92,21 @@ export class SlugValSan extends ValSan<string, string> {
 				// Remove leading/trailing hyphens
 				.replace(/^-+|-+$/g, '')
 		);
+	}
+
+	async validate(input: string): Promise<ValidationResult> {
+		if (!isString(input)) {
+			return this.fail([this.rules().string]);
+		}
+
+		if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(input)) {
+			return this.fail([this.rules().slug]);
+		}
+
+		return this.pass();
+	}
+
+	async sanitize(input: string): Promise<string> {
+		return input;
 	}
 }
