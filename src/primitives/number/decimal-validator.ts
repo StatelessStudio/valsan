@@ -24,7 +24,7 @@ export interface DecimalValidatorOptions extends ValSanOptions {
  * Validates that a number is a decimal (has decimal places).
  * Optionally validates the number of decimal places.
  *
- * Does not modify the input number.
+ * Preserves number inputs and converts numeric strings and exact bigints.
  *
  * @example
  * ```typescript

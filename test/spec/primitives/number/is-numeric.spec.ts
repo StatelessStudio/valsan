@@ -6,7 +6,7 @@ describe('isNumeric', () => {
 		expect(isNumeric(123)).toBeTrue();
 		expect(isNumeric(-456)).toBeTrue();
 		expect(isNumeric(NaN)).toBeFalse();
-		expect(isNumeric(Infinity)).toBeTrue();
+		expect(isNumeric(Infinity)).toBeFalse();
 	});
 
 	it('should return true for numeric strings', () => {
@@ -15,8 +15,11 @@ describe('isNumeric', () => {
 		expect(isNumeric('0')).withContext('0').toBeTrue();
 		expect(isNumeric('1.23')).withContext('1.23').toBeTrue();
 		expect(isNumeric('NaN')).withContext('NaN').toBeFalse();
-		expect(isNumeric('Infinity')).withContext('Infinity').toBeTrue();
+		expect(isNumeric('Infinity')).withContext('Infinity').toBeFalse();
 		expect(isNumeric('')).withContext('empty string').toBeFalse();
+		expect(isNumeric('   ')).withContext('whitespace').toBeFalse();
+		expect(isNumeric('9007199254740993')).toBeFalse();
+		expect(isNumeric('1.00000000000000001')).toBeFalse();
 	});
 
 	it('should return true for bigint values', () => {

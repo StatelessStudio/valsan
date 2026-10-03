@@ -19,7 +19,7 @@ export interface RangeValidatorOptions extends ValSanOptions {
 /**
  * Validates that a number falls within a specified range.
  *
- * Does not modify the input number.
+ * Preserves number inputs and converts numeric strings and exact bigints.
  *
  * @example
  * ```typescript

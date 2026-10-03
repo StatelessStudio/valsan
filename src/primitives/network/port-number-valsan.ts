@@ -2,6 +2,7 @@ import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
 import { isNumeric } from '../number/is-numeric';
 import { numberRule } from '../number/number-rules';
+import { normalizeNumber } from '../number/normalize-number';
 
 export class PortNumberValSan extends ValSan<number | string, number> {
 	// Represent port numbers as integers in OpenAPI
@@ -25,14 +26,9 @@ export class PortNumberValSan extends ValSan<number | string, number> {
 	protected override async normalize(
 		input: string | number
 	): Promise<number> {
-		if (typeof input === 'string') {
-			const trimmed = input.trim();
-			const num = Number(trimmed);
-
-			return num;
-		}
-
-		return input;
+		return typeof input === 'string' || typeof input === 'number'
+			? normalizeNumber(input)
+			: Number.NaN;
 	}
 
 	protected async validate(input: number): Promise<ValidationResult> {
