@@ -289,6 +289,37 @@ describe('ObjectValSan', () => {
 		expect(result.errors[0].field).toBe('age');
 	});
 
+	it(
+		'should distinguish property names that contain dots in error paths',
+		async () => {
+			const valsan = new ObjectValSan({
+				schema: {
+					'user.email': new IntegerValidator(),
+					user: new ObjectValSan({
+						schema: {
+							email: new IntegerValidator(),
+						},
+					}),
+				},
+			});
+
+			const result = await valsan.run({
+				'user.email': 'invalid',
+				user: { email: 'invalid' },
+			});
+
+			expect(result.success).toBe(false);
+			expect(result.errors.map((error) => error.field)).toEqual([
+				'user.email',
+				'user.email',
+			]);
+			expect(result.errors.map((error) => error.path)).toEqual([
+				['user.email'],
+				['user', 'email'],
+			]);
+		}
+	);
+
 	it('should detect unexpected fields', async () => {
 		const valsan = new ObjectValSan({
 			schema: {
@@ -308,6 +339,9 @@ describe('ObjectValSan', () => {
 		expect(
 			result.errors.find((e) => e.field === 'extraField')
 		).toBeDefined();
+		expect(
+			result.errors.find((e) => e.field === 'extraField')?.path
+		).toEqual(['extraField']);
 	});
 
 	it('should handle multiple unexpected fields', async () => {

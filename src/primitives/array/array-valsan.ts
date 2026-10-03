@@ -100,10 +100,9 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 			}
 			else {
 				errors.push(
-					...itemResult.errors.map((err: ValidationError) => ({
-						...err,
-						field: err.field ? `[${i}].${err.field}` : `[${i}]`,
-					}))
+					...itemResult.errors.map((err: ValidationError) =>
+						this.validationError(err, i)
+					)
 				);
 			}
 		}

@@ -6,6 +6,11 @@ import { BaseValSan } from './valsan-base';
 
 export interface ValidationError {
 	field?: string;
+	/**
+	 * Path to the invalid value, using property names and array
+	 * indices as separate segments
+	 */
+	path?: Array<string | number>;
 	code: string;
 	message: string;
 	context?: Record<string, unknown>;
@@ -136,6 +141,18 @@ export abstract class ValSan<
 		return {
 			isValid: true,
 			errors: [],
+		};
+	}
+	protected validationError(
+		error: ValidationError,
+		segment: string | number
+	): ValidationError {
+		const prefix = typeof segment === 'number' ? `[${segment}]` : segment;
+
+		return {
+			...error,
+			field: error.field ? `${prefix}.${error.field}` : prefix,
+			path: [segment, ...(error.path ?? [])],
 		};
 	}
 }

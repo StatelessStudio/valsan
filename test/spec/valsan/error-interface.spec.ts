@@ -8,6 +8,7 @@ describe('ValSan - ValidationError Interface', () => {
 		const result = await valsan.run('invalid');
 
 		expect(result.errors[0].field).toBeUndefined();
+		expect(result.errors[0].path).toBeUndefined();
 	});
 
 	it('should support optional context property', async () => {

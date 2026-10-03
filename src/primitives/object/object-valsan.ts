@@ -136,10 +136,9 @@ export class ObjectValSan extends ValSan<
 			}
 			else {
 				errors.push(
-					...result.errors.map((err: ValidationError) => ({
-						...err,
-						field: err.field ? `${key}.${err.field}` : key,
-					}))
+					...result.errors.map((err: ValidationError) =>
+						this.validationError(err, key)
+					)
 				);
 			}
 		}
@@ -149,6 +148,7 @@ export class ObjectValSan extends ValSan<
 				if (!Object.hasOwn(schema, key)) {
 					errors.push({
 						field: key,
+						path: [key],
 						code: 'unexpected_field',
 						message: 'Unexpected field',
 					});

@@ -50,7 +50,29 @@ describe('ArrayValSan', () => {
 		expect(result.success).toBe(false);
 		expect(result.errors.length).toBeGreaterThan(0);
 		expect(result.errors[0].field).toContain('[1]');
+		expect(result.errors[0].path).toEqual([1]);
 	});
+
+	it(
+		'should preserve object property names in nested array error paths',
+		async () => {
+			const arrayValSan = new ArrayValSan({
+				schema: new ObjectValSan({
+					schema: {
+						'profile.name': new IntegerValidator(),
+					},
+				}),
+			});
+
+			const result = await arrayValSan.run([
+				{ 'profile.name': 'invalid' },
+			]);
+
+			expect(result.success).toBe(false);
+			expect(result.errors[0].field).toBe('[0].profile.name');
+			expect(result.errors[0].path).toEqual([0, 'profile.name']);
+		}
+	);
 
 	it('should reject non-array input', async () => {
 		const arrayValSan = new ArrayValSan({

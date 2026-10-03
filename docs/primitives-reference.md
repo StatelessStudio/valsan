@@ -77,6 +77,7 @@ const fail = await emailListValidator.run([
 ]);
 // fail.success === false
 // fail.errors[0].field === '[1]' (array index)
+// fail.errors[0].path === [1] (structured array index)
 
 // Optional array
 const optional = new ArrayValSan({
@@ -380,6 +381,7 @@ const fail = await userValidator.run({
 });
 // fail.success === false
 // fail.errors[0].field === 'email'
+// fail.errors[0].path === ['email']
 
 // Nested objects
 const addressValidator = new ObjectValSan({

@@ -61,6 +61,9 @@ if (result.success) {
 }
 else {
     console.error('Validation errors:', result.errors);
+    // `path` contains property names and array indices as separate segments.
+    // Use `path` to traverse field(s) which failed.
+    // `field` may help for debugging but can be ambiguous with dotted keys.
 }
 
 // ObjectValSan can also be nested for complex structures:
