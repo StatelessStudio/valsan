@@ -49,6 +49,22 @@ describe('EmailValidator', () => {
 		expect(result2.errors[0].code).toBe('email_domain');
 	});
 
+	it('matches allowed domains case-insensitively', async () => {
+		const validator = new EmailValidator({
+			allowedDomains: ['ExAmPlE.CoM'],
+		});
+		const uppercaseDomainResult = await validator.run('user@EXAMPLE.COM');
+		const mixedCaseDomainResult = await validator.run('user@eXaMpLe.cOm');
+		const otherDomainResult = await validator.run('user@other.com');
+
+		expect(uppercaseDomainResult.success).toBe(true);
+		expect(mixedCaseDomainResult.success).toBe(true);
+		expect(otherDomainResult.success).toBe(false);
+		if (!otherDomainResult.success) {
+			expect(otherDomainResult.errors[0].code).toBe('email_domain');
+		}
+	});
+
 	it('should allow custom error message', async () => {
 		const validator = new (class extends EmailValidator {
 			override rules() {
@@ -87,5 +103,74 @@ describe('EmailValidator', () => {
 		const result = await validator.run(123 as any);
 		expect(result.success).toBe(false);
 		expect(result.errors[0].code).toBe('string');
+	});
+
+	it('rejects malformed local parts and domain labels', async () => {
+		const validator = new EmailValidator();
+		for (const input of [
+			'user@-example..com', 'user@example-.com',
+			'user@example..com', 'user@.example.com',
+			'user@example.com.', '.user@example.com',
+			'user.@example.com', 'user..name@example.com',
+			`${'a'.repeat(65)}@example.com`,
+			`user@${'a'.repeat(64)}.com`,
+			`user@example.${'a'.repeat(64)}`,
+			`${'a'.repeat(64)}@${'b'.repeat(63)}.${'c'.repeat(63)}.` +
+				`${'d'.repeat(63)}.com`,
+		]) {
+			const result = await validator.run(input);
+			expect(result.success).withContext(input).toBe(false);
+			expect(result.errors[0].code).toBe('email_format');
+		}
+	});
+
+	it('preserves valid local parts and hyphenated domains', async () => {
+		const validator = new EmailValidator();
+		const input = `${'a'.repeat(64)}@my-domain.example.com`;
+		const result = await validator.run(input);
+		expect(result.success).toBe(true);
+		expect(result.data).toBe(input);
+	});
+
+	it('accepts address length 254 and rejects 255', async () => {
+		const validator = new EmailValidator();
+		const local = 'a'.repeat(64);
+		const domainAtBoundary = [
+			'a'.repeat(63),
+			'b'.repeat(63),
+			'c'.repeat(57),
+			'com',
+		].join('.');
+		const domainOverBoundary = [
+			'a'.repeat(63),
+			'b'.repeat(63),
+			'c'.repeat(58),
+			'com',
+		].join('.');
+		const validAddress = `${local}@${domainAtBoundary}`;
+		const invalidAddress = `${local}@${domainOverBoundary}`;
+
+		expect(validAddress.length).toBe(254);
+		expect(invalidAddress.length).toBe(255);
+
+		const validResult = await validator.run(validAddress);
+		const invalidResult = await validator.run(invalidAddress);
+		expect(validResult.success).toBe(true);
+		expect(invalidResult.success).toBe(false);
+		expect(invalidResult.errors[0].code).toBe('email_format');
+	});
+
+	it('rejects missing, empty, or multiple @ separators', async () => {
+		const validator = new EmailValidator();
+		for (const input of [
+			'userexample.com',
+			'a@b@c.com',
+			'@example.com',
+			'user@',
+		]) {
+			const result = await validator.run(input);
+			expect(result.success).withContext(input).toBe(false);
+			expect(result.errors[0].code).toBe('email_format');
+		}
 	});
 });
