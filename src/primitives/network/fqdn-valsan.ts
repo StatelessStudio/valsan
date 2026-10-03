@@ -2,12 +2,7 @@ import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
 import { isString } from '../string/is-string';
 import { stringRule } from '../string/string-rules';
-
-// RFC 1035 FQDN: labels separated by dots, each label 1-63 chars,
-//  total <= 255, no leading/trailing dot
-const fqdnRegex =
-	// eslint-disable-next-line max-len
-	/^(?=.{1,255}$)([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+import { isFqdn } from './is-fqdn';
 
 export class FqdnValSan extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
@@ -40,7 +35,7 @@ export class FqdnValSan extends ValSan<string, string> {
 			return this.fail([this.rules().string]);
 		}
 
-		if (!fqdnRegex.test(input)) {
+		if (!isFqdn(input)) {
 			return this.fail([this.rules().fqdn]);
 		}
 
