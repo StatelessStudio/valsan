@@ -143,12 +143,16 @@ describe('ArrayValSan', () => {
 
 	it('should support array of objects', async () => {
 		const objectArrayValSan = new ArrayValSan({
-			schema: new EmailValidator(),
+			schema: new ObjectValSan({
+				schema: {
+					email: new EmailValidator(),
+				},
+			}),
 		});
 
 		const result = await objectArrayValSan.run([
-			'user1@example.com',
-			'user2@example.com',
+			{ email: 'user1@example.com' },
+			{ email: 'user2@example.com' },
 		]);
 
 		expect(result.success).toBe(true);
