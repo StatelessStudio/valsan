@@ -121,4 +121,18 @@ describe('UuidValSan', () => {
 		const result = await validator.run(validUuidV5);
 		expect(result.success).toBe(true);
 	});
+
+	it('rejects unsupported versions and non-RFC variant bits', async () => {
+		const validator = new UuidValSan();
+		for (const input of [
+			'550e8400-e29b-f1d4-a716-446655440000',
+			'550e8400-e29b-21d4-a716-446655440000',
+			'550e8400-e29b-41d4-0716-446655440000',
+			'550e8400-e29b-41d4-c716-446655440000',
+		]) {
+			const result = await validator.run(input);
+			expect(result.success).withContext(input).toBe(false);
+			expect(result.errors[0].code).toBe('uuid');
+		}
+	});
 });
