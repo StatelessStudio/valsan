@@ -17,8 +17,55 @@ All options are optional and have sensible defaults. See validator docs for deta
 
 ## Optional Values
 
-Set `isOptional: true` to accept `null` and `undefined` without running validation
-or sanitization. Empty values (null & undefined) will pass through.
+### isOptional
+
+Set `isOptional: true` to allow both `null` and `undefined` to pass through
+without validation or sanitization:
+
+```typescript
+const optional = new MinLengthValidator({
+    minLength: 5,
+    isOptional: true
+});
+
+await optional.run(null);      // passes
+await optional.run(undefined); // passes
+```
+
+### isNullable
+
+Set `isNullable: true` to allow `null` to pass through without validation or
+sanitization. It does not allow `undefined` unless `isUndefinable` or
+`isOptional` is also enabled:
+
+```typescript
+const nullable = new MinLengthValidator({
+    minLength: 5,
+    isNullable: true
+});
+
+await nullable.run(null);      // passes
+await nullable.run(undefined); // fails
+```
+
+### isUndefinable
+
+Set `isUndefinable: true` to allow `undefined` to pass through without
+validation or sanitization. It does not allow `null` unless `isNullable` or
+`isOptional` is also enabled:
+
+```typescript
+const undefinable = new MinLengthValidator({
+    minLength: 5,
+    isUndefinable: true
+});
+
+await undefinable.run(undefined); // passes
+await undefinable.run(null);      // fails
+```
+
+When combined with `isOptional`, an explicit `isNullable` or `isUndefinable`
+value overrides `isOptional` for that value.
 
 ## Copying
 
