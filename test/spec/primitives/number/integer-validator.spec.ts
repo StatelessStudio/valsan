@@ -9,6 +9,14 @@ describe('IntegerValidator', () => {
 		expect(result.data).toBe(42);
 	});
 
+	it('converts numeric strings to numbers', async () => {
+		const validator = new IntegerValidator();
+		const result = await validator.run('42');
+		expect(result.success).toBe(true);
+		expect(result.data).toBe(42);
+		expect(typeof result.data).toBe('number');
+	});
+
 	it('should accept zero', async () => {
 		const validator = new IntegerValidator();
 		const result = await validator.run(0);

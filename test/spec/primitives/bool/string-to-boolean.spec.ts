@@ -83,6 +83,21 @@ describe('StringToBooleanValSan', () => {
 		expect(result.errors[0].code).toBe('boolean');
 	});
 
+	it('rejects unsupported input without throwing', async () => {
+		const validator = new StringToBooleanValSan();
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const numberResult = await validator.run(1 as any);
+		const objectResult = await validator.run(
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			{} as any
+		);
+
+		expect(numberResult.success).toBe(false);
+		expect(numberResult.errors[0].code).toBe('string');
+		expect(objectResult.success).toBe(false);
+		expect(objectResult.errors[0].code).toBe('string');
+	});
+
 	it('should include allowed values in error context', async () => {
 		const validator = new StringToBooleanValSan();
 		const result = await validator.run('invalid');

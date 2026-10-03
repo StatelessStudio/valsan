@@ -53,6 +53,25 @@ describe('Iso8601TimestampValSan', () => {
 		expect(result.errors[0].code).toBe('iso8601');
 	});
 
+	it('rejects impossible calendar dates and times', async () => {
+		for (const timestamp of [
+			'2025-02-30T12:34:56Z',
+			'2025-13-01T12:34:56Z',
+			'2025-11-09T99:34:56Z',
+		]) {
+			const result = await valSan.run(timestamp);
+			expect(result.success).withContext(timestamp).toBe(false);
+		}
+	});
+
+	it('trims valid ISO timestamps before validating', async () => {
+		const result = await valSan.run(' 2025-11-09T12:34:56Z ');
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.toISOString()).toBe('2025-11-09T12:34:56.000Z');
+		}
+	});
+
 	it('should reject invalid Date objects', async () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const result = await valSan.run(2 as any);

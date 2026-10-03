@@ -1,5 +1,6 @@
 import { ValSan, ValidationResult, ValSanOptions } from '../../';
 import { ValSanTypes } from '../../types/types';
+import { isString } from '../string/is-string';
 import { stringRule } from '../string/string-rules';
 
 export interface StringToBooleanValSanOptions extends ValSanOptions {
@@ -90,10 +91,14 @@ export class StringToBooleanValSan extends ValSan<string, boolean> {
 	}
 
 	override async normalize(input: string): Promise<string> {
-		return input?.toLowerCase();
+		return typeof input === 'string' ? input.toLowerCase() : input;
 	}
 
 	async validate(input: string): Promise<ValidationResult> {
+		if (!isString(input)) {
+			return this.fail([this.rules().string]);
+		}
+
 		if (
 			!this.trueValues.includes(input) &&
 			!this.falseValues.includes(input)

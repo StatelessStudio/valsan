@@ -1,6 +1,7 @@
 import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
 import { numberRule } from './number-rules';
+import { normalizeNumber } from './normalize-number';
 
 /**
  * Validates that a number is an integer (no decimal places).
@@ -22,7 +23,11 @@ import { numberRule } from './number-rules';
  * // result.success === true, result.data === 42
  * ```
  */
-export class IntegerValidator extends ValSan<number | string, number> {
+export class IntegerValidator extends ValSan<
+	number | string | bigint,
+	number,
+	number
+> {
 	override type: ValSanTypes = 'integer';
 	override example = '42';
 
@@ -42,7 +47,13 @@ export class IntegerValidator extends ValSan<number | string, number> {
 		};
 	}
 
-	async validate(input: number | string): Promise<ValidationResult> {
+	protected override async normalize(
+		input: number | string | bigint
+	): Promise<number> {
+		return normalizeNumber(input);
+	}
+
+	async validate(input: number): Promise<ValidationResult> {
 		if (typeof input !== 'number' || isNaN(input)) {
 			return this.fail([this.rules().number]);
 		}

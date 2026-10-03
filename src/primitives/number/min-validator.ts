@@ -2,6 +2,7 @@ import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
 import { isNumeric } from './is-numeric';
 import { numberRule } from './number-rules';
+import { normalizeNumber } from './normalize-number';
 
 export interface MinValidatorOptions extends ValSanOptions {
 	/**
@@ -30,7 +31,11 @@ export interface MinValidatorOptions extends ValSanOptions {
  * // result.success === true, result.data === 10
  * ```
  */
-export class MinValidator extends ValSan<number, number> {
+export class MinValidator extends ValSan<
+	number | string | bigint,
+	number,
+	number
+> {
 	override type: ValSanTypes = 'number';
 
 	private readonly min: number;
@@ -54,6 +59,12 @@ export class MinValidator extends ValSan<number, number> {
 	constructor(options: MinValidatorOptions) {
 		super(options);
 		this.min = options.min;
+	}
+
+	protected override async normalize(
+		input: number | string | bigint
+	): Promise<number> {
+		return normalizeNumber(input);
 	}
 
 	async validate(input: number): Promise<ValidationResult> {

@@ -19,6 +19,12 @@ export class Iso8601TimestampValSan extends ValSan<string | Date, Date> {
 		// eslint-disable-next-line max-len
 		/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})$/;
 
+	protected override async normalize(
+		input: string | Date
+	): Promise<string | Date> {
+		return typeof input === 'string' ? input.trim() : input;
+	}
+
 	override rules() {
 		return {
 			stringOrDate: {
@@ -55,11 +61,19 @@ export class Iso8601TimestampValSan extends ValSan<string | Date, Date> {
 			return this.pass();
 		}
 
-		if (
-			typeof input === 'string' &&
-			Iso8601TimestampValSan.iso8601Regex.test(input)
-		) {
-			return this.pass();
+		if (typeof input === 'string') {
+			if (!Iso8601TimestampValSan.iso8601Regex.test(input)) {
+				return this.fail([this.rules().iso8601]);
+			}
+
+			const date = new Date(input);
+			const calendarDate = new Date(`${input.slice(0, 10)}T00:00:00Z`);
+			if (
+				!Number.isNaN(date.getTime()) &&
+				calendarDate.toISOString().slice(0, 10) === input.slice(0, 10)
+			) {
+				return this.pass();
+			}
 		}
 
 		return this.fail([this.rules().iso8601]);

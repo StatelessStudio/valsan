@@ -16,6 +16,41 @@ describe('MinValidator', () => {
 		expect(result.data).toBe(10);
 	});
 
+	it('normalizes supported numeric inputs to numbers', async () => {
+		const validator = new MinValidator({ min: 0 });
+		const stringResult = await validator.run('42');
+		const bigintResult = await validator.run(42n);
+
+		expect(stringResult.success).toBe(true);
+		expect(stringResult.data).toBe(42);
+		expect(typeof stringResult.data).toBe('number');
+		expect(bigintResult.success).toBe(true);
+		expect(bigintResult.data).toBe(42);
+	});
+
+	it('rejects inexact bigint inputs', async () => {
+		const validator = new MinValidator({ min: 0 });
+		const result = await validator.run(
+			9007199254740993n
+		);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('number');
+	});
+
+	it('rejects blank numeric strings', async () => {
+		const validator = new MinValidator({ min: 0 });
+		const result = await validator.run('  ');
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('number');
+	});
+
+	it('rejects bigint inputs that overflow number conversion', async () => {
+		const validator = new MinValidator({ min: 0 });
+		const result = await validator.run(10n ** 400n);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('number');
+	});
+
 	it('should reject numbers below minimum', async () => {
 		const validator = new MinValidator({ min: 0 });
 		const result = await validator.run(-5);

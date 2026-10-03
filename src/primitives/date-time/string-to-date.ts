@@ -44,11 +44,13 @@ export class StringToDateValSan extends ValSan<string, Date> {
 	}
 
 	override async normalize(input: string): Promise<Date> {
-		return new Date(input);
+		return typeof input === 'string'
+			? new Date(input)
+			: new Date(Number.NaN);
 	}
 
 	async validate(input: Date): Promise<ValidationResult> {
-		if (input.toString() === 'Invalid Date') {
+		if (Number.isNaN(input.getTime())) {
 			return this.fail([this.rules().date]);
 		}
 		return this.pass();
