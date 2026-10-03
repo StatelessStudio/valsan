@@ -30,8 +30,21 @@ export type SanitizeResult<T> =
 
 export interface ValSanOptions {
 	/**
-	 * If true, undefined and null values will pass validation without
-	 * running validation or sanitization steps.
+	 * If true, null values will pass validation without running validation or
+	 * sanitization steps.
+	 * @default false
+	 */
+	isNullable?: boolean;
+	/**
+	 * If true, undefined values will pass validation without running validation
+	 * or sanitization steps.
+	 * @default false
+	 */
+	isUndefinable?: boolean;
+	/**
+	 * If true, both null and undefined values will pass validation without
+	 * running validation or sanitization steps. Explicit isNullable and
+	 * isUndefinable values take precedence for their respective inputs.
 	 * @default false
 	 */
 	isOptional?: boolean;
