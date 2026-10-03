@@ -1,11 +1,14 @@
 import { ValSanTypes } from '../../types/types';
 import { ValSan, ValidationResult } from '../../valsan';
+import { isValidCalendarDate } from './is-valid-calendar-date';
+import { parseIsoTimestamp } from './parse-iso-timestamp';
 
 /**
- * Converts a string to a Date object.
+ * Converts a date string, timestamp, or Date to a Date object.
  *
- * Validates that the string represents a valid date before conversion.
- * Accepts ISO 8601 format and any format parseable by the Date constructor.
+ * Accepts ISO calendar dates or timestamps with minutes or seconds and a
+ * timezone.
+ * Numeric timestamps are milliseconds since 1970-01-01T00:00:00Z.
  *
  * @example
  * ```typescript
@@ -22,10 +25,17 @@ import { ValSan, ValidationResult } from '../../valsan';
  * // result.errors[0].code === 'date'
  * ```
  */
-export class StringToDateValSan extends ValSan<string, Date> {
+export class StringToDateValSan extends ValSan<
+	string | number | Date,
+	Date,
+	Date
+> {
 	override type: ValSanTypes = 'string';
 	override format = 'date';
 	override example = '2024-01-15';
+
+	private static readonly isoDatePattern =
+		/^\d{4}-\d{2}-\d{2}$/;
 
 	override rules() {
 		return {
@@ -43,10 +53,31 @@ export class StringToDateValSan extends ValSan<string, Date> {
 		};
 	}
 
-	override async normalize(input: string): Promise<Date> {
-		return typeof input === 'string'
-			? new Date(input)
-			: new Date(Number.NaN);
+	override async normalize(
+		input: string | number | Date
+	): Promise<Date> {
+		if (input instanceof Date) {
+			return new Date(input.getTime());
+		}
+
+		if (typeof input === 'string') {
+			const trimmed = input.trim();
+			if (StringToDateValSan.isoDatePattern.test(trimmed)) {
+				if (isValidCalendarDate(trimmed)) {
+					return new Date(`${trimmed}T00:00:00Z`);
+				}
+
+				return new Date(Number.NaN);
+			}
+
+			return parseIsoTimestamp(trimmed) ?? new Date(Number.NaN);
+		}
+
+		if (typeof input === 'number') {
+			return new Date(input);
+		}
+
+		return new Date(Number.NaN);
 	}
 
 	async validate(input: Date): Promise<ValidationResult> {

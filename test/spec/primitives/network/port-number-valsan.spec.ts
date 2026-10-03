@@ -41,10 +41,21 @@ describe('PortNumberValSan', () => {
 		expect(result.data).toBe(1234);
 	});
 
-	it('accepts empty string as 0', async () => {
-		const result = await valSan.run('');
-		expect(result.success).toBe(true);
-		expect(result.data).toBe(0);
+	it('rejects blank strings and rounded fractions', async () => {
+		for (const input of ['', '  ', '1.00000000000000001']) {
+			const result = await valSan.run(input);
+			expect(result.success).withContext(input).toBe(false);
+			expect(result.errors[0].code).toBe('number');
+		}
+	});
+
+	it('rejects unsupported runtime types without coercion', async () => {
+		for (const input of [true, false, [], {}, Symbol('port'), 443n]) {
+			// @ts-expect-error: testing unsupported runtime input
+			const result = await valSan.run(input);
+			expect(result.success).toBe(false);
+			expect(result.errors[0].code).toBe('number');
+		}
 	});
 
 	it('rejects non-numeric string', async () => {

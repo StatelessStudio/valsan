@@ -6,7 +6,8 @@ import { stringRule } from '../string/string-rules';
 // UUID v1, v3, v4, and v5 regex pattern
 // Matches: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (case-insensitive)
 const uuidRegex =
-	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+	// eslint-disable-next-line max-len
+	/^[0-9a-f]{8}-[0-9a-f]{4}-[1345][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export class UuidValSan extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';

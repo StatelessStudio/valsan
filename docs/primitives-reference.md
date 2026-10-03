@@ -188,7 +188,9 @@ const fail3 = await validator.run('#FF000');
 
 ### StringToDateValSan
 
-Accepts date strings, epoch milliseconds, and `Date` instances. Successful output is a valid `Date` object
+Accepts ISO date strings, epoch milliseconds, and `Date` instances. Successful output is a valid `Date` object.
+
+String input accepts an extended ISO calendar date (`YYYY-MM-DD`) or the timezone-qualified ISO 8601 date-time formats described below for `Iso8601TimestampValSan`. Impossible calendar dates fail rather than rolling over. Numeric input is interpreted as epoch milliseconds. Unsupported types fail with code `date`.
 
 ```typescript
 import { StringToDateValSan } from 'valsan'; // from 'valsan/date-time'
@@ -202,8 +204,9 @@ const result = await validator.run('2024-01-15');
 
 ### Iso8601TimestampValSan
 
-Accepts a valid `Date` or an ISO 8601 timestamp string and returns a valid
-`Date`. Timestamp strings are trimmed and checked for valid calendar dates.
+Accepts a valid `Date` or an ISO 8601 timestamp string and returns a valid `Date`. Timestamp strings are timezone-qualified extended ISO 8601 date-times: reduced precision through minutes (`YYYY-MM-DDTHH:mmZ`) or
+seconds with an optional 1-3 digit fraction
+(`YYYY-MM-DDTHH:mm:ss[.fraction]Z`). `Z` may be replaced by a numeric `+/-HH:mm` offset. Time and offset fields are range-checked. Timezone qualification is required for unambiguous conversion. `StringToDateValSan` uses these same date-time rules, and additionally accepts date-only strings and numeric epoch-millisecond timestamps.
 
 ```typescript
 import { Iso8601TimestampValSan } from 'valsan'; // from 'valsan/date-time'
@@ -640,6 +643,19 @@ const result = await validator.run('123-4567');
 
 ## Number Primitives
 
+Numeric conversion returns finite numbers only. Blank strings, infinity, overflow, underflow to zero, and strings that silently round to a different decimal value fail with code `number`. Scientific notation and hexadecimal, octal, and binary strings remain supported when conversion preserves the value.
+
+Decimal strings are checked against the number's shortest decimal representation; ordinary values such as `"0.1"` remain supported despite JavaScript's binary floating-point representation. Integer string conversions
+must preserve the exact integer value, even beyond the safe-integer range.
+Precision already lost before a number input reaches ValSan cannot be recovered.
+
+`MinValidator`, `MaxValidator`, `RangeValidator`, `IntegerValidator`, and
+`DecimalValidator` normalize numeric strings and exactly representable to numbers before applying constraints. `isNumeric` uses the same finite,
+non-blank, non-rounding conversion policy.
+
+Compatibility change: infinity, blank numeric inputs, and numeric strings
+that lose precision are no longer accepted.
+
 ### StringToNumberValSan
 
 Converts a string to a number, validating that it's a valid numeric string.
@@ -765,7 +781,8 @@ const result = await validator.run('192.168.1.1');
 
 ### MacAddressValSan
 
-Validates that a string is a valid MAC address.
+Validates colon, hyphen, or dotted MAC address formats. Separators must be
+consistent; mixed colon/hyphen addresses fail validation.
 
 ```typescript
 import { MacAddressValSan } from 'valsan'; // from 'valsan/network'
@@ -779,6 +796,9 @@ const result = await validator.run('00:1A:2B:3C:4D:5E');
 ### PortNumberValSan
 
 Validates that a value is a valid TCP/UDP port number (0-65535).
+
+Empty and whitespace-only strings fail validation; they no longer convert to
+port zero. Numeric conversion follows the finite, non-rounding policy above.
 
 ```typescript
 import { PortNumberValSan } from 'valsan'; // from 'valsan/network'
@@ -806,6 +826,8 @@ const result = await validator.run('https://example.com');
 
 Validates that a string is a valid fully qualified domain name (FQDN).
 
+Every label, including the final label, is limited to 63 characters.
+
 ```typescript
 import { FqdnValSan } from 'valsan'; // from 'valsan/network'
 
@@ -820,6 +842,11 @@ const result = await validator.run('example.com');
 ### EmailValidator
 
 Validates that a string is a valid email address, with options for allowed domains and plus addressing.
+
+Domain labels must be non-empty and cannot begin or end with hyphens.
+Local parts cannot begin/end with dots or contain consecutive dots. The local
+part is limited to 64 characters and the full address to 254 characters.
+This validator supports its documented ASCII subset, not all RFC email syntax.
 
 ```typescript
 import { EmailValidator } from 'valsan'; // from 'valsan/person'

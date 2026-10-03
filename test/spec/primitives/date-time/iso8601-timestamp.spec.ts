@@ -18,6 +18,33 @@ describe('Iso8601TimestampValSan', () => {
 		expect(result.data?.toISOString()).toBe(iso);
 	});
 
+	it('accepts 1-3 fractional second digits', async () => {
+		for (const [input, expected] of [
+			['2025-11-09T12:34:56.7Z', '2025-11-09T12:34:56.700Z'],
+			['2025-11-09T12:34:56.78Z', '2025-11-09T12:34:56.780Z'],
+		]) {
+			const result = await valSan.run(input);
+			expect(result.success).withContext(input).toBe(true);
+			if (result.success) {
+				expect(result.data.toISOString()).toBe(expected);
+			}
+		}
+	});
+
+	it('accepts timestamps without seconds', async () => {
+		for (const [input, expected] of [
+			['2025-11-09T12:34Z', '2025-11-09T12:34:00.000Z'],
+			['2025-11-09T12:34+05:30', '2025-11-09T07:04:00.000Z'],
+		]) {
+			const result = await valSan.run(input);
+			expect(result.success).withContext(input).toBe(true);
+
+			if (result.success) {
+				expect(result.data.toISOString()).toBe(expected);
+			}
+		}
+	});
+
 	it('should fail for an invalid ISO 8601 timestamp', async () => {
 		const result = await valSan.run('not-a-timestamp');
 		expect(result.success).toBe(false);
@@ -58,6 +85,10 @@ describe('Iso8601TimestampValSan', () => {
 			'2025-02-30T12:34:56Z',
 			'2025-13-01T12:34:56Z',
 			'2025-11-09T99:34:56Z',
+			'2025-11-09T12:99Z',
+			'2025-11-09T24:00Z',
+			'2025-11-09T12:34+24:00',
+			'2025-11-09T12:34:56.1234Z',
 		]) {
 			const result = await valSan.run(timestamp);
 			expect(result.success).withContext(timestamp).toBe(false);

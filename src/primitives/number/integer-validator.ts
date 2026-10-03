@@ -6,7 +6,7 @@ import { normalizeNumber } from './normalize-number';
 /**
  * Validates that a number is an integer (no decimal places).
  *
- * Does not modify the input number.
+ * Preserves number inputs and converts numeric strings and exact bigints.
  *
  * @example
  * ```typescript

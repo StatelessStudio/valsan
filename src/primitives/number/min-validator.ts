@@ -14,7 +14,7 @@ export interface MinValidatorOptions extends ValSanOptions {
 /**
  * Validates that a number meets a minimum value requirement.
  *
- * Does not modify the input number.
+ * Preserves number inputs and converts numeric strings and exact bigints.
  *
  * @example
  * ```typescript

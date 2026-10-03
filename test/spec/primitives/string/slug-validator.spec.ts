@@ -180,9 +180,6 @@ describe('SlugValSan', () => {
 
 		it('should handle edge cases', async () => {
 			const edgeCases = [
-				{ input: '___', expected: '' },
-				{ input: '---', expected: '' },
-				{ input: '_-_-_', expected: '' },
 				{ input: 'a_b_c', expected: 'a-b-c' },
 				{ input: 'a b c', expected: 'a-b-c' },
 			];
@@ -193,6 +190,14 @@ describe('SlugValSan', () => {
 				if (result.success) {
 					expect(result.data).toBe(expected);
 				}
+			}
+		});
+
+		it('rejects inputs that convert to an empty slug', async () => {
+			for (const input of ['', '___', '---', '_-_-_', '!!!', '  ']) {
+				const result = await autoValidator.run(input);
+				expect(result.success).withContext(input).toBe(false);
+				expect(result.errors[0].code).toBe('slug');
 			}
 		});
 

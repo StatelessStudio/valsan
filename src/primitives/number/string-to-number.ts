@@ -1,6 +1,7 @@
 import { ValSan, ValidationResult } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
 import { numberRule } from './number-rules';
+import { normalizeNumber } from './normalize-number';
 
 /**
  * Converts a string to a number.
@@ -36,11 +37,7 @@ export class StringToNumberValSan extends ValSan<string, number> {
 			return Number.NaN;
 		}
 
-		if (input.trim() === '') {
-			return Number.NaN;
-		}
-
-		return Number(input);
+		return normalizeNumber(input);
 	}
 
 	async validate(input: number): Promise<ValidationResult> {

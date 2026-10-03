@@ -42,6 +42,14 @@ describe('FqdnValSan', () => {
 		expect(result.success).toBe(true);
 	});
 
+	it('enforces the label length limit on the final label', async () => {
+		const valid = await valSan.run(`host.${'a'.repeat(63)}`);
+		const invalid = await valSan.run(`host.${'a'.repeat(64)}`);
+		expect(valid.success).toBe(true);
+		expect(invalid.success).toBe(false);
+		expect(invalid.errors[0].code).toBe('fqdn');
+	});
+
 	it('rejects FQDN with total length > 255', async () => {
 		const label = 'a'.repeat(63);
 		const fqdn = Array(5).fill(label).join('.') + '.com';

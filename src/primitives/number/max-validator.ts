@@ -14,7 +14,7 @@ export interface MaxValidatorOptions extends ValSanOptions {
 /**
  * Validates that a number does not exceed a maximum value.
  *
- * Does not modify the input number.
+ * Preserves number inputs and converts numeric strings and exact bigints.
  *
  * @example
  * ```typescript

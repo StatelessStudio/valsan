@@ -1,8 +1,5 @@
+import { normalizeNumber } from './normalize-number';
+
 export function isNumeric(value: unknown): boolean {
-	return (
-		(typeof value === 'number' ||
-			typeof value === 'bigint' ||
-			(typeof value === 'string' && value.length > 0)) &&
-		!Number.isNaN(Number(value))
-	);
+	return !Number.isNaN(normalizeNumber(value));
 }

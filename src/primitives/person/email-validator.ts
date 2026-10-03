@@ -2,6 +2,11 @@ import { ValSan, ValidationResult, ValSanOptions } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
 import { isString } from '../string/is-string';
 import { stringRule } from '../string/string-rules';
+import { isFqdn } from '../network/is-fqdn';
+
+// This validator supports an ASCII subset, so character counts equal octets.
+const MAX_EMAIL_LENGTH = 254;
+const MAX_LOCAL_PART_LENGTH = 64;
 
 export interface EmailValidatorOptions extends ValSanOptions {
 	/**
@@ -14,7 +19,7 @@ export interface EmailValidatorOptions extends ValSanOptions {
 
 	/**
 	 * If set, only allow emails from these domains
-	 *  (case-insensitive, no leading @).
+	 *  (case-insensitive, no leading @). Values are normalized to lowercase.
 	 */
 	allowedDomains?: string[];
 }
@@ -80,6 +85,17 @@ export class EmailValidator extends ValSan<string, string> {
 			return this.fail([this.rules().string]);
 		}
 
+		const addressParts = input.split('@');
+		if (
+			addressParts.length !== 2 ||
+			addressParts[0] === '' ||
+			addressParts[1] === ''
+		) {
+			return this.fail([this.rules().invalid]);
+		}
+
+		const [localPartValue, domainValue] = addressParts;
+
 		// Basic email regex, optionally restrict plus addressing
 		const plusPart = this.allowPlusAddress ? '+?' : '';
 		const localPart = `[A-Za-z0-9._%${plusPart}-]+`;
@@ -90,10 +106,21 @@ export class EmailValidator extends ValSan<string, string> {
 			return this.fail([this.rules().invalid]);
 		}
 
+		if (
+			input.length > MAX_EMAIL_LENGTH ||
+			localPartValue.length > MAX_LOCAL_PART_LENGTH ||
+			localPartValue.startsWith('.') ||
+			localPartValue.endsWith('.') ||
+			localPartValue.includes('..') ||
+			!isFqdn(domainValue)
+		) {
+			return this.fail([this.rules().invalid]);
+		}
+
 		// Check allowed domains if specified
 		if (this.allowedDomains) {
-			const domain = input.split('@')[1]?.toLowerCase();
-			if (!domain || !this.allowedDomains.includes(domain)) {
+			const normalizedDomain = domainValue.toLowerCase();
+			if (!this.allowedDomains.includes(normalizedDomain)) {
 				return this.fail([this.rules().domain]);
 			}
 		}

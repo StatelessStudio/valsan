@@ -6,6 +6,16 @@ import { EmailValidator } from '../../../../src/primitives/person';
 import { ObjectValSan } from '../../../../src/primitives/object';
 
 describe('ArrayValSan', () => {
+	class TestableArrayValSan extends ArrayValSan {
+		public override async validate() {
+			return super.validate();
+		}
+
+		public override async sanitize() {
+			return super.sanitize();
+		}
+	}
+
 	it('should validate and sanitize array of primitives', async () => {
 		const arrayValSan = new ArrayValSan({
 			schema: new IntegerValidator(),
@@ -143,12 +153,16 @@ describe('ArrayValSan', () => {
 
 	it('should support array of objects', async () => {
 		const objectArrayValSan = new ArrayValSan({
-			schema: new EmailValidator(),
+			schema: new ObjectValSan({
+				schema: {
+					email: new EmailValidator(),
+				},
+			}),
 		});
 
 		const result = await objectArrayValSan.run([
-			'user1@example.com',
-			'user2@example.com',
+			{ email: 'user1@example.com' },
+			{ email: 'user2@example.com' },
 		]);
 
 		expect(result.success).toBe(true);
@@ -215,21 +229,25 @@ describe('ArrayValSan', () => {
 		expect(arrayValSan.type).toBe('array');
 	});
 
-	it('should have 100% coverage of validate and sanitize', async () => {
-		const arrayValSan = new ArrayValSan({
+	it('should return a passing validation result', async () => {
+		const arrayValSan = new TestableArrayValSan({
 			schema: new IntegerValidator(),
 		});
 
-		// Directly test the unused validate method
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const validateResult = await (arrayValSan as any).validate([]);
-		expect(validateResult.isValid).toBe(true);
-		expect(validateResult.errors.length).toBe(0);
+		const result = await arrayValSan.validate();
 
-		// Directly test the unused sanitize method
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const sanitizeResult = await (arrayValSan as any).sanitize([]);
-		expect(sanitizeResult).toEqual([]);
+		expect(result.isValid).toBe(true);
+		expect(result.errors).toEqual([]);
+	});
+
+	it('should return an empty sanitized array', async () => {
+		const arrayValSan = new TestableArrayValSan({
+			schema: new IntegerValidator(),
+		});
+
+		const result = await arrayValSan.sanitize();
+
+		expect(result).toEqual([]);
 	});
 
 	it('can get the schema', async () => {
