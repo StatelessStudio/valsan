@@ -143,6 +143,7 @@ export abstract class ValSan<
 			errors: [],
 		};
 	}
+
 	protected validationError(
 		error: ValidationError,
 		segment: string | number
