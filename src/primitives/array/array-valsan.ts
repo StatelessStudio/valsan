@@ -6,7 +6,6 @@ import {
 	RunsLikeAValSan,
 } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
-import { requiredRule } from '../../rules';
 
 export type ArraySchema = RunsLikeAValSan<unknown, unknown>;
 
@@ -60,18 +59,7 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 	): Promise<SanitizeResult<unknown[]>> {
 		const options = this.options as ArrayValSanOptions;
 		if (input === undefined || input === null) {
-			if (options.isOptional) {
-				return this.checkRequired(input);
-			}
-			return {
-				success: false,
-				errors: [
-					{
-						code: requiredRule.code,
-						message: requiredRule.user.errorMessage,
-					},
-				],
-			};
+			return this.checkRequired(input);
 		}
 
 		if (!Array.isArray(input)) {
