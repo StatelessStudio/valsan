@@ -1,4 +1,4 @@
-import { ValSan, ValidationResult } from '../../valsan';
+import { ValSan, ValSanOptions, ValidationResult } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
 import { numberRule } from './number-rules';
 import { normalizeNumber } from './normalize-number';
@@ -23,7 +23,13 @@ import { normalizeNumber } from './normalize-number';
  * // result.errors[0].code === 'number'
  * ```
  */
-export class StringToNumberValSan extends ValSan<string, number> {
+export class StringToNumberValSan<
+	const TOptions extends ValSanOptions = Record<string, never>,
+> extends ValSan<string, number, string | number, TOptions> {
+	constructor(options: TOptions = {} as TOptions) {
+		super(options);
+	}
+
 	override inputType = 'string' as const;
 
 	override type: ValSanTypes = 'number';

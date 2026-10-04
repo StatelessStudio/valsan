@@ -45,8 +45,25 @@ Every `ValSan` instance, including custom classes, implements
 [Standard Schema v1](https://standardschema.dev/) through its `~standard`
 property. This allows a custom ValSan to be used directly with libraries that accept Standard Schema.
 
-`ArrayValSan` and `ObjectValSan` can also use Standard Schema validators as
-nested schemas.
+`ArrayValSan` and `ObjectValSan` can also use Standard Schema validators as nested schemas.
+
+### Typed inputs, outputs, and options
+
+Object and array validators infer child input/output types, including foreign Standard Schema transformations. Object keys whose value type includes `undefined` are optional; `null` alone does not make a key optional.
+
+The fourth `ValSan` generic and third `ComposedValSan` generic describe constructor options. Supply a precise option type to make Standard Schema nullability reflect `isNullable`, `isUndefinable`, and `isOptional`, including explicit `false` overrides. For example:
+
+```typescript
+class RequiredText extends ValSan<
+  string, string, string, Record<string, never>
+> {
+  // Implement validate() and sanitize() as usual.
+}
+```
+
+Its Standard Schema output is `string`, not `string | null | undefined`. Existing classes using the default broad options type retain conservative Standard Schema output types. When extending an option-aware built-in with a custom constructor, forward its actual option type through the generic rather than using the built-in's empty-options default. Never mutate schema configuration after construction.
+
+`SchemaInput`, `SchemaOutput`, and `SchemaValue` are exported type helpers. The first two support native validators and Standard Schemas; the last applies the option-dependent null/undefined union to a value type. Supported JSON Schema primitives and containers retain literal constructor options automatically.
 
 ## JSON Schema extension API
 

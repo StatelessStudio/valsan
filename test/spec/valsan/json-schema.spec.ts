@@ -34,6 +34,7 @@ import {
 	Rule,
 	RuleConstraint,
 	RunsLikeAValSan,
+	ObjectSchema,
 } from '../../../src';
 import type { ValSanTypes } from '../../../src/types/types';
 import {
@@ -173,7 +174,8 @@ describe('Standard JSON Schema export', () => {
 			const converters = standard['~standard'].jsonSchema;
 			const input = converters.input({ target });
 			const output = converters.output({ target });
-			const ajv = target === 'draft-07' ? new Ajv() : new Ajv2020();
+			const ajv =
+				target === 'draft-07' ? new Ajv() : new Ajv2020();
 			const validateInput = ajv.compile(input);
 			const validateOutput = ajv.compile(output);
 			const value = {
@@ -330,21 +332,14 @@ describe('Standard JSON Schema export', () => {
 			}));
 	});
 
-	it('exports identity compositions without dropping constraints', () => {
+	it('exports length constraints as a flat string schema', () => {
 		const schema = new LengthValidator({ minLength: 2, maxLength: 4 });
 		expect(schema.jsonSchemaPreservesInput).toBe(true);
 		const json = schema['~standard'].jsonSchema.input({
 			target: 'draft-07',
 		});
 		expect(json).toEqual(documented(schema, {
-			allOf: [
-				documented(new MinLengthValidator(), {
-					type: 'string', minLength: 2,
-				}),
-				documented(new MaxLengthValidator({ maxLength: 4 }), {
-					type: 'string', maxLength: 4,
-				}),
-			],
+			type: 'string', minLength: 2, maxLength: 4,
 		}));
 		const validate = new Ajv().compile(json);
 		expect(validate('abc')).toBe(true);
@@ -359,6 +354,88 @@ describe('Standard JSON Schema export', () => {
 		expect(new EnumValidator({ allowedValues: ['a'] })
 			.jsonSchemaPreservesInput).toBe(true);
 	});
+
+	it('exports workflow length fields as strings without object defaults',
+		() => {
+			const field = new LengthValidator({
+				minLength: 0, maxLength: 255, description: 'Example field',
+			});
+			const schema = new ObjectValSan({
+				schema: { exampleField: field },
+			});
+			for (const target of ['draft-07', 'draft-2020-12']) {
+				for (const direction of ['input', 'output'] as const) {
+					const json = schema.toJsonSchema(direction, { target });
+					const properties =
+						json['properties'] as Record<string, JsonSchema>;
+					expect(properties['exampleField']).toEqual({
+						type: 'string', minLength: 0, maxLength: 255,
+						title: 'String length', description: 'Example field',
+					});
+					expect(properties['exampleField']['allOf'])
+						.toBeUndefined();
+					expect(properties['exampleField']['default'])
+						.toBeUndefined();
+					const ajv = target === 'draft-07' ? new Ajv() : new Ajv2020();
+					const validate = ajv.compile(json);
+					expect(validate({ exampleField: '' })).toBe(true);
+					expect(validate({ exampleField: 'a'.repeat(255) }))
+						.toBe(true);
+					expect(validate({ exampleField: 'a'.repeat(256) }))
+						.toBe(false);
+					expect(validate({ exampleField: {} })).toBe(false);
+				}
+			}
+			expect(new LengthValidator().toJsonSchema(
+				'input', { target: 'draft-07' }
+			)).toEqual(documented(new LengthValidator(), {
+				type: 'string', minLength: 1,
+			}));
+		});
+
+	it('preserves explicit schemas in modified length compositions', () => {
+		const schema = new LengthValidator({ minLength: 2, maxLength: 4 });
+		schema.steps[0] = new MinLengthValidator({
+			minLength: 2,
+			jsonSchema: {
+				input: { type: 'string', const: 'abc' },
+				output: { type: 'string', const: 'abc' },
+			},
+		});
+		const json = schema.toJsonSchema('input', { target: 'draft-07' });
+		expect(json['allOf']).toBeDefined();
+		const validate = new Ajv().compile(json);
+		expect(validate('abc')).toBe(true);
+		expect(validate('abcd')).toBe(false);
+		const extended = new LengthValidator();
+		extended.steps.push(new MinLengthValidator({ minLength: 2 }));
+		expect(extended.toJsonSchema(
+			'input', { target: 'draft-07' }
+		)['allOf']).toBeDefined();
+		class CustomMin extends MinLengthValidator {
+			protected override jsonSchemaDefinition() {
+				return { type: 'string', pattern: '^a' };
+			}
+		}
+		const custom = new LengthValidator();
+		custom.steps[0] = new CustomMin();
+		expect(custom.toJsonSchema(
+			'input', { target: 'draft-07' }
+		)['allOf']).toBeDefined();
+	});
+
+	it('keeps transforming length subclasses subject to composition checks',
+		() => {
+			class Transforming extends LengthValidator {
+				constructor() {
+					super();
+					this.steps.push(new TrimSanitizer());
+				}
+			}
+			expect(() => new Transforming().toJsonSchema(
+				'input', { target: 'draft-07' }
+			)).toThrowError(TypeError, /Transforming compositions/);
+		});
 
 	it('exports single transforms but rejects unsafe pipelines', () => {
 		const one = new ComposedValSan([new StringToNumberValSan()]);
@@ -467,7 +544,7 @@ describe('Standard JSON Schema export', () => {
 		const schema = new Unsupported();
 		expect(() => schema.toJsonSchema('input', { target: 'draft-07' }))
 			.toThrowError(TypeError, /does not support JSON Schema export/);
-		const object = new ObjectValSan({ schema: {} });
+		const object = new ObjectValSan({ schema: {} as ObjectSchema });
 		object.schema['self'] = object;
 		expect(() => object.toJsonSchema('input', { target: 'draft-07' }))
 			.toThrowError(TypeError, /Cyclic schemas/);

@@ -18,7 +18,9 @@ export interface ObjectSanitizationResult {
  */
 export class ObjectSanitizer {
 	public readonly schema: ObjectSchema;
-	protected valsan: ObjectValSan;
+	protected valsan: ObjectValSan<{
+		schema: ObjectSchema; allowAdditionalProperties: boolean;
+	}>;
 
 	constructor(schema: ObjectSchema, allowAdditionalProperties = true) {
 		this.schema = schema;

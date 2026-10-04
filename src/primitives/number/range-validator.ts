@@ -36,10 +36,13 @@ export interface RangeValidatorOptions extends ValSanOptions {
  * // result.success === true, result.data === 50
  * ```
  */
-export class RangeValidator extends ValSan<
+export class RangeValidator<
+	const TOptions extends RangeValidatorOptions = RangeValidatorOptions,
+> extends ValSan<
 	number | string | bigint,
 	number,
-	number
+	number,
+	TOptions
 > {
 	override inputType = ['number', 'string'] as const;
 
@@ -74,7 +77,7 @@ export class RangeValidator extends ValSan<
 		};
 	}
 
-	constructor(options: RangeValidatorOptions) {
+	constructor(options: TOptions) {
 		super(options);
 		this.min = options.min;
 		this.max = options.max;

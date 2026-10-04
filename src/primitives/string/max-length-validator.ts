@@ -30,7 +30,10 @@ export interface MaxLengthValidatorOptions extends ValSanOptions {
  * // result.success === true, result.data === 'short'
  * ```
  */
-export class MaxLengthValidator extends ValSan<string, string> {
+export class MaxLengthValidator<
+	const TOptions extends MaxLengthValidatorOptions =
+		MaxLengthValidatorOptions,
+> extends ValSan<string, string, string, TOptions> {
 	public override get jsonSchemaPreservesInput(): boolean {
 		return true;
 	}
@@ -42,7 +45,7 @@ export class MaxLengthValidator extends ValSan<string, string> {
 
 	private readonly maxLength: number;
 
-	constructor(options: MaxLengthValidatorOptions) {
+	constructor(options: TOptions) {
 		super(options);
 		this.maxLength = options.maxLength;
 	}

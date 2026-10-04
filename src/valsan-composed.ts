@@ -5,7 +5,7 @@ import {
 	ValSanOptions,
 } from './valsan';
 import { BaseValSan } from './valsan-base';
-import { standardProps } from './schema';
+import { standardProps, SchemaValue } from './schema';
 import {
 	exportChildSchema,
 	JsonSchema,
@@ -47,14 +47,25 @@ export interface ComposedValSanOptions extends ValSanOptions {
  * const result = await validator.run('  USER@EXAMPLE.COM  ');
  * ```
  */
-export class ComposedValSan<TInput = unknown, TOutput = TInput>
+export class ComposedValSan<
+	TInput = unknown,
+	TOutput = TInput,
+	TOptions extends ComposedValSanOptions = ComposedValSanOptions,
+>
 	extends BaseValSan<TInput, TOutput>
 	implements RunsLikeAValSan<TInput, TOutput> {
+	public override readonly options: NoInfer<TOptions> &
+		Readonly<ComposedValSanOptions>;
+
 	protected override title = 'Composed value';
 	protected override description =
 		'A value that satisfies each configured Valsan step in sequence.';
 
-	public readonly '~standard' = standardProps<TInput, TOutput>(
+	public readonly '~standard' = standardProps<
+		ComposedValSanOptions extends NoInfer<TOptions> ? TInput :
+			SchemaValue<TInput, NoInfer<TOptions>>,
+		SchemaValue<TOutput, NoInfer<TOptions>>
+	>(
 		async (input) => this.run(input as TInput),
 		{
 			input: (options) => this.toJsonSchema('input', options),
@@ -100,9 +111,10 @@ export class ComposedValSan<TInput = unknown, TOutput = TInput>
 	constructor(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		public readonly steps: RunsLikeAValSan<any, any>[],
-		public override readonly options: ComposedValSanOptions = {}
+		options: TOptions = {} as TOptions
 	) {
 		super();
+		this.options = options;
 
 		if (steps.length === 0) {
 			throw new Error('ComposedValSan requires at least one step');

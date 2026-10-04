@@ -37,7 +37,9 @@ export interface PatternValidatorOptions extends ValSanOptions {
  * // result.success === true, result.data === '123-4567'
  * ```
  */
-export class PatternValidator extends ValSan<string, string> {
+export class PatternValidator<
+	const TOptions extends PatternValidatorOptions = PatternValidatorOptions,
+> extends ValSan<string, string, string, TOptions> {
 	public override get jsonSchemaPreservesInput(): boolean {
 		return true;
 	}
@@ -59,7 +61,7 @@ export class PatternValidator extends ValSan<string, string> {
 	private readonly pattern: RegExp;
 	private readonly errorMessage?: string;
 
-	constructor(options: PatternValidatorOptions) {
+	constructor(options: TOptions) {
 		super(options);
 		this.pattern = new RegExp(options.pattern);
 		this.errorMessage = options.errorMessage;

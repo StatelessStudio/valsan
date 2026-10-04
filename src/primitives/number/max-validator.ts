@@ -31,10 +31,13 @@ export interface MaxValidatorOptions extends ValSanOptions {
  * // result.success === true, result.data === 50
  * ```
  */
-export class MaxValidator extends ValSan<
+export class MaxValidator<
+	const TOptions extends MaxValidatorOptions = MaxValidatorOptions,
+> extends ValSan<
 	number | string | bigint,
 	number,
-	number
+	number,
+	TOptions
 > {
 	override inputType = ['number', 'string'] as const;
 
@@ -62,7 +65,7 @@ export class MaxValidator extends ValSan<
 		};
 	}
 
-	constructor(options: MaxValidatorOptions) {
+	constructor(options: TOptions) {
 		super(options);
 		this.max = options.max;
 	}

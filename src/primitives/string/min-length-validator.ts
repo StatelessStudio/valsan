@@ -31,7 +31,9 @@ export interface MinLengthValidatorOptions extends ValSanOptions {
  * // result.success === true, result.data === 'abc'
  * ```
  */
-export class MinLengthValidator extends ValSan<string, string> {
+export class MinLengthValidator<
+	const TOptions extends MinLengthValidatorOptions = Record<string, never>,
+> extends ValSan<string, string, string, TOptions> {
 	public override get jsonSchemaPreservesInput(): boolean {
 		return true;
 	}
@@ -42,7 +44,7 @@ export class MinLengthValidator extends ValSan<string, string> {
 		'A string at least as long as the configured minimum length.';
 	private readonly minLength: number;
 
-	constructor(options: MinLengthValidatorOptions = {}) {
+	constructor(options: TOptions = {} as TOptions) {
 		super(options);
 		this.minLength = options.minLength ?? 1;
 	}

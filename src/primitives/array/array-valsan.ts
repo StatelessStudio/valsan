@@ -6,7 +6,9 @@ import {
 } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
 import { runSchema } from '../../schema';
-import type { SchemaLike } from '../../schema';
+import type {
+	SchemaLike, SchemaInput, SchemaOutput, SchemaValue,
+} from '../../schema';
 import {
 	exportChildSchema,
 	JsonSchema,
@@ -38,7 +40,14 @@ export interface ArrayValSanOptions extends ValSanOptions {
  * ]);
  * ```
  */
-export class ArrayValSan extends ValSan<unknown[], unknown[]> {
+export class ArrayValSan<
+	const TOptions extends ArrayValSanOptions = ArrayValSanOptions,
+> extends ValSan<
+	SchemaValue<Array<SchemaInput<TOptions['schema']>>, TOptions>,
+	SchemaValue<Array<SchemaOutput<TOptions['schema']>>, TOptions>,
+	SchemaValue<Array<SchemaOutput<TOptions['schema']>>, TOptions>,
+	TOptions
+> {
 	override type: ValSanTypes = 'array';
 	override title = 'Array';
 	override description =
@@ -62,11 +71,11 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 		};
 	}
 
-	public get schema(): ArraySchema {
-		return (this.options as ArrayValSanOptions).schema;
+	public get schema(): TOptions['schema'] {
+		return this.options.schema;
 	}
 
-	constructor(options: ArrayValSanOptions) {
+	constructor(options: TOptions) {
 		super(options);
 	}
 
@@ -84,7 +93,9 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 
 	public override async run(
 		input: unknown[] | unknown
-	): Promise<SanitizeResult<unknown[]>> {
+	): Promise<SanitizeResult<
+		SchemaValue<Array<SchemaOutput<TOptions['schema']>>, TOptions>
+	>> {
 		const options = this.options as ArrayValSanOptions;
 
 		if (input === undefined || input === null) {
@@ -133,7 +144,7 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 
 		return {
 			success: true,
-			data: result,
+			data: result as Array<SchemaOutput<TOptions['schema']>>,
 			errors: [],
 		};
 	}
@@ -148,7 +159,7 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 	/**
 	 * Unused - sanitization is handled in run()
 	 */
-	protected override async sanitize(): Promise<unknown[]> {
-		return [];
+	protected override async sanitize() {
+		return [] as Array<SchemaOutput<TOptions['schema']>>;
 	}
 }

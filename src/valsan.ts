@@ -3,7 +3,7 @@ import { Rule } from './rules';
 import { RuleSet } from './rules/rule';
 import { ValSanTypes, ValSanValueType } from './types/types';
 import { BaseValSan } from './valsan-base';
-import { standardProps } from './schema';
+import { standardProps, SchemaValue } from './schema';
 import {
 	deriveRuleSchema,
 	JsonSchema,
@@ -97,10 +97,15 @@ export abstract class ValSan<
 		TInput = unknown,
 		TOutput = TInput,
 		TNormalized = TInput | TOutput,
+		TOptions extends ValSanOptions = ValSanOptions,
 	>
 	extends BaseValSan<TInput, TOutput>
 	implements RunsLikeAValSan<TInput, TOutput> {
-	public readonly '~standard' = standardProps<TInput, TOutput>(
+	public readonly '~standard' = standardProps<
+		ValSanOptions extends NoInfer<TOptions> ? TInput :
+			SchemaValue<TInput, NoInfer<TOptions>>,
+		SchemaValue<TOutput, NoInfer<TOptions>>
+	>(
 		async (input) => this.run(input as TInput),
 		{
 			input: (options) => this.toJsonSchema('input', options),
@@ -108,8 +113,12 @@ export abstract class ValSan<
 		}
 	);
 
-	public constructor(public override readonly options: ValSanOptions = {}) {
+	public override readonly options: NoInfer<TOptions> &
+		Readonly<ValSanOptions>;
+
+	public constructor(options: TOptions = {} as TOptions) {
 		super();
+		this.options = options;
 	}
 
 	public rules(): RuleSet {

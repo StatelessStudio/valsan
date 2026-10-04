@@ -17,7 +17,9 @@ export type {
 	JsonSchemaOptions,
 	JsonSchemaShapes,
 } from './json-schema';
-export type { SchemaLike, StandardSchema } from './schema';
+export type {
+	SchemaLike, StandardSchema, SchemaInput, SchemaOutput, SchemaValue,
+} from './schema';
 export type { ValSanTypes, ValSanValueType } from './types/types';
 
 export * from './errors';

@@ -31,10 +31,13 @@ export interface MinValidatorOptions extends ValSanOptions {
  * // result.success === true, result.data === 10
  * ```
  */
-export class MinValidator extends ValSan<
+export class MinValidator<
+	const TOptions extends MinValidatorOptions = MinValidatorOptions,
+> extends ValSan<
 	number | string | bigint,
 	number,
-	number
+	number,
+	TOptions
 > {
 	override inputType = ['number', 'string'] as const;
 
@@ -62,7 +65,7 @@ export class MinValidator extends ValSan<
 		};
 	}
 
-	constructor(options: MinValidatorOptions) {
+	constructor(options: TOptions) {
 		super(options);
 		this.min = options.min;
 	}

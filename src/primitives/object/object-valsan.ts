@@ -6,7 +6,9 @@ import {
 } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
 import { runSchema } from '../../schema';
-import type { SchemaLike } from '../../schema';
+import type {
+	SchemaLike, SchemaInput, SchemaOutput, SchemaValue,
+} from '../../schema';
 import {
 	exportChildSchema,
 	JsonSchema,
@@ -15,6 +17,30 @@ import {
 } from '../../json-schema';
 
 export type ObjectSchema = Record<string, SchemaLike>;
+
+type OptionalKeys<TSchema extends ObjectSchema, Direction extends 'input' |
+	'output'> = {
+	[Key in keyof TSchema]: undefined extends (
+		Direction extends 'input' ? SchemaInput<TSchema[Key]> :
+			SchemaOutput<TSchema[Key]>
+	) ? Key : never;
+}[keyof TSchema];
+
+type ObjectValue<TSchema extends ObjectSchema, Direction extends 'input' |
+	'output'> = {
+	[Key in Exclude<keyof TSchema, OptionalKeys<TSchema, Direction>>]:
+		Direction extends 'input' ? SchemaInput<TSchema[Key]> :
+			SchemaOutput<TSchema[Key]>;
+} & {
+	[Key in OptionalKeys<TSchema, Direction>]?:
+		Direction extends 'input' ? SchemaInput<TSchema[Key]> :
+			SchemaOutput<TSchema[Key]>;
+};
+
+export type ObjectSchemaInput<TSchema extends ObjectSchema> =
+	ObjectValue<TSchema, 'input'>;
+export type ObjectSchemaOutput<TSchema extends ObjectSchema> =
+	ObjectValue<TSchema, 'output'>;
 
 export interface ObjectValSanOptions extends ValSanOptions {
 	/**
@@ -28,6 +54,16 @@ export interface ObjectValSanOptions extends ValSanOptions {
 	 */
 	allowAdditionalProperties?: boolean;
 }
+
+type Output<TOptions extends ObjectValSanOptions> =
+	ObjectSchemaOutput<TOptions['schema']> &
+	(true extends TOptions['allowAdditionalProperties']
+		? Record<string, unknown> : unknown);
+
+type Input<TOptions extends ObjectValSanOptions> =
+	ObjectSchemaInput<TOptions['schema']> &
+	(true extends TOptions['allowAdditionalProperties']
+		? Record<string, unknown> : unknown);
 
 /**
  * Validates and sanitizes nested objects.
@@ -51,9 +87,13 @@ export interface ObjectValSanOptions extends ValSanOptions {
  * });
  * ```
  */
-export class ObjectValSan extends ValSan<
-	Record<string, unknown>,
-	Record<string, unknown>
+export class ObjectValSan<
+	const TOptions extends ObjectValSanOptions = ObjectValSanOptions,
+> extends ValSan<
+	SchemaValue<Input<TOptions>, TOptions>,
+	SchemaValue<Output<TOptions>, TOptions>,
+	SchemaValue<Output<TOptions>, TOptions>,
+	TOptions
 > {
 	override type: ValSanTypes = 'object';
 	override title = 'Object';
@@ -93,11 +133,11 @@ export class ObjectValSan extends ValSan<
 		};
 	}
 
-	public get schema(): ObjectSchema {
-		return (this.options as ObjectValSanOptions).schema;
+	public get schema(): TOptions['schema'] {
+		return this.options.schema;
 	}
 
-	constructor(options: ObjectValSanOptions) {
+	constructor(options: TOptions) {
 		super(options);
 	}
 
@@ -115,7 +155,9 @@ export class ObjectValSan extends ValSan<
 
 	public override async run(
 		input: Record<string, unknown> | null | undefined
-	): Promise<SanitizeResult<Record<string, unknown>>> {
+	): Promise<SanitizeResult<
+		SchemaValue<Output<TOptions>, TOptions>
+	>> {
 		const options = this.options as ObjectValSanOptions;
 		if (input === undefined || input === null) {
 			return this.checkRequired(input);
@@ -196,7 +238,7 @@ export class ObjectValSan extends ValSan<
 
 		return {
 			success: true,
-			data: output,
+			data: output as Output<TOptions>,
 			errors: [],
 		};
 	}
@@ -211,7 +253,7 @@ export class ObjectValSan extends ValSan<
 	/**
 	 * Unused - sanitization is handled in run()
 	 */
-	protected override async sanitize(): Promise<Record<string, unknown>> {
-		return {};
+	protected override async sanitize() {
+		return {} as Output<TOptions>;
 	}
 }

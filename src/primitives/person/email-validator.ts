@@ -36,7 +36,9 @@ export interface EmailValidatorOptions extends ValSanOptions {
  * // result.success === true
  * ```
  */
-export class EmailValidator extends ValSan<string, string> {
+export class EmailValidator<
+	const TOptions extends EmailValidatorOptions = Record<string, never>,
+> extends ValSan<string, string, string, TOptions> {
 	public override get jsonSchemaPreservesInput(): boolean {
 		return true;
 	}
@@ -92,7 +94,7 @@ export class EmailValidator extends ValSan<string, string> {
 		};
 	}
 
-	constructor(options: EmailValidatorOptions = {}) {
+	constructor(options: TOptions = {} as TOptions) {
 		super(options);
 		this.allowPlusAddress = options.allowPlusAddress !== false;
 		this.allowedDomains = options.allowedDomains?.map((d) =>

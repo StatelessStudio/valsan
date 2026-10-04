@@ -6,7 +6,36 @@ import type {
 	RunsLikeAValSan,
 	SanitizeResult,
 	ValidationError,
+	ValSanOptions,
 } from './valsan';
+
+type OptionValue<
+	TOptions,
+	Key extends PropertyKey
+> = Key extends keyof TOptions ? TOptions[Key] : undefined;
+
+type AllowsNullish<TOptions, Key extends PropertyKey> =
+	Extract<OptionValue<TOptions, Key>, boolean> |
+	(undefined extends OptionValue<TOptions, Key>
+		? OptionValue<TOptions, 'isOptional'>
+		: never);
+
+export type SchemaValue<TValue, TOptions extends ValSanOptions> =
+	TValue | (TOptions extends unknown ?
+		(true extends AllowsNullish<TOptions, 'isNullable'> ? null : never) |
+		(true extends AllowsNullish<TOptions, 'isUndefinable'>
+			? undefined : never)
+		: never);
+
+export type SchemaInput<TSchema> =
+	TSchema extends StandardSchemaV1<infer TInput, unknown> ? TInput :
+	TSchema extends RunsLikeAValSan<infer TInput, unknown>
+		? SchemaValue<TInput, TSchema['options']> : never;
+
+export type SchemaOutput<TSchema> =
+	TSchema extends StandardSchemaV1<unknown, infer TOutput> ? TOutput :
+	TSchema extends RunsLikeAValSan<unknown, infer TOutput>
+		? SchemaValue<TOutput, TSchema['options']> : never;
 
 export type StandardSchema = StandardSchemaV1<unknown, unknown>;
 
@@ -15,8 +44,8 @@ export type SchemaLike = RunsLikeAValSan<unknown, unknown> | StandardSchema;
 export function standardProps<TInput, TOutput>(
 	run: (input: unknown) => Promise<SanitizeResult<TOutput>>,
 	jsonSchema: StandardJSONSchemaV1.Converter
-): StandardSchemaV1.Props<TInput, TOutput | null | undefined> &
-	StandardJSONSchemaV1.Props<TInput, TOutput | null | undefined> {
+): StandardSchemaV1.Props<TInput, TOutput> &
+	StandardJSONSchemaV1.Props<TInput, TOutput> {
 	return {
 		version: 1,
 		vendor: 'valsan',
