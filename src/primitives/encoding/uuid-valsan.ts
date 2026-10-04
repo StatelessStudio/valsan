@@ -11,6 +11,9 @@ const uuidRegex =
 
 export class UuidValSan extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'UUID';
+	override description =
+		'A UUID string in version 1, 3, 4, or 5 format.';
 	override format = 'uuid';
 	override example = '550e8400-e29b-41d4-a716-446655440000';
 

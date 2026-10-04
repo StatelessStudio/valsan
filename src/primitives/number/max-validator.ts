@@ -37,6 +37,9 @@ export class MaxValidator extends ValSan<
 	number
 > {
 	override type: ValSanTypes = 'number';
+	override title = 'Maximum value';
+	override description =
+		'A number no greater than the configured inclusive maximum.';
 
 	private readonly max: number;
 
@@ -46,7 +49,7 @@ export class MaxValidator extends ValSan<
 			max: {
 				code: 'maximum',
 				user: {
-					helperText: `Maximum: ${this.max}`,
+					helperText: `Maximum value: ${this.max}`,
 					errorMessage: `Number must be at most ${this.max}`,
 				},
 				context: {

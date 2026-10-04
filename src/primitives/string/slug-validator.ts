@@ -47,6 +47,10 @@ export interface SlugValSanOptions extends ValSanOptions {
  */
 export class SlugValSan extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'Slug';
+	override description =
+		'A lowercase slug containing letters, numbers, and single hyphen ' +
+		'separators.';
 	override example = 'hello-world';
 
 	private readonly autoConvert: boolean;

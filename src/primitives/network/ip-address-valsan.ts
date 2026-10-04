@@ -54,6 +54,8 @@ function isIpv6(input: string): boolean {
 
 export class IpAddressValSan extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'IP address';
+	override description = 'A valid IPv4 or IPv6 address.';
 	override example = '192.168.0.1';
 
 	override rules() {

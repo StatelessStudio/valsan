@@ -5,6 +5,9 @@ import { stringRule } from '../string/string-rules';
 
 export class JsonValSan extends ValSan<string, unknown> {
 	override type: ValSanTypes = 'string';
+	override title = 'JSON';
+	override description =
+		'A string containing valid JSON.';
 	override format = 'json';
 	override example = '{"key": "value"}';
 

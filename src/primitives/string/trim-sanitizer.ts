@@ -18,6 +18,9 @@ import { stringRule } from './string-rules';
  */
 export class TrimSanitizer extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'Trimmed string';
+	override description =
+		'A string without leading or trailing whitespace.';
 
 	public override rules() {
 		return {

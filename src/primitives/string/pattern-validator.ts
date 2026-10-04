@@ -39,6 +39,9 @@ export interface PatternValidatorOptions extends ValSanOptions {
  */
 export class PatternValidator extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'Pattern-matched string';
+	override description =
+		'A string matching the configured regular expression.';
 	private readonly pattern: RegExp;
 	private readonly errorMessage?: string;
 

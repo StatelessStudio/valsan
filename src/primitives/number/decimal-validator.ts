@@ -69,6 +69,10 @@ export class DecimalValidator extends ValSan<
 	number
 > {
 	override type: ValSanTypes = 'number';
+	override title = 'Decimal number';
+	override description =
+		'A numeric value with decimal places, optionally limited to a ' +
+		'configured number of decimal places.';
 	override example = '3.14';
 
 	private readonly maxDecimalPlaces?: number;
