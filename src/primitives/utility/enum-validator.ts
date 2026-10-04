@@ -10,6 +10,9 @@ export interface EnumValidatorOptions<T> extends ValSanOptions {
 
 export class EnumValidator<T> extends ValSan<T, T> {
 	override type: ValSanTypes = 'unknown';
+	override title = 'Enumeration';
+	override description =
+		'One of the configured allowed values.';
 
 	protected readonly allowedValues: readonly T[];
 

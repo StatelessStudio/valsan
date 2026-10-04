@@ -42,6 +42,9 @@ export class RangeValidator extends ValSan<
 	number
 > {
 	override type: ValSanTypes = 'number';
+	override title = 'Number range';
+	override description =
+		'A number within the configured inclusive minimum and maximum.';
 
 	private readonly min: number;
 	private readonly max: number;
@@ -52,13 +55,13 @@ export class RangeValidator extends ValSan<
 			range: {
 				code: 'number_range',
 				user: {
-					helperText: 'Range',
+					helperText: `Value from ${this.min} through ${this.max}.`,
 					errorMessage:
 						`Number must be between ${this.min} ` +
 						`and ${this.max}`,
 				},
 				dev: {
-					helperText: 'Range',
+					helperText: `Number from ${this.min} through ${this.max}.`,
 					errorMessage:
 						`Number must be between ${this.min} and ` +
 						`${this.max}`,

@@ -15,6 +15,34 @@ You can use options to:
 
 All options are optional and have sensible defaults. See validator docs for details.
 
+## Schema Metadata
+
+Built-in Valsans provide a title and description through `getTitle()` and `getDescription()` for schema documentation and JSON Schema output. Instance options override those defaults:
+
+```typescript
+import { MacAddressValSan } from 'valsan';
+
+const macAddress = new MacAddressValSan({
+    description: 'The MAC address of the Wi-Fi NIC'
+});
+
+console.log(macAddress.getTitle());       // "MAC Address"
+console.log(macAddress.getDescription()); // "The MAC address of the Wi-Fi NIC"
+```
+
+`getValidationDescription()` combines the Valsan description with its rule helper text. Composed Valsans include helper text from each step.
+
+Custom Valsans can provide intrinsic defaults by overriding the `title` and `description` fields:
+
+```typescript
+class MyValSan extends ValSan<string, string> {
+    override title = 'My value';
+    override description = 'A value with custom validation.';
+    // Implement the remaining ValSan methods.
+}
+```
+
+
 ## Optional Values
 
 ### isOptional

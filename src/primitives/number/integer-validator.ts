@@ -29,6 +29,10 @@ export class IntegerValidator extends ValSan<
 	number
 > {
 	override type: ValSanTypes = 'integer';
+	override title = 'Integer';
+	override description =
+		'An integer supplied as a number, numeric string, or exactly ' +
+		'representable bigint.';
 	override example = '42';
 
 	override rules() {

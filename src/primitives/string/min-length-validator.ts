@@ -33,6 +33,9 @@ export interface MinLengthValidatorOptions extends ValSanOptions {
  */
 export class MinLengthValidator extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'Minimum string length';
+	override description =
+		'A string at least as long as the configured minimum length.';
 	private readonly minLength: number;
 
 	constructor(options: MinLengthValidatorOptions = {}) {
@@ -46,7 +49,7 @@ export class MinLengthValidator extends ValSan<string, string> {
 			minLength: {
 				code: 'string_min_len',
 				user: {
-					helperText: `Min length: ${this.minLength}`,
+					helperText: `Minimum length: ${this.minLength}`,
 					errorMessage:
 						`Input must be at least ${this.minLength} ` +
 						'character(s)',

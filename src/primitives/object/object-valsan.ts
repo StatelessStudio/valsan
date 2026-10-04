@@ -5,7 +5,6 @@ import {
 	ValidationError,
 } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
-import { requiredRule } from '../../rules';
 import { runSchema } from '../../schema';
 import type { SchemaLike } from '../../schema';
 
@@ -51,6 +50,9 @@ export class ObjectValSan extends ValSan<
 	Record<string, unknown>
 > {
 	override type: ValSanTypes = 'object';
+	override title = 'Object';
+	override description =
+		'An object whose configured properties each satisfy their schema.';
 
 	public get schema(): ObjectSchema {
 		return (this.options as ObjectValSanOptions).schema;
@@ -77,18 +79,7 @@ export class ObjectValSan extends ValSan<
 	): Promise<SanitizeResult<Record<string, unknown>>> {
 		const options = this.options as ObjectValSanOptions;
 		if (input === undefined || input === null) {
-			if (options.isOptional) {
-				return this.checkRequired(input);
-			}
-			return {
-				success: false,
-				errors: [
-					{
-						code: requiredRule.code,
-						message: requiredRule.user.errorMessage,
-					},
-				],
-			};
+			return this.checkRequired(input);
 		}
 
 		if (

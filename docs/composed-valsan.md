@@ -68,3 +68,25 @@ const strict = new EmailAddressValSan({ minLength: 8, maxLength: 50 });
 await standard.run('user@example.com'); // ✅ passes
 await strict.run('a@b.c');              // ❌ fails minLength
 ```
+
+## Rules and Validation Descriptions
+
+`ComposedValSan.rules()` merges rules from its steps. Override `rules()` in a composed validator when you need a different user-facing summary:
+
+```typescript
+class EmailAddressValSan extends ComposedValSan<string, string> {
+    override rules() {
+        return {
+            email: {
+                code: 'email',
+                user: {
+                    helperText: 'A valid email address',
+                    errorMessage: 'Input must be a valid email address'
+                }
+            }
+        };
+    }
+
+    // Define the composition in the constructor.
+}
+```

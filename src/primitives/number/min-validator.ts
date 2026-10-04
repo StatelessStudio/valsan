@@ -37,6 +37,9 @@ export class MinValidator extends ValSan<
 	number
 > {
 	override type: ValSanTypes = 'number';
+	override title = 'Minimum value';
+	override description =
+		'A number no less than the configured inclusive minimum.';
 
 	private readonly min: number;
 
@@ -46,7 +49,7 @@ export class MinValidator extends ValSan<
 			min: {
 				code: 'minimum',
 				user: {
-					helperText: `Minimum: ${this.min}`,
+					helperText: `Minimum value: ${this.min}`,
 					errorMessage: `Number must be at least ${this.min}`,
 				},
 				context: {

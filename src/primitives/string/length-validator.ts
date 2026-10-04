@@ -42,6 +42,9 @@ export interface LengthValidatorOptions
  */
 export class LengthValidator extends ComposedValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'String length';
+	override description =
+		'A string whose length falls within the configured inclusive range.';
 
 	constructor(options: LengthValidatorOptions = {}) {
 		const steps = [

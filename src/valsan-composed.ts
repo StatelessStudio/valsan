@@ -44,6 +44,10 @@ export interface ComposedValSanOptions extends ValSanOptions {
 export class ComposedValSan<TInput = unknown, TOutput = TInput>
 	extends BaseValSan<TInput, TOutput>
 	implements RunsLikeAValSan<TInput, TOutput> {
+	protected override title = 'Composed value';
+	protected override description =
+		'A value that satisfies each configured Valsan step in sequence.';
+
 	public readonly '~standard' = standardProps<TInput, TOutput>(
 		async (input) => this.run(input as TInput)
 	);
@@ -102,6 +106,14 @@ export class ComposedValSan<TInput = unknown, TOutput = TInput>
 		}
 
 		return combinedRules;
+	}
+
+	public getValidationDescription(): string | undefined {
+		return this.buildValidationDescription(this.getRuleHelperTexts());
+	}
+
+	public getRuleHelperTexts(): string[] {
+		return this.collectRuleHelperTexts(this.rules());
 	}
 
 	async run(input: TInput): Promise<SanitizeResult<TOutput>> {

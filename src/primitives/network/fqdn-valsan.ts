@@ -6,6 +6,8 @@ import { isFqdn } from './is-fqdn';
 
 export class FqdnValSan extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'Fully qualified domain name';
+	override description = 'A fully qualified domain name (FQDN).';
 	override format = 'hostname';
 	override example = 'host.example.com';
 

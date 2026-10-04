@@ -11,6 +11,9 @@ const semverRegex =
 
 export class SemverValSan extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'Semantic version';
+	override description =
+		'A Semantic Versioning 2.0.0 version string.';
 	override format = 'semver';
 	override example = '1.2.3';
 

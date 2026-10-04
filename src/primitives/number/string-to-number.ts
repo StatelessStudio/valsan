@@ -25,6 +25,8 @@ import { normalizeNumber } from './normalize-number';
  */
 export class StringToNumberValSan extends ValSan<string, number> {
 	override type: ValSanTypes = 'number';
+	override title = 'Number';
+	override description = 'A string representing a valid number.';
 
 	override rules() {
 		return {

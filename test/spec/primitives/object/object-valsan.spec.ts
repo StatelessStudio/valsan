@@ -171,7 +171,7 @@ describe('ObjectValSan', () => {
 
 		expect(result.success).toBe(false);
 		expect(result.errors).toEqual([
-			{ code: 'required', message: 'Value is empty' },
+			{ code: 'required', message: 'Value is required' },
 		]);
 	});
 
@@ -187,7 +187,7 @@ describe('ObjectValSan', () => {
 
 		expect(result.success).toBe(false);
 		expect(result.errors).toEqual([
-			{ code: 'required', message: 'Value is empty' },
+			{ code: 'required', message: 'Value is required' },
 		]);
 	});
 
@@ -210,6 +210,42 @@ describe('ObjectValSan', () => {
 			expect(runSpy).not.toHaveBeenCalled();
 		});
 	}
+
+	it('should honor nullable and undefinable independently', async () => {
+		const nullableObject = new ObjectValSan({
+			schema: { name: new TrimSanitizer() },
+			isNullable: true,
+		});
+		const undefinableObject = new ObjectValSan({
+			schema: { name: new TrimSanitizer() },
+			isUndefinable: true,
+		});
+
+		expect<unknown>(await nullableObject.run(null)).toEqual({
+			success: true,
+			data: null,
+			errors: [],
+		});
+		expect((await nullableObject.run(undefined)).success).toBe(false);
+		expect<unknown>(await undefinableObject.run(undefined)).toEqual({
+			success: true,
+			data: undefined,
+			errors: [],
+		});
+		expect((await undefinableObject.run(null)).success).toBe(false);
+	});
+
+	it('should let explicit nullish options override isOptional', async () => {
+		const valsan = new ObjectValSan({
+			schema: { name: new TrimSanitizer() },
+			isOptional: true,
+			isNullable: false,
+			isUndefinable: false,
+		});
+
+		expect((await valsan.run(null)).success).toBe(false);
+		expect((await valsan.run(undefined)).success).toBe(false);
+	});
 
 	it('should preserve optional nested object values', async () => {
 		const optionalObject = new ObjectValSan({

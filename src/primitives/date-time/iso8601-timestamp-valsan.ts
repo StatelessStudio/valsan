@@ -8,6 +8,9 @@ import { parseIsoTimestamp } from './parse-iso-timestamp';
  */
 export class Iso8601TimestampValSan extends ValSan<string | Date, Date> {
 	override type: ValSanTypes = 'string';
+	override title = 'ISO 8601 timestamp';
+	override description =
+		'A valid Date object or ISO 8601 timestamp.';
 	override format = 'date-time';
 	override example = '2023-01-01T12:00:00Z';
 
