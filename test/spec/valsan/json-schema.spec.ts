@@ -57,6 +57,69 @@ describe('Standard JSON Schema export', () => {
 		};
 	}
 
+	it('shares nullish policy across validation and export without caching',
+		async () => {
+			const options: ValSanOptions = {};
+			const schema = new TrimSanitizer(options);
+			for (const optional of [undefined, false, true]) {
+				for (const nullable of [undefined, false, true]) {
+					for (const undefinable of [undefined, false, true]) {
+						options.isOptional = optional;
+						options.isNullable = nullable;
+						options.isUndefinable = undefinable;
+						const allowsNull = nullable ?? optional ?? false;
+						const allowsUndefined =
+							undefinable ?? optional ?? false;
+						expect((await schema.run(null)).success)
+							.toBe(allowsNull);
+						expect((await schema.run(undefined)).success)
+							.toBe(allowsUndefined);
+						expect(schema.jsonSchemaAllowsUndefined)
+							.toBe(allowsUndefined);
+						for (const direction of ['input', 'output'] as const) {
+							const json = schema.toJsonSchema(direction, {
+								target: 'draft-07',
+							});
+							expect(new Ajv().compile(json)(null))
+								.toBe(allowsNull);
+						}
+					}
+				}
+			}
+		});
+
+	it('renders merged constraints consistently for rules and compositions',
+		() => {
+			const first = {
+				minLength: 2, maxLength: 8, pattern: '^a',
+				enum: ['abz', 'az'],
+			};
+			const second = {
+				minLength: 3, maxLength: 6, pattern: 'z$',
+				enum: ['abz', 'bz'],
+			};
+			const rule = (jsonSchema: Rule['jsonSchema']): Rule => ({
+				code: 'constraint',
+				user: { helperText: '', errorMessage: '' },
+				jsonSchema,
+			});
+			const composed = intersectPrimitiveSchemas([
+				{ type: 'string', ...first }, { type: 'string', ...second },
+			]);
+			for (const direction of ['input', 'output'] as const) {
+				expect(deriveRuleSchema({
+					input: 'string', output: 'string',
+				}, {
+					first: rule(first), second: rule(second),
+				}, direction)).toEqual(composed);
+			}
+			expect(composed).toEqual({
+				type: 'string', minLength: 3, maxLength: 6, enum: ['abz'],
+				allOf: [{ pattern: '^a' }, { pattern: 'z$' }],
+			});
+			expect(Object.values(composed)).not.toContain(undefined);
+		});
+
 	it('exports default and custom documentation on both directions and drafts',
 		() => {
 			const defaults = new TrimSanitizer();

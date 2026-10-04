@@ -16,11 +16,19 @@ export class BaseValSan<TInput = unknown, TOutput = TInput> {
 	}
 
 	public get jsonSchemaAllowsUndefined(): boolean {
-		return this.options.isUndefinable ?? this.options.isOptional ?? false;
+		return this.allowsUndefined;
 	}
 
 	protected get jsonSchemaAllowsNull(): boolean {
+		return this.allowsNull;
+	}
+
+	private get allowsNull(): boolean {
 		return this.options.isNullable ?? this.options.isOptional ?? false;
+	}
+
+	private get allowsUndefined(): boolean {
+		return this.options.isUndefinable ?? this.options.isOptional ?? false;
 	}
 
 	public toJsonSchema(
@@ -119,17 +127,13 @@ export class BaseValSan<TInput = unknown, TOutput = TInput> {
 	}
 
 	public checkRequired(input: unknown): SanitizeResult<TOutput> {
-		const isNullable =
-			this.options.isNullable ?? this.options.isOptional ?? false;
-		const isUndefinable =
-			this.options.isUndefinable ?? this.options.isOptional ?? false;
 		let isAllowed = this.options.isOptional ?? false;
 
 		if (input === null) {
-			isAllowed = isNullable;
+			isAllowed = this.allowsNull;
 		}
 		else if (input === undefined) {
-			isAllowed = isUndefinable;
+			isAllowed = this.allowsUndefined;
 		}
 
 		if (isAllowed) {

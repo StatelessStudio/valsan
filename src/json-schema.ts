@@ -158,16 +158,9 @@ function deriveConstraints(
 						`JSON Schema ${keyword} requires a finite numeric bound`
 					);
 				}
-				if (keyword === 'minimum') {
-					constraints.minimum = Math.max(
-						constraints.minimum ?? -Infinity, value
-					);
-				}
-				else {
-					constraints.maximum = Math.min(
-						constraints.maximum ?? Infinity, value
-					);
-				}
+				constraints[keyword] = keyword === 'minimum'
+					? Math.max(constraints.minimum ?? -Infinity, value)
+					: Math.min(constraints.maximum ?? Infinity, value);
 			}
 			else if (keyword === 'minLength' || keyword === 'maxLength') {
 				if (keyword === 'maxLength' && value === Infinity) {
@@ -182,16 +175,9 @@ function deriveConstraints(
 						`JSON Schema ${keyword} must be a nonnegative integer`
 					);
 				}
-				if (keyword === 'minLength') {
-					constraints.minLength = Math.max(
-						constraints.minLength ?? 0, value
-					);
-				}
-				else {
-					constraints.maxLength = Math.min(
-						constraints.maxLength ?? Infinity, value
-					);
-				}
+				constraints[keyword] = keyword === 'minLength'
+					? Math.max(constraints.minLength ?? 0, value)
+					: Math.min(constraints.maxLength ?? Infinity, value);
 			}
 			else if (keyword === 'pattern' || keyword === 'format') {
 				if (
@@ -228,19 +214,6 @@ function deriveConstraints(
 		}
 	}
 	if (
-		(outputs.includes('unknown') || inputs.includes('unknown')) &&
-		constraints.enum === undefined
-	) {
-		throw new TypeError(
-			'Cannot derive primitive JSON Schema for unknown without an enum'
-		);
-	}
-
-	const patternSchema: JsonSchema = patterns.size > 1
-		? { allOf: [...patterns].map((pattern) => ({ pattern })) }
-		: patterns.size === 1 ? { pattern: [...patterns][0] } : {};
-
-	if (
 		constraints.minimum !== undefined &&
 		constraints.maximum !== undefined &&
 		constraints.minimum > constraints.maximum
@@ -255,6 +228,19 @@ function deriveConstraints(
 	) {
 		throw new TypeError('JSON Schema length requires ordered bounds');
 	}
+
+	if (
+		(outputs.includes('unknown') || inputs.includes('unknown')) &&
+		constraints.enum === undefined
+	) {
+		throw new TypeError(
+			'Cannot derive primitive JSON Schema for unknown without an enum'
+		);
+	}
+
+	const patternSchema: JsonSchema = patterns.size > 1
+		? { allOf: [...patterns].map((pattern) => ({ pattern })) }
+		: patterns.size === 1 ? { pattern: [...patterns][0] } : {};
 
 	const branches = (schemas: JsonSchema[]): JsonSchema =>
 		schemas.length === 1 ? schemas[0] : { anyOf: schemas };
