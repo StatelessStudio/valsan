@@ -3,14 +3,15 @@ import { Rule } from './rules';
 import { RuleSet } from './rules/rule';
 import { ValSanTypes } from './types/types';
 import { BaseValSan } from './valsan-base';
+import { standardProps } from './schema';
 
 export interface ValidationError {
 	field?: string;
 	/**
-	 * Path to the invalid value, using property names and array
-	 * indices as separate segments
+	 * Path to the invalid value, using property keys and array indices as
+	 * separate segments
 	 */
-	path?: Array<string | number>;
+	path?: PropertyKey[];
 	code: string;
 	message: string;
 	context?: Record<string, unknown>;
@@ -72,6 +73,10 @@ export abstract class ValSan<
 	>
 	extends BaseValSan<TInput, TOutput>
 	implements RunsLikeAValSan<TInput, TOutput> {
+	public readonly '~standard' = standardProps<TInput, TOutput>(
+		async (input) => this.run(input as TInput)
+	);
+
 	public constructor(public override readonly options: ValSanOptions = {}) {
 		super();
 	}
@@ -159,9 +164,10 @@ export abstract class ValSan<
 
 	protected validationError(
 		error: ValidationError,
-		segment: string | number
+		segment: PropertyKey
 	): ValidationError {
-		const prefix = typeof segment === 'number' ? `[${segment}]` : segment;
+		const prefix =
+			typeof segment === 'number' ? `[${segment}]` : String(segment);
 
 		return {
 			...error,

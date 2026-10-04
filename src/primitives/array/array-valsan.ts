@@ -3,12 +3,13 @@ import {
 	ValSanOptions,
 	SanitizeResult,
 	ValidationError,
-	RunsLikeAValSan,
 } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
 import { requiredRule } from '../../rules';
+import { runSchema } from '../../schema';
+import type { SchemaLike } from '../../schema';
 
-export type ArraySchema = RunsLikeAValSan<unknown, unknown>;
+export type ArraySchema = SchemaLike;
 
 export interface ArrayValSanOptions extends ValSanOptions {
 	/**
@@ -93,7 +94,7 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 		// Validate and sanitize each item
 		for (let i = 0; i < input.length; i++) {
 			const value = input[i];
-			const itemResult = await schema.run(value);
+			const itemResult = await runSchema(schema, value);
 
 			if (itemResult.success) {
 				result.push(itemResult.data);

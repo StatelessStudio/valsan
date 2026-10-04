@@ -3,12 +3,13 @@ import {
 	ValSanOptions,
 	SanitizeResult,
 	ValidationError,
-	RunsLikeAValSan,
 } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
 import { requiredRule } from '../../rules';
+import { runSchema } from '../../schema';
+import type { SchemaLike } from '../../schema';
 
-export type ObjectSchema = Record<string, RunsLikeAValSan<unknown, unknown>>;
+export type ObjectSchema = Record<string, SchemaLike>;
 
 export interface ObjectValSanOptions extends ValSanOptions {
 	/**
@@ -124,7 +125,7 @@ export class ObjectValSan extends ValSan<
 		for (const key of Object.keys(schema)) {
 			const validator = schema[key];
 			const value = input[key];
-			const result = await validator.run(value);
+			const result = await runSchema(validator, value);
 
 			if (result.success) {
 				Object.defineProperty(output, key, {

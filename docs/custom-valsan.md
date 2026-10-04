@@ -39,6 +39,15 @@ class MyValSan extends ValSan<string, string> {
 }
 ```
 
+## Standard Schema support
+
+Every `ValSan` instance, including custom classes, implements
+[Standard Schema v1](https://standardschema.dev/) through its `~standard`
+property. This allows a custom ValSan to be used directly with libraries that accept Standard Schema.
+
+`ArrayValSan` and `ObjectValSan` can also use Standard Schema validators as
+nested schemas.
+
 ## Naming Conventions
 
 - Use `Sanitizer` for pure transformations (e.g. `TrimSanitizer`)

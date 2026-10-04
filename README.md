@@ -98,6 +98,10 @@ const result = await range.run(150);
 console.log(result.success); // false - out of range
 ```
 
+### Standard Schema interoperability
+
+ValSan instances implement [Standard Schema v1](https://standardschema.dev/), so they can be passed to libraries that accept Standard Schema validators. `ArrayValSan` and `ObjectValSan` can also consume Standard Schema objects.
+
 ### Primitives Library
 
 Compose your own validators from built-in primitives:

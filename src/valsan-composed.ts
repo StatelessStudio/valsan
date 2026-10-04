@@ -5,6 +5,7 @@ import {
 	ValSanOptions,
 } from './valsan';
 import { BaseValSan } from './valsan-base';
+import { standardProps } from './schema';
 
 export interface ComposedValSanOptions extends ValSanOptions {
 	/**
@@ -43,6 +44,10 @@ export interface ComposedValSanOptions extends ValSanOptions {
 export class ComposedValSan<TInput = unknown, TOutput = TInput>
 	extends BaseValSan<TInput, TOutput>
 	implements RunsLikeAValSan<TInput, TOutput> {
+	public readonly '~standard' = standardProps<TInput, TOutput>(
+		async (input) => this.run(input as TInput)
+	);
+
 	/**
 	 * Creates a composed validator from an array of ValSan steps.
 	 *
