@@ -142,9 +142,7 @@ JSON Schema describes the wire shape and representable constraints, not the
 sanitization algorithm or every JavaScript validation rule (for example,
 JavaScript string length counts UTF-16 units rather than JSON Schema characters).
 
-Single-step compositions export that step. Multi-step, value-preserving
-compositions export all step constraints using `allOf`. Multi-step transforming
-pipelines require explicit `options.jsonSchema` input/output definitions.
+Single-step compositions export that step. Multi-step, value-preserving compositions flatten compatible primitive constraints; other schemas retain `allOf`. Flattening preserves repeated patterns as conjunctions and intersects enum values. Multi-step transforming pipelines require explicit `options.jsonSchema` input/output definitions.
 Unsupported built-ins, custom validators, regex flags, restricted email options,
 non-JSON enums, cyclic schemas, and arrays allowing undefined elements throw
 instead of silently producing an unconstrained schema.

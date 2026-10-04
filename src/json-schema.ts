@@ -2,6 +2,7 @@ import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
 import type { SchemaLike } from './schema';
 import type { Rule, RuleSet, RuleJsonSchema } from './rules/rule';
 import type { ValSanValueType } from './types/types';
+import { MAX_EMAIL_LENGTH } from './primitives/person/email-limits';
 
 export type JsonSchema = Record<string, unknown>;
 export type JsonSchemaDirection = 'input' | 'output';
@@ -39,7 +40,23 @@ function primitiveTypes(type: ValSanValueType): Array<
 	});
 }
 
-function ruleConstraints(rule: Rule): Partial<RuleJsonSchema> {
+function jsonEnum(value: unknown): Array<string | number | boolean> {
+	if (
+		!Array.isArray(value) || value.length === 0 ||
+		!value.every((item) =>
+			typeof item === 'string' || typeof item === 'boolean' ||
+			(typeof item === 'number' && Number.isFinite(item))
+		)
+	) {
+		throw new TypeError(
+			'JSON Schema enums require nonempty JSON primitive values'
+		);
+	}
+
+	return [...new Set<string | number | boolean>(value)];
+}
+
+function ruleConstraints(rule: Rule): JsonSchema {
 	if (rule.jsonSchema === 'type-only') {
 		return {};
 	}
@@ -52,7 +69,7 @@ function ruleConstraints(rule: Rule): Partial<RuleJsonSchema> {
 				'jsonSchema: \'type-only\''
 			);
 		}
-		return rule.jsonSchema;
+		return { ...rule.jsonSchema };
 	}
 
 	const kind = rule.kind;
@@ -73,6 +90,40 @@ function ruleConstraints(rule: Rule): Partial<RuleJsonSchema> {
 		return { minLength: rule.context?.minLength };
 	case 'string.maxLength':
 		return { maxLength: rule.context?.maxLength };
+	case 'string.pattern':
+		if (!(rule.context?.regex instanceof RegExp)) {
+			throw new TypeError('Pattern rules require a RegExp');
+		}
+
+		if (rule.context.regex.flags !== '') {
+			throw new TypeError(
+				'Regex flags cannot be represented in JSON Schema; ' +
+				'provide options.jsonSchema'
+			);
+		}
+
+		return { pattern: rule.context.regex.source };
+	case 'value.enum':
+		return { enum: jsonEnum(rule.context?.allowedValues) };
+	case 'string.email':
+		if (rule.context?.allowPlusAddress !== true) {
+			throw new TypeError(
+				'Restricted email validators require options.jsonSchema'
+			);
+		}
+
+		return { format: 'email', maxLength: MAX_EMAIL_LENGTH };
+	case 'string.emailDomains':
+		if (
+			rule.context === undefined ||
+			rule.context.allowedDomains !== undefined
+		) {
+			throw new TypeError(
+				'Restricted email validators require options.jsonSchema'
+			);
+		}
+
+		return {};
 	case undefined:
 		throw new TypeError(
 			`Rule ${rule.code} has no JSON Schema constraint metadata`
@@ -82,23 +133,26 @@ function ruleConstraints(rule: Rule): Partial<RuleJsonSchema> {
 	}
 }
 
-export function deriveRuleSchema(
+function deriveConstraints(
 	shapes: JsonSchemaShapes,
-	rules: RuleSet,
+	metadata: JsonSchema[],
 	direction: JsonSchemaDirection
 ): JsonSchema {
-	const inputs = primitiveTypes(shapes.input);
-	const outputs = primitiveTypes(shapes.output);
+	const inputs = shapes.input === 'unknown' ? ['unknown'] :
+		primitiveTypes(shapes.input);
+	const outputs = shapes.output === 'unknown' ? ['unknown'] :
+		primitiveTypes(shapes.output);
 	const constraints: Partial<RuleJsonSchema> = {};
-	for (const rule of Object.values(rules)) {
-		for (const [keyword, value] of Object.entries(ruleConstraints(rule))) {
+	const patterns = new Set<string>();
+	for (const constraintsOfRule of metadata) {
+		for (const [keyword, value] of Object.entries(constraintsOfRule)) {
 			if (
 				keyword === 'minimum' || keyword === 'maximum'
 			) {
 				if (
 					!outputs.every((type) =>
 						type === 'number' || type === 'integer') ||
-					!Number.isFinite(value)
+					typeof value !== 'number' || !Number.isFinite(value)
 				) {
 					throw new TypeError(
 						`JSON Schema ${keyword} requires a finite numeric bound`
@@ -121,6 +175,7 @@ export function deriveRuleSchema(
 				}
 				if (
 					!outputs.every((type) => type === 'string') ||
+					typeof value !== 'number' ||
 					!Number.isInteger(value) || value < 0
 				) {
 					throw new TypeError(
@@ -138,6 +193,33 @@ export function deriveRuleSchema(
 					);
 				}
 			}
+			else if (keyword === 'pattern' || keyword === 'format') {
+				if (
+					!outputs.every((type) => type === 'string') ||
+					typeof value !== 'string' ||
+					(keyword === 'format' && value !== 'email')
+				) {
+					throw new TypeError(
+						`JSON Schema ${keyword} requires string metadata`
+					);
+				}
+				if (keyword === 'pattern') {
+					patterns.add(value);
+				}
+				else {
+					constraints.format = 'email';
+				}
+			}
+			else if (keyword === 'enum') {
+				const values = jsonEnum(value);
+				constraints.enum = constraints.enum === undefined ? values :
+					constraints.enum.filter((item) => values.includes(item));
+				if (constraints.enum.length === 0) {
+					throw new TypeError(
+						'JSON Schema enum intersection is empty'
+					);
+				}
+			}
 			else {
 				throw new TypeError(
 					`Unsupported JSON Schema constraint: ${keyword}`
@@ -146,15 +228,42 @@ export function deriveRuleSchema(
 		}
 	}
 	if (
+		(outputs.includes('unknown') || inputs.includes('unknown')) &&
+		constraints.enum === undefined
+	) {
+		throw new TypeError(
+			'Cannot derive primitive JSON Schema for unknown without an enum'
+		);
+	}
+
+	const patternSchema: JsonSchema = patterns.size > 1
+		? { allOf: [...patterns].map((pattern) => ({ pattern })) }
+		: patterns.size === 1 ? { pattern: [...patterns][0] } : {};
+
+	if (
 		constraints.minimum !== undefined &&
 		constraints.maximum !== undefined &&
 		constraints.minimum > constraints.maximum
 	) {
 		throw new TypeError('JSON Schema range requires ordered finite bounds');
 	}
+
+	if (
+		constraints.minLength !== undefined &&
+		constraints.maxLength !== undefined &&
+		constraints.minLength > constraints.maxLength
+	) {
+		throw new TypeError('JSON Schema length requires ordered bounds');
+	}
+
 	const branches = (schemas: JsonSchema[]): JsonSchema =>
 		schemas.length === 1 ? schemas[0] : { anyOf: schemas };
-	const output = branches(outputs.map((type) => ({ type, ...constraints })));
+	const shape = (type: string): JsonSchema =>
+		type === 'unknown' ? {} : { type };
+	const output = branches(outputs.map((type) => ({
+		...shape(type), ...constraints, ...patternSchema,
+	})));
+
 	if (direction === 'output') {
 		return output;
 	}
@@ -165,8 +274,52 @@ export function deriveRuleSchema(
 		) {
 			return { type: 'integer', ...constraints };
 		}
-		return outputs.includes(type) ? { type, ...constraints } : { type };
+		return outputs.includes(type)
+			? { ...shape(type), ...constraints, ...patternSchema }
+			: shape(type);
 	}));
+}
+
+export function deriveRuleSchema(
+	shapes: JsonSchemaShapes,
+	rules: RuleSet,
+	direction: JsonSchemaDirection
+): JsonSchema {
+	return deriveConstraints(
+		shapes, Object.values(rules).map(ruleConstraints), direction
+	);
+}
+
+export function intersectPrimitiveSchemas(schemas: JsonSchema[]): JsonSchema {
+	const supported = new Set([
+		'type', 'minimum', 'maximum', 'minLength', 'maxLength',
+		'pattern', 'format', 'enum', 'title', 'description',
+	]);
+	const type = schemas[0]?.['type'];
+
+	if (
+		schemas.length === 0 ||
+		(type !== 'string' && type !== 'number' &&
+			type !== 'integer' && type !== 'boolean') ||
+		!schemas.every((schema) =>
+			schema['type'] === type &&
+			(schema['format'] === undefined || schema['format'] === 'email') &&
+			Object.keys(schema).every((key) => supported.has(key))
+		)
+	) {
+		return { allOf: schemas };
+	}
+
+	const metadata = schemas.map((schema) =>
+		Object.fromEntries(Object.entries(schema).filter(
+			([key]) => key !== 'type' && key !== 'title' &&
+				key !== 'description'
+		))
+	);
+
+	return deriveConstraints({
+		input: type, output: type,
+	}, metadata, 'output');
 }
 
 export function assertJsonSchemaTarget(options: JsonSchemaOptions): void {

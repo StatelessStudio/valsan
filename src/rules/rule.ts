@@ -8,6 +8,9 @@ interface RuleJsonSchemaConstraints {
 	maximum?: number;
 	minLength?: number;
 	maxLength?: number;
+	pattern?: string;
+	format?: 'email';
+	enum?: readonly (string | number | boolean)[];
 }
 
 export type RuleJsonSchema = {
@@ -25,7 +28,20 @@ export type RuleConstraint =
 	| { kind: 'number.maximum'; context: { max: number } }
 	| { kind: 'number.range'; context: { min: number; max: number } }
 	| { kind: 'string.minLength'; context: { minLength: number } }
-	| { kind: 'string.maxLength'; context: { maxLength: number } };
+	| { kind: 'string.maxLength'; context: { maxLength: number } }
+	| {
+		kind: 'string.pattern';
+		context: { pattern: string; regex: RegExp };
+	}
+	| { kind: 'value.enum'; context: { allowedValues: readonly unknown[] } }
+	| {
+		kind: 'string.email';
+		context: { allowPlusAddress: boolean };
+	}
+	| {
+		kind: 'string.emailDomains';
+		context: { allowedDomains: readonly string[] | undefined };
+	};
 
 interface RuleDetails {
 	code: string;

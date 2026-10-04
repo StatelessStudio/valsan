@@ -16,22 +16,6 @@ export class EnumValidator<
 		return true;
 	}
 
-	protected override jsonSchemaDefinition() {
-		if (
-			this.allowedValues.length === 0 ||
-			!this.allowedValues.every((value) =>
-				typeof value === 'string' ||
-				typeof value === 'boolean' ||
-				(typeof value === 'number' && Number.isFinite(value))
-			)
-		) {
-			throw new TypeError(
-				'JSON Schema enums require nonempty JSON primitive values'
-			);
-		}
-		return { enum: [...new Set(this.allowedValues)] };
-	}
-
 	override type: ValSanTypes = 'unknown';
 	override title = 'Enumeration';
 	override description =
@@ -47,6 +31,7 @@ export class EnumValidator<
 	override rules() {
 		return {
 			enum: {
+				kind: 'value.enum' as const,
 				code: 'enum',
 				user: {
 					helperText: 'Values: ' + this.allowedValues.join(', '),

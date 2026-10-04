@@ -123,6 +123,26 @@ Recognized kinds derive constraints directly from context:
 | `number.range` | `{ min: number, max: number }` | `minimum`, `maximum` |
 | `string.minLength` | `{ minLength: number }` | `minLength` |
 | `string.maxLength` | `{ maxLength: number }` | `maxLength` |
+| `string.pattern` | `{ regex: RegExp, pattern: string }` | `pattern` |
+| `value.enum` | `{ allowedValues: readonly unknown[] }` | `enum` |
+| `string.email` | `{ allowPlusAddress: boolean }` | `format: 'email'`, `maxLength` |
+| `string.emailDomains` | `{ allowedDomains: readonly string[] \| undefined }` | Checks whether domain restrictions are representable |
+
+```typescript
+override rules() {
+  return {
+    pattern: {
+      kind: 'string.pattern' as const,
+      code: 'custom_pattern',
+      context: { regex: /^a/, pattern: '/^a/' },
+      user: {
+        helperText: 'Starts with a',
+        errorMessage: 'Value must start with a',
+      },
+    },
+  };
+}
+```
 
 The exported `Rule` and `RuleSet` types enforce context for these kinds.
 Custom rules may instead provide explicit `jsonSchema` metadata, which takes precedence over kind-based derivation. Shared derivation supports `minimum`, `maximum`, `minLength`, and `maxLength`, checks their values, and combines repeated bounds using the strongest constraint. An unbounded `maxLength: Infinity` is omitted.

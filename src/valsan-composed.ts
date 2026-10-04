@@ -8,6 +8,7 @@ import { BaseValSan } from './valsan-base';
 import { standardProps, SchemaValue } from './schema';
 import {
 	exportChildSchema,
+	intersectPrimitiveSchemas,
 	JsonSchema,
 	JsonSchemaDirection,
 	JsonSchemaOptions,
@@ -94,11 +95,9 @@ export class ComposedValSan<
 			);
 		}
 
-		return {
-			allOf: this.steps.map((step) =>
-				exportChildSchema(step, direction, options)
-			),
-		};
+		return intersectPrimitiveSchemas(this.steps.map((step) =>
+			exportChildSchema(step, direction, options)
+		));
 	}
 
 	/**

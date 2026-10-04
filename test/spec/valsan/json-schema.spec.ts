@@ -40,6 +40,7 @@ import type { ValSanTypes } from '../../../src/types/types';
 import {
 	exportChildSchema,
 	deriveRuleSchema,
+	intersectPrimitiveSchemas,
 } from '../../../src/json-schema';
 
 describe('Standard JSON Schema export', () => {
@@ -376,7 +377,8 @@ describe('Standard JSON Schema export', () => {
 						.toBeUndefined();
 					expect(properties['exampleField']['default'])
 						.toBeUndefined();
-					const ajv = target === 'draft-07' ? new Ajv() : new Ajv2020();
+					const ajv =
+						target === 'draft-07' ? new Ajv() : new Ajv2020();
 					const validate = ajv.compile(json);
 					expect(validate({ exampleField: '' })).toBe(true);
 					expect(validate({ exampleField: 'a'.repeat(255) }))
@@ -411,7 +413,7 @@ describe('Standard JSON Schema export', () => {
 		extended.steps.push(new MinLengthValidator({ minLength: 2 }));
 		expect(extended.toJsonSchema(
 			'input', { target: 'draft-07' }
-		)['allOf']).toBeDefined();
+		)).toEqual(documented(extended, { type: 'string', minLength: 2 }));
 		class CustomMin extends MinLengthValidator {
 			protected override jsonSchemaDefinition() {
 				return { type: 'string', pattern: '^a' };
@@ -421,7 +423,7 @@ describe('Standard JSON Schema export', () => {
 		custom.steps[0] = new CustomMin();
 		expect(custom.toJsonSchema(
 			'input', { target: 'draft-07' }
-		)['allOf']).toBeDefined();
+		)).toEqual(documented(custom, { type: 'string', pattern: '^a' }));
 	});
 
 	it('keeps transforming length subclasses subject to composition checks',
@@ -711,6 +713,178 @@ describe('Standard JSON Schema export', () => {
 		)).toEqual(documented(unsupported, { type: 'number', minimum: 2 }));
 	});
 
+	it('derives richer semantic rules without conversion hooks', () => {
+		const details = {
+			code: 'custom', user: { helperText: '', errorMessage: '' },
+		};
+		const rules: RuleSet = {
+			pattern: {
+				...details, kind: 'string.pattern',
+				context: { regex: /^a/, pattern: '/^a/' },
+			},
+			secondPattern: {
+				...details, kind: 'string.pattern',
+				context: { regex: /z$/, pattern: '/z$/' },
+			},
+			enum: {
+				...details, kind: 'value.enum',
+				context: { allowedValues: ['az', 'ab', 'az'] },
+			},
+			secondEnum: {
+				...details, kind: 'value.enum',
+				context: { allowedValues: ['az', 'bz'] },
+			},
+		};
+		for (const target of ['draft-07', 'draft-2020-12']) {
+			const ajv = target === 'draft-07' ? new Ajv() : new Ajv2020();
+			for (const direction of ['input', 'output'] as const) {
+				const json = deriveRuleSchema({
+					input: 'string', output: 'string',
+				}, rules, direction);
+				expect(json).toEqual({
+					type: 'string', enum: ['az'],
+					allOf: [{ pattern: '^a' }, { pattern: 'z$' }],
+				});
+				const validate = ajv.compile(json);
+				expect(validate('az')).toBe(true);
+				expect(validate('ab')).toBe(false);
+				expect(validate('bz')).toBe(false);
+			}
+		}
+		expect(new PatternValidator({ pattern: /^a$/ }).rules().pattern.kind)
+			.toBe('string.pattern');
+		expect(new EnumValidator({ allowedValues: [true] }).rules().enum.kind)
+			.toBe('value.enum');
+		expect(new EmailValidator().rules().invalid.kind)
+			.toBe('string.email');
+	});
+
+	it('preserves explicit overrides for richer kinds', () => {
+		const rule: Rule = {
+			code: 'custom', user: { helperText: '', errorMessage: '' },
+			kind: 'string.pattern',
+			context: { regex: /abc/i, pattern: '/abc/i' },
+			jsonSchema: { pattern: '^a' },
+		};
+		expect(deriveRuleSchema({
+			input: 'string', output: 'string',
+		}, { rule }, 'output')).toEqual({ type: 'string', pattern: '^a' });
+		expect(deriveRuleSchema({
+			input: 'string', output: 'string',
+		}, {
+			first: rule, second: rule,
+		}, 'output')).toEqual({ type: 'string', pattern: '^a' });
+	});
+
+	it('rejects malformed rich rule context and incompatible metadata', () => {
+		const details = {
+			code: 'invalid', user: { helperText: '', errorMessage: '' },
+		};
+		for (const metadata of [
+			{ kind: 'string.pattern', context: { regex: 'abc' } },
+			{ kind: 'string.pattern' },
+			{ kind: 'string.email' },
+			{ kind: 'string.emailDomains' },
+			{ kind: 'value.enum' },
+			{ kind: 'value.enum', context: { allowedValues: [] } },
+			{ jsonSchema: { enum: [null] } },
+			{ jsonSchema: { pattern: 42 } },
+			{ jsonSchema: { format: 'uri' } },
+		]) {
+			const rule = { ...details, ...metadata } as Rule;
+			expect(() => deriveRuleSchema({
+				input: 'string', output: 'string',
+			}, { rule }, 'output')).toThrowError(TypeError);
+		}
+		expect(() => deriveRuleSchema({
+			input: 'string', output: 'string',
+		}, {
+			first: { ...details, jsonSchema: { enum: ['a'] } },
+			second: { ...details, jsonSchema: { enum: ['b'] } },
+		}, 'output')).toThrowError(TypeError, /enum intersection is empty/);
+	});
+
+	it('flattens compatible primitives and preserves other intersections',
+		() => {
+			expect(intersectPrimitiveSchemas([
+				{ type: 'number', minimum: 1, maximum: 10 },
+				{ type: 'number', minimum: 3, maximum: 8 },
+			])).toEqual({ type: 'number', minimum: 3, maximum: 8 });
+			expect(intersectPrimitiveSchemas([
+				{ type: 'string', pattern: '^a', enum: ['az', 'ab'] },
+				{ type: 'string', pattern: 'z$', enum: ['az', 'bz'] },
+			])).toEqual({
+				type: 'string', enum: ['az'],
+				allOf: [{ pattern: '^a' }, { pattern: 'z$' }],
+			});
+			expect(intersectPrimitiveSchemas([
+				{ type: 'string' }, { type: 'string', minLength: 2 },
+			])).toEqual({ type: 'string', minLength: 2 });
+			for (const schemas of [
+				[],
+				[{ type: 'object' }, { type: 'object' }],
+				[{ type: 'string' }, { type: 'number' }],
+				[{ type: 'string' }, { type: 'string', default: 'abc' }],
+				[{ type: 'string' }, { type: 'string', const: 'abc' }],
+				[{ type: 'string' }, { anyOf: [{ type: 'string' }] }],
+				[{ type: 'string' }, { type: 'string', format: 'uri' }],
+			]) {
+				expect(intersectPrimitiveSchemas(schemas)).toEqual({
+					allOf: schemas,
+				});
+			}
+			expect(intersectPrimitiveSchemas([
+				{ type: 'boolean' }, { type: 'boolean' },
+			])).toEqual({ type: 'boolean' });
+			expect(intersectPrimitiveSchemas([
+				{ type: 'integer' }, { type: 'integer', minimum: 1 },
+			])).toEqual({ type: 'integer', minimum: 1 });
+			expect(() => intersectPrimitiveSchemas([
+				{ type: 'string', minLength: 4 },
+				{ type: 'string', maxLength: 2 },
+			])).toThrowError(TypeError, /length requires ordered bounds/);
+		});
+
+	it('requires typed context for richer rule kinds', () => {
+		const check = (rule: Rule) => rule;
+		const details = {
+			code: 'custom', user: { helperText: '', errorMessage: '' },
+		};
+		// @ts-expect-error Pattern rules require a RegExp.
+		check({ ...details, kind: 'string.pattern', context: { regex: 'a' } });
+		// @ts-expect-error Enum rules require an array.
+		check({ ...details, kind: 'value.enum',
+			context: { allowedValues: 1 } });
+		// @ts-expect-error Email rules require their addressing policy.
+		check({ ...details, kind: 'string.email', context: {} });
+	});
+
+	it('preserves runtime conjunction when flattening pattern compositions',
+		async () => {
+			const schema = new ComposedValSan([
+				new PatternValidator({ pattern: /^a/ }),
+				new PatternValidator({ pattern: /z$/ }),
+				new MinLengthValidator({ minLength: 3 }),
+			]);
+			for (const target of ['draft-07', 'draft-2020-12']) {
+				for (const direction of ['input', 'output'] as const) {
+					const json = schema.toJsonSchema(direction, { target });
+					expect(json).toEqual(documented(schema, {
+						type: 'string', minLength: 3,
+						allOf: [{ pattern: '^a' }, { pattern: 'z$' }],
+					}));
+					const ajv =
+						target === 'draft-07' ? new Ajv() : new Ajv2020();
+					const validate = ajv.compile(json);
+					for (const value of ['abz', 'az', 'ab', 'bz']) {
+						expect(validate(value)).toBe(
+							(await schema.run(value)).success
+						);
+					}
+				}
+			}
+		});
+
 	it('derives recognized constraint kinds from typed context', () => {
 		const cases: Array<[JsonSchemaShapes, RuleConstraint, JsonSchema]> = [
 			[
@@ -960,7 +1134,8 @@ describe('Standard JSON Schema export', () => {
 			[string, undefined],
 			[string, { minimum: 1 }],
 			[number, { minLength: 1 }],
-			[string, { pattern: '^a' }],
+			[number, { pattern: '^a' }],
+			[string, { multipleOf: 2 }],
 			[string, { minLength: 1.5 }],
 			[string, { maxLength: -1 }],
 			[number, { minimum: NaN }],

@@ -44,16 +44,6 @@ export class PatternValidator<
 		return true;
 	}
 
-	protected override jsonSchemaDefinition() {
-		if (this.pattern.flags !== '') {
-			throw new TypeError(
-				'Regex flags cannot be represented in JSON Schema; ' +
-				'provide options.jsonSchema'
-			);
-		}
-		return { type: 'string', pattern: this.pattern.source };
-	}
-
 	override type: ValSanTypes = 'string';
 	override title = 'Pattern-matched string';
 	override description =
@@ -71,6 +61,7 @@ export class PatternValidator<
 		return {
 			string: stringRule,
 			pattern: {
+				kind: 'string.pattern' as const,
 				code: 'pattern',
 				user: {
 					helperText: 'Pattern',
@@ -84,6 +75,7 @@ export class PatternValidator<
 				},
 				context: {
 					pattern: this.pattern.toString(),
+					regex: this.pattern,
 				},
 			},
 		};

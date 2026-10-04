@@ -5,9 +5,6 @@ import {
 } from './min-length-validator';
 import { MaxLengthValidator } from './max-length-validator';
 import { ValSanTypes } from '../../types/types';
-import {
-	deriveRuleSchema, JsonSchemaDirection, JsonSchemaOptions,
-} from '../../json-schema';
 
 export interface LengthValidatorOptions
 	extends ComposedValSanOptions,
@@ -50,31 +47,6 @@ export class LengthValidator<
 	override title = 'String length';
 	override description =
 		'A string whose length falls within the configured inclusive range.';
-
-	protected override jsonSchemaDefinition(
-		direction: JsonSchemaDirection,
-		options: JsonSchemaOptions
-	) {
-		if (!this.jsonSchemaPreservesInput) {
-			return super.jsonSchemaDefinition(direction, options);
-		}
-		if (
-			this.steps.length !== 2 ||
-			this.steps.some((step, index) =>
-				Object.getPrototypeOf(step) !== (
-					index === 0 ? MinLengthValidator.prototype :
-						MaxLengthValidator.prototype
-				) ||
-				step.options.jsonSchema?.[direction] !== undefined
-			)
-		) {
-			return super.jsonSchemaDefinition(direction, options);
-		}
-		return deriveRuleSchema({
-			input: this.inputType ?? this.type,
-			output: this.outputType ?? this.type,
-		}, this.rules(), direction);
-	}
 
 	constructor(options: TOptions = {} as TOptions) {
 		const steps = [

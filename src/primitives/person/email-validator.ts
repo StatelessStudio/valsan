@@ -3,10 +3,8 @@ import { ValSanTypes } from '../../types/types';
 import { isString } from '../string/is-string';
 import { stringRule } from '../string/string-rules';
 import { isFqdn } from '../network/is-fqdn';
-
-// This validator supports an ASCII subset, so character counts equal octets.
-const MAX_EMAIL_LENGTH = 254;
-const MAX_LOCAL_PART_LENGTH = 64;
+import { MAX_EMAIL_LENGTH, MAX_LOCAL_PART_LENGTH } from './email-limits';
+import type { Rule } from '../../rules/rule';
 
 export interface EmailValidatorOptions extends ValSanOptions {
 	/**
@@ -43,18 +41,6 @@ export class EmailValidator<
 		return true;
 	}
 
-	protected override jsonSchemaDefinition() {
-		if (!this.allowPlusAddress || this.allowedDomains !== undefined) {
-			throw new TypeError(
-				'Restricted email validators require options.jsonSchema'
-			);
-		}
-
-		return {
-			type: 'string', format: 'email', maxLength: MAX_EMAIL_LENGTH,
-		};
-	}
-
 	override type: ValSanTypes = 'string';
 	override title = 'Email address';
 	override description =
@@ -66,10 +52,11 @@ export class EmailValidator<
 	protected readonly allowPlusAddress: boolean;
 	protected readonly allowedDomains?: string[];
 
-	override rules() {
+	override rules(): { string: Rule; invalid: Rule; domain: Rule } {
 		return {
 			string: stringRule,
 			invalid: {
+				kind: 'string.email' as const,
 				code: 'email_format',
 				user: {
 					helperText: 'Email',
@@ -80,6 +67,7 @@ export class EmailValidator<
 				},
 			},
 			domain: {
+				kind: 'string.emailDomains' as const,
 				code: 'email_domain',
 				user: {
 					helperText:
