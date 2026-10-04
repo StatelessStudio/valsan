@@ -96,7 +96,7 @@ describe('ArrayValSan', () => {
 
 		expect(result.success).toBe(false);
 		expect(result.errors).toEqual([
-			{ code: 'required', message: 'Value is empty' },
+			{ code: 'required', message: 'Value is required' },
 		]);
 	});
 
@@ -110,7 +110,7 @@ describe('ArrayValSan', () => {
 
 		expect(result.success).toBe(false);
 		expect(result.errors).toEqual([
-			{ code: 'required', message: 'Value is empty' },
+			{ code: 'required', message: 'Value is required' },
 		]);
 	});
 
@@ -131,6 +131,42 @@ describe('ArrayValSan', () => {
 			expect(runSpy).not.toHaveBeenCalled();
 		});
 	}
+
+	it('should honor nullable and undefinable independently', async () => {
+		const nullableArray = new ArrayValSan({
+			schema: new IntegerValidator(),
+			isNullable: true,
+		});
+		const undefinableArray = new ArrayValSan({
+			schema: new IntegerValidator(),
+			isUndefinable: true,
+		});
+
+		expect<unknown>(await nullableArray.run(null)).toEqual({
+			success: true,
+			data: null,
+			errors: [],
+		});
+		expect((await nullableArray.run(undefined)).success).toBe(false);
+		expect<unknown>(await undefinableArray.run(undefined)).toEqual({
+			success: true,
+			data: undefined,
+			errors: [],
+		});
+		expect((await undefinableArray.run(null)).success).toBe(false);
+	});
+
+	it('should let explicit nullish options override isOptional', async () => {
+		const arrayValSan = new ArrayValSan({
+			schema: new IntegerValidator(),
+			isOptional: true,
+			isNullable: false,
+			isUndefinable: false,
+		});
+
+		expect((await arrayValSan.run(null)).success).toBe(false);
+		expect((await arrayValSan.run(undefined)).success).toBe(false);
+	});
 
 	it('should preserve nested optional arrays', async () => {
 		const optionalArray = new ArrayValSan({

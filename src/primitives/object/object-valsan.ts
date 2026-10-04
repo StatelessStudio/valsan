@@ -6,7 +6,6 @@ import {
 	RunsLikeAValSan,
 } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
-import { requiredRule } from '../../rules';
 
 export type ObjectSchema = Record<string, RunsLikeAValSan<unknown, unknown>>;
 
@@ -76,18 +75,7 @@ export class ObjectValSan extends ValSan<
 	): Promise<SanitizeResult<Record<string, unknown>>> {
 		const options = this.options as ObjectValSanOptions;
 		if (input === undefined || input === null) {
-			if (options.isOptional) {
-				return this.checkRequired(input);
-			}
-			return {
-				success: false,
-				errors: [
-					{
-						code: requiredRule.code,
-						message: requiredRule.user.errorMessage,
-					},
-				],
-			};
+			return this.checkRequired(input);
 		}
 
 		if (
