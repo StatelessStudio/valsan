@@ -38,6 +38,20 @@ export interface PatternValidatorOptions extends ValSanOptions {
  * ```
  */
 export class PatternValidator extends ValSan<string, string> {
+	public override get jsonSchemaPreservesInput(): boolean {
+		return true;
+	}
+
+	protected override jsonSchemaDefinition() {
+		if (this.pattern.flags !== '') {
+			throw new TypeError(
+				'Regex flags cannot be represented in JSON Schema; ' +
+				'provide options.jsonSchema'
+			);
+		}
+		return { type: 'string', pattern: this.pattern.source };
+	}
+
 	override type: ValSanTypes = 'string';
 	override title = 'Pattern-matched string';
 	override description =

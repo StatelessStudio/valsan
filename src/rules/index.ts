@@ -1,1 +1,1 @@
-export { Rule, RuleSet } from './rule';
+export { Rule, RuleSet, RuleJsonSchema, RuleConstraint } from './rule';

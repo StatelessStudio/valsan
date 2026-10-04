@@ -37,6 +37,22 @@ export interface EmailValidatorOptions extends ValSanOptions {
  * ```
  */
 export class EmailValidator extends ValSan<string, string> {
+	public override get jsonSchemaPreservesInput(): boolean {
+		return true;
+	}
+
+	protected override jsonSchemaDefinition() {
+		if (!this.allowPlusAddress || this.allowedDomains !== undefined) {
+			throw new TypeError(
+				'Restricted email validators require options.jsonSchema'
+			);
+		}
+
+		return {
+			type: 'string', format: 'email', maxLength: MAX_EMAIL_LENGTH,
+		};
+	}
+
 	override type: ValSanTypes = 'string';
 	override title = 'Email address';
 	override description =

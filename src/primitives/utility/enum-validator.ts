@@ -9,6 +9,26 @@ export interface EnumValidatorOptions<T> extends ValSanOptions {
 }
 
 export class EnumValidator<T> extends ValSan<T, T> {
+	public override get jsonSchemaPreservesInput(): boolean {
+		return true;
+	}
+
+	protected override jsonSchemaDefinition() {
+		if (
+			this.allowedValues.length === 0 ||
+			!this.allowedValues.every((value) =>
+				typeof value === 'string' ||
+				typeof value === 'boolean' ||
+				(typeof value === 'number' && Number.isFinite(value))
+			)
+		) {
+			throw new TypeError(
+				'JSON Schema enums require nonempty JSON primitive values'
+			);
+		}
+		return { enum: [...new Set(this.allowedValues)] };
+	}
+
 	override type: ValSanTypes = 'unknown';
 	override title = 'Enumeration';
 	override description =

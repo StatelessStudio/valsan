@@ -6,6 +6,12 @@ import {
 } from './valsan';
 import { BaseValSan } from './valsan-base';
 import { standardProps } from './schema';
+import {
+	exportChildSchema,
+	JsonSchema,
+	JsonSchemaDirection,
+	JsonSchemaOptions,
+} from './json-schema';
 
 export interface ComposedValSanOptions extends ValSanOptions {
 	/**
@@ -49,8 +55,40 @@ export class ComposedValSan<TInput = unknown, TOutput = TInput>
 		'A value that satisfies each configured Valsan step in sequence.';
 
 	public readonly '~standard' = standardProps<TInput, TOutput>(
-		async (input) => this.run(input as TInput)
+		async (input) => this.run(input as TInput),
+		{
+			input: (options) => this.toJsonSchema('input', options),
+			output: (options) => this.toJsonSchema('output', options),
+		}
 	);
+
+	public override get jsonSchemaPreservesInput(): boolean {
+		return this.steps.every((step) =>
+			'jsonSchemaPreservesInput' in step &&
+			step.jsonSchemaPreservesInput === true
+		);
+	}
+
+	protected override jsonSchemaDefinition(
+		direction: JsonSchemaDirection,
+		options: JsonSchemaOptions
+	): JsonSchema {
+		if (this.steps.length === 1) {
+			return exportChildSchema(this.steps[0], direction, options);
+		}
+
+		if (!this.jsonSchemaPreservesInput) {
+			throw new TypeError(
+				'Transforming compositions require explicit options.jsonSchema'
+			);
+		}
+
+		return {
+			allOf: this.steps.map((step) =>
+				exportChildSchema(step, direction, options)
+			),
+		};
+	}
 
 	/**
 	 * Creates a composed validator from an array of ValSan steps.

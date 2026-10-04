@@ -36,6 +36,8 @@ export class MinValidator extends ValSan<
 	number,
 	number
 > {
+	override inputType = ['number', 'string'] as const;
+
 	override type: ValSanTypes = 'number';
 	override title = 'Minimum value';
 	override description =
@@ -48,6 +50,7 @@ export class MinValidator extends ValSan<
 			number: numberRule,
 			min: {
 				code: 'minimum',
+				kind: 'number.minimum' as const,
 				user: {
 					helperText: `Minimum value: ${this.min}`,
 					errorMessage: `Number must be at least ${this.min}`,

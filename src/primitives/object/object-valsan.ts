@@ -7,6 +7,12 @@ import {
 import { ValSanTypes } from '../../types/types';
 import { runSchema } from '../../schema';
 import type { SchemaLike } from '../../schema';
+import {
+	exportChildSchema,
+	JsonSchema,
+	JsonSchemaDirection,
+	JsonSchemaOptions,
+} from '../../json-schema';
 
 export type ObjectSchema = Record<string, SchemaLike>;
 
@@ -53,6 +59,39 @@ export class ObjectValSan extends ValSan<
 	override title = 'Object';
 	override description =
 		'An object whose configured properties each satisfy their schema.';
+
+	protected override jsonSchemaDefinition(
+		direction: JsonSchemaDirection,
+		options: JsonSchemaOptions
+	): JsonSchema {
+		const properties: Record<string, JsonSchema> = {};
+		const required: string[] = [];
+
+		for (const [key, child] of Object.entries(this.schema)) {
+			Object.defineProperty(properties, key, {
+				value: exportChildSchema(child, direction, options),
+				enumerable: true,
+				configurable: true,
+				writable: true,
+			});
+
+			if (
+				!('jsonSchemaAllowsUndefined' in child) ||
+				child.jsonSchemaAllowsUndefined !== true
+			) {
+				required.push(key);
+			}
+		}
+
+		return {
+			type: 'object',
+			properties,
+			required,
+			additionalProperties:
+				(this.options as ObjectValSanOptions)
+					.allowAdditionalProperties ?? false,
+		};
+	}
 
 	public get schema(): ObjectSchema {
 		return (this.options as ObjectValSanOptions).schema;

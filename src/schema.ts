@@ -1,4 +1,7 @@
-import type { StandardSchemaV1 } from '@standard-schema/spec';
+import type {
+	StandardSchemaV1,
+	StandardJSONSchemaV1,
+} from '@standard-schema/spec';
 import type {
 	RunsLikeAValSan,
 	SanitizeResult,
@@ -10,11 +13,14 @@ export type StandardSchema = StandardSchemaV1<unknown, unknown>;
 export type SchemaLike = RunsLikeAValSan<unknown, unknown> | StandardSchema;
 
 export function standardProps<TInput, TOutput>(
-	run: (input: unknown) => Promise<SanitizeResult<TOutput>>
-): StandardSchemaV1.Props<TInput, TOutput | null | undefined> {
+	run: (input: unknown) => Promise<SanitizeResult<TOutput>>,
+	jsonSchema: StandardJSONSchemaV1.Converter
+): StandardSchemaV1.Props<TInput, TOutput | null | undefined> &
+	StandardJSONSchemaV1.Props<TInput, TOutput | null | undefined> {
 	return {
 		version: 1,
 		vendor: 'valsan',
+		jsonSchema,
 		validate: async (input) => {
 			const result = await run(input);
 

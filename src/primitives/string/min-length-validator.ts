@@ -32,6 +32,10 @@ export interface MinLengthValidatorOptions extends ValSanOptions {
  * ```
  */
 export class MinLengthValidator extends ValSan<string, string> {
+	public override get jsonSchemaPreservesInput(): boolean {
+		return true;
+	}
+
 	override type: ValSanTypes = 'string';
 	override title = 'Minimum string length';
 	override description =
@@ -48,6 +52,7 @@ export class MinLengthValidator extends ValSan<string, string> {
 			string: stringRule,
 			minLength: {
 				code: 'string_min_len',
+				kind: 'string.minLength' as const,
 				user: {
 					helperText: `Minimum length: ${this.minLength}`,
 					errorMessage:

@@ -1,9 +1,17 @@
 import { validationError } from './errors';
 import { Rule } from './rules';
 import { RuleSet } from './rules/rule';
-import { ValSanTypes } from './types/types';
+import { ValSanTypes, ValSanValueType } from './types/types';
 import { BaseValSan } from './valsan-base';
 import { standardProps } from './schema';
+import {
+	deriveRuleSchema,
+	JsonSchema,
+	JsonSchemaDefinition,
+	JsonSchemaDirection,
+	JsonSchemaOptions,
+	JsonSchemaShapes,
+} from './json-schema';
 
 export interface ValidationError {
 	field?: string;
@@ -45,6 +53,10 @@ export interface ValSanOptions {
 	 */
 	description?: string;
 	/**
+	 * Explicit JSON representations for custom validators or transformations.
+	 */
+	jsonSchema?: JsonSchemaDefinition;
+	/**
 	 * If true, null values will pass validation without running validation or
 	 * sanitization steps.
 	 * @default false
@@ -67,6 +79,8 @@ export interface ValSanOptions {
 
 export interface RunsLikeAValSan<TInput = unknown, TOutput = TInput> {
 	readonly type: ValSanTypes;
+	readonly inputType?: ValSanValueType;
+	readonly outputType?: ValSanValueType;
 	readonly format?: string;
 	readonly example: string;
 	readonly getTitle: () => string;
@@ -87,7 +101,11 @@ export abstract class ValSan<
 	extends BaseValSan<TInput, TOutput>
 	implements RunsLikeAValSan<TInput, TOutput> {
 	public readonly '~standard' = standardProps<TInput, TOutput>(
-		async (input) => this.run(input as TInput)
+		async (input) => this.run(input as TInput),
+		{
+			input: (options) => this.toJsonSchema('input', options),
+			output: (options) => this.toJsonSchema('output', options),
+		}
 	);
 
 	public constructor(public override readonly options: ValSanOptions = {}) {
@@ -104,6 +122,21 @@ export abstract class ValSan<
 
 	public getRuleHelperTexts(): string[] {
 		return this.collectRuleHelperTexts(this.rules());
+	}
+
+	protected override jsonSchemaDefinition(
+		direction: JsonSchemaDirection,
+		options: JsonSchemaOptions
+	): JsonSchema {
+		const rules = this.rules();
+		if (Object.keys(rules).length === 0) {
+			return super.jsonSchemaDefinition(direction, options);
+		}
+		const shapes: JsonSchemaShapes = {
+			input: this.inputType ?? this.type,
+			output: this.outputType ?? this.type,
+		};
+		return deriveRuleSchema(shapes, rules, direction);
 	}
 
 	public copy(options: ValSanOptions): ValSan<TInput, TOutput, TNormalized> {

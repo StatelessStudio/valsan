@@ -7,6 +7,12 @@ import {
 import { ValSanTypes } from '../../types/types';
 import { runSchema } from '../../schema';
 import type { SchemaLike } from '../../schema';
+import {
+	exportChildSchema,
+	JsonSchema,
+	JsonSchemaDirection,
+	JsonSchemaOptions,
+} from '../../json-schema';
 
 export type ArraySchema = SchemaLike;
 
@@ -38,6 +44,24 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 	override description =
 		'An array whose items each satisfy the configured schema.';
 
+	protected override jsonSchemaDefinition(
+		direction: JsonSchemaDirection,
+		options: JsonSchemaOptions
+	): JsonSchema {
+		if (
+			'jsonSchemaAllowsUndefined' in this.schema &&
+			this.schema.jsonSchemaAllowsUndefined === true
+		) {
+			throw new TypeError(
+				'Undefined array elements cannot be represented in JSON Schema'
+			);
+		}
+		return {
+			type: 'array',
+			items: exportChildSchema(this.schema, direction, options),
+		};
+	}
+
 	public get schema(): ArraySchema {
 		return (this.options as ArrayValSanOptions).schema;
 	}
@@ -62,6 +86,7 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 		input: unknown[] | unknown
 	): Promise<SanitizeResult<unknown[]>> {
 		const options = this.options as ArrayValSanOptions;
+
 		if (input === undefined || input === null) {
 			return this.checkRequired(input);
 		}

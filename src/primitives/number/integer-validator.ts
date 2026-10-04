@@ -28,6 +28,8 @@ export class IntegerValidator extends ValSan<
 	number,
 	number
 > {
+	override inputType = ['number', 'string'] as const;
+
 	override type: ValSanTypes = 'integer';
 	override title = 'Integer';
 	override description =
@@ -40,6 +42,7 @@ export class IntegerValidator extends ValSan<
 			number: numberRule,
 			integer: {
 				code: 'integer',
+				kind: 'type.integer' as const,
 				user: {
 					helperText: 'Integer',
 					errorMessage: 'Number must be an integer',

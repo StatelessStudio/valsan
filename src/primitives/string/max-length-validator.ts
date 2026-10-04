@@ -31,6 +31,10 @@ export interface MaxLengthValidatorOptions extends ValSanOptions {
  * ```
  */
 export class MaxLengthValidator extends ValSan<string, string> {
+	public override get jsonSchemaPreservesInput(): boolean {
+		return true;
+	}
+
 	override type: ValSanTypes = 'string';
 	override title = 'Maximum string length';
 	override description =
@@ -48,6 +52,7 @@ export class MaxLengthValidator extends ValSan<string, string> {
 			string: stringRule,
 			maxLength: {
 				code: 'string_max_len',
+				kind: 'string.maxLength' as const,
 				user: {
 					helperText: `Maximum length: ${this.maxLength}`,
 					errorMessage:

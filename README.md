@@ -102,6 +102,63 @@ console.log(result.success); // false - out of range
 
 ValSan instances implement [Standard Schema v1](https://standardschema.dev/), so they can be passed to libraries that accept Standard Schema validators. `ArrayValSan` and `ObjectValSan` can also consume Standard Schema objects.
 
+### JSON Schema export
+
+ValSan and ComposedValSan also expose the
+[Standard JSON Schema](https://standardschema.dev/json-schema) interface.
+Supported validators can be passed to consumers requiring that interface, such
+as Mastra tool schemas, or exported directly:
+
+```typescript
+import {
+  ArrayValSan, EnumValidator, ObjectValSan, StringToNumberValSan, TrimSanitizer,
+} from 'valsan';
+
+const schema = new ObjectValSan({
+  schema: {
+    name: new TrimSanitizer(),
+    count: new StringToNumberValSan(),
+    tags: new ArrayValSan({
+      schema: new EnumValidator({ allowedValues: ['work', 'home'] }),
+    }),
+  },
+});
+
+const input = schema['~standard'].jsonSchema.input({ target: 'draft-2020-12' });
+const output = schema['~standard'].jsonSchema.output({ target: 'draft-2020-12' });
+// input.properties.count.type === 'string'
+// output.properties.count.type === 'number'
+// Both schemas reject undeclared properties.
+```
+
+Supported targets are `draft-2020-12` and `draft-07`; other targets throw.
+Automatic export covers nested objects/arrays, string/number/boolean enums,
+trim/lowercase/uppercase sanitizers, string length/pattern validators, default
+email validation, numeric integer/min/max/range validators, and string-to-number
+and string-to-boolean transformations. Numeric inputs describe JSON numbers and
+strings; bigint is not a JSON value. Runtime validation still checks numeric
+string syntax, exact conversion, boolean spellings, and other refinements.
+JSON Schema describes the wire shape and representable constraints, not the
+sanitization algorithm or every JavaScript validation rule (for example,
+JavaScript string length counts UTF-16 units rather than JSON Schema characters).
+
+Single-step compositions export that step. Multi-step, value-preserving
+compositions export all step constraints using `allOf`. Multi-step transforming
+pipelines require explicit `options.jsonSchema` input/output definitions.
+Unsupported built-ins, custom validators, regex flags, restricted email options,
+non-JSON enums, cyclic schemas, and arrays allowing undefined elements throw
+instead of silently producing an unconstrained schema.
+
+Optional object fields are omitted from `required`, and nullable values use
+`anyOf`. Additional properties follow `allowAdditionalProperties`; they are
+never silently stripped. External children must implement both validation and
+JSON Schema conversion. Without ValSan optionality metadata, external child
+properties are treated as required. Reference-bearing child schemas require
+explicit definitions on the parent, because nested references need rebasing.
+
+See [custom validators](docs/custom-valsan.md#json-schema-extension-api) for
+explicit definitions and subclass conversion hooks.
+
 ### Primitives Library
 
 Compose your own validators from built-in primitives:

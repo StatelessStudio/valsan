@@ -52,6 +52,8 @@ export interface StringToBooleanValSanOptions extends ValSanOptions {
  * ```
  */
 export class StringToBooleanValSan extends ValSan<string, boolean> {
+	override inputType = 'string' as const;
+
 	override type: ValSanTypes = 'boolean';
 	override title = 'Boolean string';
 	override description =
@@ -67,6 +69,7 @@ export class StringToBooleanValSan extends ValSan<string, boolean> {
 			string: stringRule,
 			booleanString: {
 				code: 'boolean',
+				jsonSchema: 'type-only' as const,
 				user: {
 					helperText: 'True or false',
 					errorMessage: 'Input must be true or false',

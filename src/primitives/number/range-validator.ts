@@ -41,6 +41,8 @@ export class RangeValidator extends ValSan<
 	number,
 	number
 > {
+	override inputType = ['number', 'string'] as const;
+
 	override type: ValSanTypes = 'number';
 	override title = 'Number range';
 	override description =
@@ -54,6 +56,7 @@ export class RangeValidator extends ValSan<
 			number: numberRule,
 			range: {
 				code: 'number_range',
+				kind: 'number.range' as const,
 				user: {
 					helperText: `Value from ${this.min} through ${this.max}.`,
 					errorMessage:
