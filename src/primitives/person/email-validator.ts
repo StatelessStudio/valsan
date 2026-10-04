@@ -38,6 +38,10 @@ export interface EmailValidatorOptions extends ValSanOptions {
  */
 export class EmailValidator extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'Email address';
+	override description =
+		'An email address, optionally restricted to configured domains or ' +
+		'excluding plus addressing.';
 	override format = 'email';
 	override example = 'test@example.com';
 

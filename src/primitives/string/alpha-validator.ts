@@ -32,6 +32,9 @@ export interface AlphaValidatorOptions extends ValSanOptions {
  */
 export class AlphaValidator extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'Alphabetic string';
+	override description =
+		'A string containing only letters, optionally including spaces.';
 	override example = 'hello';
 
 	private readonly allowSpaces: boolean;

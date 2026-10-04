@@ -16,6 +16,8 @@ import { stringRule } from './string-rules';
  */
 export class UppercaseSanitizer extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'Uppercase string';
+	override description = 'A string with all letters in uppercase.';
 
 	public override rules() {
 		return {

@@ -33,6 +33,9 @@ export interface ArrayValSanOptions extends ValSanOptions {
  */
 export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 	override type: ValSanTypes = 'array';
+	override title = 'Array';
+	override description =
+		'An array whose items each satisfy the configured schema.';
 
 	public get schema(): ArraySchema {
 		return (this.options as ArrayValSanOptions).schema;

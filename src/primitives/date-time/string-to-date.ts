@@ -31,6 +31,10 @@ export class StringToDateValSan extends ValSan<
 	Date
 > {
 	override type: ValSanTypes = 'string';
+	override title = 'Date';
+	override description =
+		'An ISO calendar date, timestamp, numeric millisecond timestamp, ' +
+		'or valid Date object.';
 	override format = 'date';
 	override example = '2024-01-15';
 

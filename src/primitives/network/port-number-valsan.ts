@@ -7,6 +7,10 @@ import { normalizeNumber } from '../number/normalize-number';
 export class PortNumberValSan extends ValSan<number | string, number> {
 	// Represent port numbers as integers in OpenAPI
 	override type: ValSanTypes = 'integer';
+	override title = 'Port number';
+	override description =
+		'An integer from 0 through 65535, supplied as a number or numeric ' +
+		'string.';
 	override format = 'int32';
 	override example = '8080';
 

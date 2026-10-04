@@ -49,6 +49,9 @@ export class ObjectValSan extends ValSan<
 	Record<string, unknown>
 > {
 	override type: ValSanTypes = 'object';
+	override title = 'Object';
+	override description =
+		'An object whose configured properties each satisfy their schema.';
 
 	public get schema(): ObjectSchema {
 		return (this.options as ObjectValSanOptions).schema;

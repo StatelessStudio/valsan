@@ -11,6 +11,10 @@ const hexColorRegex =
 
 export class HexColorValSan extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'Hex color';
+	override description =
+		'A hexadecimal color in 3-, 4-, 6-, or 8-digit notation, ' +
+		'prefixed with "#".';
 	override format = 'color-hex';
 	override example = '#FF0000';
 

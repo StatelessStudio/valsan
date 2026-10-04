@@ -16,6 +16,9 @@ import { stringRule } from './string-rules';
  */
 export class AlphanumericValidator extends ValSan<string, string> {
 	override type: ValSanTypes = 'string';
+	override title = 'Alphanumeric string';
+	override description =
+		'A string containing only letters and numbers.';
 	override example = 'abc123';
 
 	override rules() {

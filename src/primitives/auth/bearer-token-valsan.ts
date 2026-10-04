@@ -30,6 +30,10 @@ export class BearerTokenValSan extends ValSan<
 	string
 > {
 	override type: ValSanTypes = 'string';
+	override title = 'Bearer token';
+	override description =
+		'An HTTP authorization value using the Bearer scheme and a ' +
+		'non-empty token.';
 	override example = 'Bearer mF_9.B5f-4.1JqM';
 
 	override rules() {

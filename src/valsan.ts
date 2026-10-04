@@ -35,6 +35,15 @@ export type SanitizeResult<T> =
 
 export interface ValSanOptions {
 	/**
+	 * Human-readable title for schema documentation and JSON Schema output.
+	 */
+	title?: string;
+	/**
+	 * Human-readable description for schema documentation and JSON Schema
+	 * output.
+	 */
+	description?: string;
+	/**
 	 * If true, null values will pass validation without running validation or
 	 * sanitization steps.
 	 * @default false
@@ -59,6 +68,10 @@ export interface RunsLikeAValSan<TInput = unknown, TOutput = TInput> {
 	readonly type: ValSanTypes;
 	readonly format?: string;
 	readonly example: string;
+	readonly getTitle: () => string;
+	readonly getDescription: () => string | undefined;
+	readonly getValidationDescription?: () => string | undefined;
+	readonly getRuleHelperTexts?: () => string[];
 	readonly options: ValSanOptions;
 
 	rules(): RuleSet;
@@ -78,6 +91,14 @@ export abstract class ValSan<
 
 	public rules(): RuleSet {
 		return {};
+	}
+
+	public getValidationDescription(): string | undefined {
+		return this.buildValidationDescription(this.getRuleHelperTexts());
+	}
+
+	public getRuleHelperTexts(): string[] {
+		return this.collectRuleHelperTexts(this.rules());
 	}
 
 	public copy(options: ValSanOptions): ValSan<TInput, TOutput, TNormalized> {
