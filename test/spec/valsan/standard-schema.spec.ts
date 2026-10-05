@@ -193,7 +193,7 @@ describe('Standard Schema interoperability', () => {
 			runSchema(unsupportedSchema, 'value')
 		).toBeRejectedWithError(
 			TypeError,
-			'Schema must implement run() or Standard Schema validation'
+			'Schema must implement run() or Standard Schema v1 validation'
 		);
 	});
 
@@ -208,6 +208,26 @@ describe('Standard Schema interoperability', () => {
 		{ '~standard': 42 },
 		{ '~standard': {} },
 		{ '~standard': { validate: 'not a function' } },
+		{
+			'~standard': {
+				version: 2,
+				vendor: 'test',
+				validate: () => ({ value: 'value' }),
+			},
+		},
+		{
+			'~standard': {
+				version: 1,
+				validate: () => ({ value: 'value' }),
+			},
+		},
+		{
+			'~standard': {
+				version: 1,
+				vendor: 42,
+				validate: () => ({ value: 'value' }),
+			},
+		},
 	];
 
 	for (const malformed of malformedSchemas) {
@@ -216,7 +236,7 @@ describe('Standard Schema interoperability', () => {
 				runSchema(malformed as SchemaLike, 'value')
 			).toBeRejectedWithError(
 				TypeError,
-				'Schema must implement run() or Standard Schema validation'
+				'Schema must implement run() or Standard Schema v1 validation'
 			);
 		});
 	}

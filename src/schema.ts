@@ -129,7 +129,7 @@ export async function runSchema(
 ): Promise<SanitizeResult<unknown>> {
 	if (!isSchemaContainer(schema)) {
 		throw new TypeError(
-			'Schema must implement run() or Standard Schema validation'
+			'Schema must implement run() or Standard Schema v1 validation'
 		);
 	}
 
@@ -140,6 +140,8 @@ export async function runSchema(
 	if (
 		'~standard' in schema &&
 		isSchemaContainer(schema['~standard']) &&
+		schema['~standard'].version === 1 &&
+		typeof schema['~standard'].vendor === 'string' &&
 		typeof schema['~standard'].validate === 'function'
 	) {
 		const result = await schema['~standard'].validate(input);
@@ -186,6 +188,6 @@ export async function runSchema(
 	}
 
 	throw new TypeError(
-		'Schema must implement run() or Standard Schema validation'
+		'Schema must implement run() or Standard Schema v1 validation'
 	);
 }
