@@ -7,7 +7,4 @@
 	"[json]": {
 		"editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
 	},
-	"[typescript]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
-	}
 }
