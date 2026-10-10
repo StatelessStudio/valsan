@@ -46,6 +46,26 @@ import {
 } from '../../../src/json-schema';
 
 describe('Standard JSON Schema export', () => {
+	it('exposes the base null policy to subclasses', () => {
+		class NullPolicySanitizer extends TrimSanitizer<ValSanOptions> {
+			public allowsNullForTest(): boolean {
+				return this.jsonSchemaAllowsNull;
+			}
+		}
+
+		expect(new NullPolicySanitizer().allowsNullForTest()).toBe(false);
+		expect(
+			new NullPolicySanitizer({ isNullable: true })
+				.allowsNullForTest()
+		).toBe(true);
+		expect(
+			new NullPolicySanitizer({
+				isOptional: true,
+				isNullable: false,
+			}).allowsNullForTest()
+		).toBe(false);
+	});
+
 	function documented(
 		schema: Pick<RunsLikeAValSan, 'getTitle' | 'getDescription'>,
 		definition: JsonSchema
@@ -400,6 +420,45 @@ describe('Standard JSON Schema export', () => {
 				anyOf: [{ type: 'integer' }, { type: 'string' }],
 			}));
 	});
+
+	it('exports transformation input wire types without runtime constraints',
+		async () => {
+			const cases = [
+				{
+					schema: new StringToNumberValSan(),
+					valid: '42',
+					invalid: 'not-a-number',
+					output: 42,
+				},
+				{
+					schema: new StringToBooleanValSan(),
+					valid: 'yes',
+					invalid: 'maybe',
+					output: true,
+				},
+			] as const;
+
+			for (const target of ['draft-07', 'draft-2020-12']) {
+				const ajv =
+					target === 'draft-07' ? new Ajv() : new Ajv2020();
+				for (const { schema, valid, invalid, output } of cases) {
+					const inputSchema = toJsonSchema(
+						schema, 'input', { target }
+					);
+					const outputSchema = toJsonSchema(
+						schema, 'output', { target }
+					);
+					const validateInput = ajv.compile(inputSchema);
+					const validateOutput = ajv.compile(outputSchema);
+
+					expect(validateInput(valid)).toBe(true);
+					expect(validateInput(invalid)).toBe(true);
+					expect(validateOutput(output)).toBe(true);
+					expect((await schema.run(valid)).success).toBe(true);
+					expect((await schema.run(invalid)).success).toBe(false);
+				}
+			}
+		});
 
 	it('exports length constraints as a flat string schema', () => {
 		const schema = new LengthValidator({ minLength: 2, maxLength: 4 });

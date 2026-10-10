@@ -1,5 +1,4 @@
 import 'jasmine';
-import { execFileSync } from 'node:child_process';
 import type {
 	StandardSchemaV1,
 	StandardJSONSchemaV1,
