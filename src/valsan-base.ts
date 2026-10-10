@@ -1,16 +1,16 @@
 import { ValSanTypes, ValSanValueType } from './types/types';
 import { RuleSet } from './rules/rule';
 import { SanitizeResult, ValSanOptions } from './valsan';
-import {
-	assertJsonSchemaTarget,
+import type {
 	JsonSchema,
+	JsonSchemaContext,
 	JsonSchemaDirection,
 	JsonSchemaOptions,
+	JsonSchemaProvider,
 } from './json-schema';
 
-export class BaseValSan<TInput = unknown, TOutput = TInput> {
-	private exportingJsonSchema = false;
-
+export class BaseValSan<TInput = unknown, TOutput = TInput>
+implements JsonSchemaProvider {
 	public get jsonSchemaPreservesInput(): boolean {
 		return false;
 	}
@@ -31,40 +31,19 @@ export class BaseValSan<TInput = unknown, TOutput = TInput> {
 		return this.options.isUndefinable ?? this.options.isOptional ?? false;
 	}
 
-	public toJsonSchema(
+	public getJsonSchemaDefinition(
 		direction: JsonSchemaDirection,
-		options: JsonSchemaOptions
+		options: JsonSchemaOptions,
+		context: JsonSchemaContext
 	): JsonSchema {
-		assertJsonSchemaTarget(options);
-		if (this.exportingJsonSchema) {
-			throw new TypeError(
-				'Cyclic schemas cannot be exported to JSON Schema'
-			);
-		}
-
-		this.exportingJsonSchema = true;
-		try {
-			const schema = this.options.jsonSchema?.[direction] ??
-				this.jsonSchemaDefinition(direction, options);
-			const exported: JsonSchema = this.jsonSchemaAllowsNull
-				? { anyOf: [structuredClone(schema), { type: 'null' }] }
-				: structuredClone(schema);
-			exported['title'] = schema['title'] ?? this.getTitle();
-			const description = schema['description'] ?? this.getDescription();
-			if (description !== undefined) {
-				exported['description'] = description;
-			}
-
-			return exported;
-		}
-		finally {
-			this.exportingJsonSchema = false;
-		}
+		return this.jsonSchemaDefinition(direction, options, context);
 	}
 
 	protected jsonSchemaDefinition(
 		direction: JsonSchemaDirection,
-		options: JsonSchemaOptions
+		options: JsonSchemaOptions,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		_context: JsonSchemaContext
 	): JsonSchema {
 		throw new TypeError(
 			`${this.constructor.name} does not support JSON Schema export; ` +
@@ -74,8 +53,8 @@ export class BaseValSan<TInput = unknown, TOutput = TInput> {
 	}
 
 	public type: ValSanTypes = 'unknown';
-	public inputType?: ValSanValueType;
-	public outputType?: ValSanValueType;
+	declare public inputType?: ValSanValueType;
+	declare public outputType?: ValSanValueType;
 
 	protected title: string | undefined = undefined;
 	protected description: string | undefined = undefined;

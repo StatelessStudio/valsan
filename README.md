@@ -102,6 +102,33 @@ console.log(result.success); // false - out of range
 
 ValSan instances implement [Standard Schema v1](https://standardschema.dev/), so they can be passed to libraries that accept Standard Schema validators. `ArrayValSan` and `ObjectValSan` can also consume Standard Schema objects.
 
+### Optional JSON Schema export
+
+JSON Schema conversion is available separately from `valsan/json-schema`.
+Normal validation does not load the exporter, and Standard Schema adapters
+are created only when accessed.
+
+```typescript
+import { LengthValidator, ObjectValSan } from 'valsan';
+import { toJsonSchema, withJsonSchema } from 'valsan/json-schema';
+
+const schema = new ObjectValSan({
+    schema: { name: new LengthValidator({ minLength: 1, maxLength: 100 }) },
+});
+
+// For a form generator:
+const formSchema = toJsonSchema(schema, 'input', { target: 'draft-07' });
+
+// For consumers such as Mastra that need Standard JSON Schema:
+const standardSchema = withJsonSchema(schema);
+// Pass standardSchema instead of schema to the consumer.
+```
+
+The adapter retains Standard Schema validation and input/output inference
+without modifying the original validator. See the
+[conversion guide](docs/standard-schema-custom-valsan.md) for supported
+constraints and limitations.
+
 ### Primitives Library
 
 Compose your own validators from built-in primitives:

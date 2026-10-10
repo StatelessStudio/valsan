@@ -1,7 +1,12 @@
-import type { StandardJSONSchemaV1 } from '@standard-schema/spec';
+/* eslint no-use-before-define: ["warn", { "functions": false }] */
+import type {
+	StandardJSONSchemaV1,
+	StandardSchemaV1,
+} from '@standard-schema/spec';
 import type { SchemaLike } from './schema';
 import type { Rule, RuleSet, RuleJsonSchema } from './rules/rule';
 import type { ValSanValueType } from './types/types';
+import type { RunsLikeAValSan } from './valsan';
 import { MAX_EMAIL_LENGTH } from './primitives/person/email-limits';
 
 export type JsonSchema = Record<string, unknown>;
@@ -17,9 +22,110 @@ export interface JsonSchemaShapes {
 	output: ValSanValueType;
 }
 
-function primitiveTypes(type: ValSanValueType): Array<
-	'string' | 'number' | 'integer' | 'boolean'
+export interface JsonSchemaContext {
+	exportChild(schema: SchemaLike): JsonSchema;
+	deriveRules(shapes: JsonSchemaShapes, rules: RuleSet): JsonSchema;
+	intersect(schemas: JsonSchema[]): JsonSchema;
+}
+
+export interface JsonSchemaProvider extends Pick<
+	RunsLikeAValSan, 'options' | 'getTitle' | 'getDescription'
 > {
+	getJsonSchemaDefinition(
+		direction: JsonSchemaDirection,
+		options: JsonSchemaOptions,
+		context: JsonSchemaContext
+	): JsonSchema;
+}
+
+const exportingSchemas = new WeakSet<object>();
+
+export function withJsonSchema<TInput, TOutput>(
+	schema: StandardSchemaV1<TInput, TOutput>
+): StandardSchemaV1<TInput, TOutput> &
+	StandardJSONSchemaV1<TInput, TOutput> & {
+		readonly jsonSchemaAllowsUndefined: boolean;
+	} {
+	const props = schema['~standard'];
+	return {
+		get jsonSchemaAllowsUndefined() {
+			return (
+				'jsonSchemaAllowsUndefined' in schema &&
+				schema.jsonSchemaAllowsUndefined === true
+			);
+		},
+		'~standard': {
+			...props,
+			validate: props.validate.bind(props),
+			jsonSchema: {
+				input: (options) => toJsonSchema(schema, 'input', options),
+				output: (options) => toJsonSchema(schema, 'output', options),
+			},
+		},
+	};
+}
+
+export function toJsonSchema(
+	schema: SchemaLike,
+	direction: JsonSchemaDirection,
+	options: JsonSchemaOptions
+): JsonSchema {
+	assertJsonSchemaTarget(options);
+	if (exportingSchemas.has(schema)) {
+		throw new TypeError('Cyclic schemas cannot be exported to JSON Schema');
+	}
+
+	exportingSchemas.add(schema);
+
+	try {
+		if (isJsonSchemaProvider(schema)) {
+			const context: JsonSchemaContext = {
+				exportChild: (child) =>
+					exportChildSchema(child, direction, options),
+				deriveRules: (shapes, rules) =>
+					deriveRuleSchema(shapes, rules, direction),
+				intersect: intersectPrimitiveSchemas,
+			};
+			const definition =
+				schema.options.jsonSchema?.[direction] ??
+				schema.getJsonSchemaDefinition(direction, options, context);
+			if (!isRecord(definition)) {
+				throw new TypeError('Invalid JSON Schema definition');
+			}
+			const allowsNull =
+				schema.options.isNullable ?? schema.options.isOptional ?? false;
+			const exported: JsonSchema = allowsNull
+				? { anyOf: [structuredClone(definition), { type: 'null' }] }
+				: structuredClone(definition);
+			exported['title'] = definition['title'] ?? schema.getTitle();
+			const description =
+				definition['description'] ?? schema.getDescription();
+			if (description !== undefined) {
+				exported['description'] = description;
+			}
+			return exported;
+		}
+		return foreignDefinition(schema, direction, options);
+	}
+	finally {
+		exportingSchemas.delete(schema);
+	}
+}
+
+function isJsonSchemaProvider(
+	schema: SchemaLike
+): schema is SchemaLike & JsonSchemaProvider {
+	return 'getJsonSchemaDefinition' in schema &&
+		typeof schema.getJsonSchemaDefinition === 'function' &&
+		'options' in schema && isRecord(schema.options) &&
+		'getTitle' in schema && typeof schema.getTitle === 'function' &&
+		'getDescription' in schema &&
+		typeof schema.getDescription === 'function';
+}
+
+function primitiveTypes(
+	type: ValSanValueType
+): Array<'string' | 'number' | 'integer' | 'boolean'> {
 	const types = typeof type === 'string' ? [type] : [...type];
 	if (types.length === 0) {
 		throw new TypeError('JSON Schema type unions cannot be empty');
@@ -34,7 +140,7 @@ function primitiveTypes(type: ValSanValueType): Array<
 		default:
 			throw new TypeError(
 				`Cannot derive primitive JSON Schema for ${value}; ` +
-				'provide explicit definitions or a conversion hook'
+						'provide explicit definitions or a conversion hook'
 			);
 		}
 	});
@@ -42,10 +148,13 @@ function primitiveTypes(type: ValSanValueType): Array<
 
 function jsonEnum(value: unknown): Array<string | number | boolean> {
 	if (
-		!Array.isArray(value) || value.length === 0 ||
-		!value.every((item) =>
-			typeof item === 'string' || typeof item === 'boolean' ||
-			(typeof item === 'number' && Number.isFinite(item))
+		!Array.isArray(value) ||
+		value.length === 0 ||
+		!value.every(
+			(item) =>
+				typeof item === 'string' ||
+				typeof item === 'boolean' ||
+				(typeof item === 'number' && Number.isFinite(item))
 		)
 	) {
 		throw new TypeError(
@@ -65,8 +174,8 @@ function ruleConstraints(rule: Rule): JsonSchema {
 		if (Object.keys(rule.jsonSchema).length === 0) {
 			throw new TypeError(
 				`Rule ${rule.code} has empty JSON Schema ` +
-				'constraint metadata; use a recognized kind or ' +
-				'jsonSchema: \'type-only\''
+					'constraint metadata; use a recognized kind or ' +
+					'jsonSchema: \'type-only\''
 			);
 		}
 		return { ...rule.jsonSchema };
@@ -98,7 +207,7 @@ function ruleConstraints(rule: Rule): JsonSchema {
 		if (rule.context.regex.flags !== '') {
 			throw new TypeError(
 				'Regex flags cannot be represented in JSON Schema; ' +
-				'provide options.jsonSchema'
+						'provide options.jsonSchema'
 			);
 		}
 
@@ -116,7 +225,7 @@ function ruleConstraints(rule: Rule): JsonSchema {
 	case 'string.emailDomains':
 		if (
 			rule.context === undefined ||
-			rule.context.allowedDomains !== undefined
+				rule.context.allowedDomains !== undefined
 		) {
 			throw new TypeError(
 				'Restricted email validators require options.jsonSchema'
@@ -138,29 +247,32 @@ function deriveConstraints(
 	metadata: JsonSchema[],
 	direction: JsonSchemaDirection
 ): JsonSchema {
-	const inputs = shapes.input === 'unknown' ? ['unknown'] :
-		primitiveTypes(shapes.input);
-	const outputs = shapes.output === 'unknown' ? ['unknown'] :
-		primitiveTypes(shapes.output);
+	const inputs =
+		shapes.input === 'unknown' ? ['unknown'] : primitiveTypes(shapes.input);
+	const outputs =
+		shapes.output === 'unknown'
+			? ['unknown']
+			: primitiveTypes(shapes.output);
 	const constraints: Partial<RuleJsonSchema> = {};
 	const patterns = new Set<string>();
 	for (const constraintsOfRule of metadata) {
 		for (const [keyword, value] of Object.entries(constraintsOfRule)) {
-			if (
-				keyword === 'minimum' || keyword === 'maximum'
-			) {
+			if (keyword === 'minimum' || keyword === 'maximum') {
 				if (
-					!outputs.every((type) =>
-						type === 'number' || type === 'integer') ||
-					typeof value !== 'number' || !Number.isFinite(value)
+					!outputs.every(
+						(type) => type === 'number' || type === 'integer'
+					) ||
+					typeof value !== 'number' ||
+					!Number.isFinite(value)
 				) {
 					throw new TypeError(
 						`JSON Schema ${keyword} requires a finite numeric bound`
 					);
 				}
-				constraints[keyword] = keyword === 'minimum'
-					? Math.max(constraints.minimum ?? -Infinity, value)
-					: Math.min(constraints.maximum ?? Infinity, value);
+				constraints[keyword] =
+					keyword === 'minimum'
+						? Math.max(constraints.minimum ?? -Infinity, value)
+						: Math.min(constraints.maximum ?? Infinity, value);
 			}
 			else if (keyword === 'minLength' || keyword === 'maxLength') {
 				if (keyword === 'maxLength' && value === Infinity) {
@@ -169,15 +281,17 @@ function deriveConstraints(
 				if (
 					!outputs.every((type) => type === 'string') ||
 					typeof value !== 'number' ||
-					!Number.isInteger(value) || value < 0
+					!Number.isInteger(value) ||
+					value < 0
 				) {
 					throw new TypeError(
 						`JSON Schema ${keyword} must be a nonnegative integer`
 					);
 				}
-				constraints[keyword] = keyword === 'minLength'
-					? Math.max(constraints.minLength ?? 0, value)
-					: Math.min(constraints.maxLength ?? Infinity, value);
+				constraints[keyword] =
+					keyword === 'minLength'
+						? Math.max(constraints.minLength ?? 0, value)
+						: Math.min(constraints.maxLength ?? Infinity, value);
 			}
 			else if (keyword === 'pattern' || keyword === 'format') {
 				if (
@@ -198,8 +312,12 @@ function deriveConstraints(
 			}
 			else if (keyword === 'enum') {
 				const values = jsonEnum(value);
-				constraints.enum = constraints.enum === undefined ? values :
-					constraints.enum.filter((item) => values.includes(item));
+				constraints.enum =
+					constraints.enum === undefined
+						? values
+						: constraints.enum.filter((item) =>
+							values.includes(item)
+						);
 				if (constraints.enum.length === 0) {
 					throw new TypeError(
 						'JSON Schema enum intersection is empty'
@@ -238,32 +356,42 @@ function deriveConstraints(
 		);
 	}
 
-	const patternSchema: JsonSchema = patterns.size > 1
-		? { allOf: [...patterns].map((pattern) => ({ pattern })) }
-		: patterns.size === 1 ? { pattern: [...patterns][0] } : {};
+	const patternSchema: JsonSchema =
+		patterns.size > 1
+			? { allOf: [...patterns].map((pattern) => ({ pattern })) }
+			: patterns.size === 1
+				? { pattern: [...patterns][0] }
+				: {};
 
 	const branches = (schemas: JsonSchema[]): JsonSchema =>
 		schemas.length === 1 ? schemas[0] : { anyOf: schemas };
 	const shape = (type: string): JsonSchema =>
 		type === 'unknown' ? {} : { type };
-	const output = branches(outputs.map((type) => ({
-		...shape(type), ...constraints, ...patternSchema,
-	})));
+	const output = branches(
+		outputs.map((type) => ({
+			...shape(type),
+			...constraints,
+			...patternSchema,
+		}))
+	);
 
 	if (direction === 'output') {
 		return output;
 	}
-	return branches(inputs.map((type) => {
-		if (
-			type === 'number' && outputs.length === 1 &&
-			outputs[0] === 'integer'
-		) {
-			return { type: 'integer', ...constraints };
-		}
-		return outputs.includes(type)
-			? { ...shape(type), ...constraints, ...patternSchema }
-			: shape(type);
-	}));
+	return branches(
+		inputs.map((type) => {
+			if (
+				type === 'number' &&
+				outputs.length === 1 &&
+				outputs[0] === 'integer'
+			) {
+				return { type: 'integer', ...constraints };
+			}
+			return outputs.includes(type)
+				? { ...shape(type), ...constraints, ...patternSchema }
+				: shape(type);
+		})
+	);
 }
 
 export function deriveRuleSchema(
@@ -272,47 +400,65 @@ export function deriveRuleSchema(
 	direction: JsonSchemaDirection
 ): JsonSchema {
 	return deriveConstraints(
-		shapes, Object.values(rules).map(ruleConstraints), direction
+		shapes,
+		Object.values(rules).map(ruleConstraints),
+		direction
 	);
 }
 
 export function intersectPrimitiveSchemas(schemas: JsonSchema[]): JsonSchema {
 	const supported = new Set([
-		'type', 'minimum', 'maximum', 'minLength', 'maxLength',
-		'pattern', 'format', 'enum', 'title', 'description',
+		'type',
+		'minimum',
+		'maximum',
+		'minLength',
+		'maxLength',
+		'pattern',
+		'format',
+		'enum',
+		'title',
+		'description',
 	]);
 	const type = schemas[0]?.['type'];
 
 	if (
 		schemas.length === 0 ||
-		(type !== 'string' && type !== 'number' &&
-			type !== 'integer' && type !== 'boolean') ||
-		!schemas.every((schema) =>
-			schema['type'] === type &&
-			(schema['format'] === undefined || schema['format'] === 'email') &&
-			Object.keys(schema).every((key) => supported.has(key))
+		(type !== 'string' &&
+			type !== 'number' &&
+			type !== 'integer' &&
+			type !== 'boolean') ||
+		!schemas.every(
+			(schema) =>
+				schema['type'] === type &&
+				(schema['format'] === undefined ||
+					schema['format'] === 'email') &&
+				Object.keys(schema).every((key) => supported.has(key))
 		)
 	) {
 		return { allOf: schemas };
 	}
 
 	const metadata = schemas.map((schema) =>
-		Object.fromEntries(Object.entries(schema).filter(
-			([key]) => key !== 'type' && key !== 'title' &&
-				key !== 'description'
-		))
+		Object.fromEntries(
+			Object.entries(schema).filter(
+				([key]) =>
+					key !== 'type' && key !== 'title' && key !== 'description'
+			)
+		)
 	);
 
-	return deriveConstraints({
-		input: type, output: type,
-	}, metadata, 'output');
+	return deriveConstraints(
+		{
+			input: type,
+			output: type,
+		},
+		metadata,
+		'output'
+	);
 }
 
 export function assertJsonSchemaTarget(options: JsonSchemaOptions): void {
-	if (
-		options.target !== 'draft-2020-12' &&
-		options.target !== 'draft-07'
-	) {
+	if (options.target !== 'draft-2020-12' && options.target !== 'draft-07') {
 		throw new TypeError(
 			`Unsupported JSON Schema target: ${options.target}`
 		);
@@ -339,7 +485,7 @@ function assertInlineSchema(
 	) {
 		throw new TypeError(
 			'Reference-bearing child schemas require explicit parent ' +
-			'options.jsonSchema'
+				'options.jsonSchema'
 		);
 	}
 	ancestors.add(value);
@@ -350,15 +496,31 @@ function assertInlineSchema(
 	}
 	else if (isRecord(value)) {
 		for (const keyword of [
-			'allOf', 'anyOf', 'oneOf', 'prefixItems', 'items', 'contains',
-			'additionalProperties', 'unevaluatedProperties', 'unevaluatedItems',
-			'not', 'if', 'then', 'else', 'propertyNames', 'additionalItems',
+			'allOf',
+			'anyOf',
+			'oneOf',
+			'prefixItems',
+			'items',
+			'contains',
+			'additionalProperties',
+			'unevaluatedProperties',
+			'unevaluatedItems',
+			'not',
+			'if',
+			'then',
+			'else',
+			'propertyNames',
+			'additionalItems',
 		]) {
 			assertInlineSchema(value[keyword], ancestors);
 		}
 		for (const keyword of [
-			'properties', 'patternProperties', '$defs', 'definitions',
-			'dependentSchemas', 'dependencies',
+			'properties',
+			'patternProperties',
+			'$defs',
+			'definitions',
+			'dependentSchemas',
+			'dependencies',
 		]) {
 			const nested = value[keyword];
 			if (isRecord(nested)) {
@@ -372,6 +534,16 @@ function assertInlineSchema(
 }
 
 export function exportChildSchema(
+	schema: SchemaLike,
+	direction: JsonSchemaDirection,
+	options: JsonSchemaOptions
+): JsonSchema {
+	const result = toJsonSchema(schema, direction, options);
+	assertInlineSchema(result);
+	return result;
+}
+
+function foreignDefinition(
 	schema: SchemaLike,
 	direction: JsonSchemaDirection,
 	options: JsonSchemaOptions

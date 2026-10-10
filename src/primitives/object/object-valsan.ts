@@ -7,40 +7,57 @@ import {
 import { ValSanTypes } from '../../types/types';
 import { runSchema } from '../../schema';
 import type {
-	SchemaLike, SchemaInput, SchemaOutput, SchemaValue,
+	SchemaLike,
+	SchemaInput,
+	SchemaOutput,
+	SchemaValue,
 } from '../../schema';
-import {
-	exportChildSchema,
+import type {
 	JsonSchema,
+	JsonSchemaContext,
 	JsonSchemaDirection,
 	JsonSchemaOptions,
 } from '../../json-schema';
 
 export type ObjectSchema = Record<string, SchemaLike>;
 
-type OptionalKeys<TSchema extends ObjectSchema, Direction extends 'input' |
-	'output'> = {
+type OptionalKeys<
+	TSchema extends ObjectSchema,
+	Direction extends 'input' | 'output',
+> = {
 	[Key in keyof TSchema]: undefined extends (
-		Direction extends 'input' ? SchemaInput<TSchema[Key]> :
-			SchemaOutput<TSchema[Key]>
-	) ? Key : never;
+		Direction extends 'input'
+			? SchemaInput<TSchema[Key]>
+			: SchemaOutput<TSchema[Key]>
+	)
+		? Key
+		: never;
 }[keyof TSchema];
 
-type ObjectValue<TSchema extends ObjectSchema, Direction extends 'input' |
-	'output'> = {
-	[Key in Exclude<keyof TSchema, OptionalKeys<TSchema, Direction>>]:
-		Direction extends 'input' ? SchemaInput<TSchema[Key]> :
-			SchemaOutput<TSchema[Key]>;
+type ObjectValue<
+	TSchema extends ObjectSchema,
+	Direction extends 'input' | 'output',
+> = {
+	[Key in Exclude<
+		keyof TSchema,
+		OptionalKeys<TSchema, Direction>
+	>]: Direction extends 'input'
+		? SchemaInput<TSchema[Key]>
+		: SchemaOutput<TSchema[Key]>;
 } & {
-	[Key in OptionalKeys<TSchema, Direction>]?:
-		Direction extends 'input' ? SchemaInput<TSchema[Key]> :
-			SchemaOutput<TSchema[Key]>;
+	[Key in OptionalKeys<TSchema, Direction>]?: Direction extends 'input'
+		? SchemaInput<TSchema[Key]>
+		: SchemaOutput<TSchema[Key]>;
 };
 
-export type ObjectSchemaInput<TSchema extends ObjectSchema> =
-	ObjectValue<TSchema, 'input'>;
-export type ObjectSchemaOutput<TSchema extends ObjectSchema> =
-	ObjectValue<TSchema, 'output'>;
+export type ObjectSchemaInput<TSchema extends ObjectSchema> = ObjectValue<
+	TSchema,
+	'input'
+>;
+export type ObjectSchemaOutput<TSchema extends ObjectSchema> = ObjectValue<
+	TSchema,
+	'output'
+>;
 
 export interface ObjectValSanOptions extends ValSanOptions {
 	/**
@@ -55,15 +72,19 @@ export interface ObjectValSanOptions extends ValSanOptions {
 	allowAdditionalProperties?: boolean;
 }
 
-type Output<TOptions extends ObjectValSanOptions> =
-	ObjectSchemaOutput<TOptions['schema']> &
+type Output<TOptions extends ObjectValSanOptions> = ObjectSchemaOutput<
+	TOptions['schema']
+> &
 	(true extends TOptions['allowAdditionalProperties']
-		? Record<string, unknown> : unknown);
+		? Record<string, unknown>
+		: unknown);
 
-type Input<TOptions extends ObjectValSanOptions> =
-	ObjectSchemaInput<TOptions['schema']> &
+type Input<TOptions extends ObjectValSanOptions> = ObjectSchemaInput<
+	TOptions['schema']
+> &
 	(true extends TOptions['allowAdditionalProperties']
-		? Record<string, unknown> : unknown);
+		? Record<string, unknown>
+		: unknown);
 
 /**
  * Validates and sanitizes nested objects.
@@ -101,15 +122,18 @@ export class ObjectValSan<
 		'An object whose configured properties each satisfy their schema.';
 
 	protected override jsonSchemaDefinition(
-		direction: JsonSchemaDirection,
-		options: JsonSchemaOptions
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		_direction: JsonSchemaDirection,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		_options: JsonSchemaOptions,
+		context: JsonSchemaContext
 	): JsonSchema {
 		const properties: Record<string, JsonSchema> = {};
 		const required: string[] = [];
 
 		for (const [key, child] of Object.entries(this.schema)) {
 			Object.defineProperty(properties, key, {
-				value: exportChildSchema(child, direction, options),
+				value: context.exportChild(child),
 				enumerable: true,
 				configurable: true,
 				writable: true,
@@ -128,8 +152,7 @@ export class ObjectValSan<
 			properties,
 			required,
 			additionalProperties:
-				(this.options as ObjectValSanOptions)
-					.allowAdditionalProperties ?? false,
+				this.options.allowAdditionalProperties ?? false,
 		};
 	}
 
@@ -155,9 +178,7 @@ export class ObjectValSan<
 
 	public override async run(
 		input: Record<string, unknown> | null | undefined
-	): Promise<SanitizeResult<
-		SchemaValue<Output<TOptions>, TOptions>
-	>> {
+	): Promise<SanitizeResult<SchemaValue<Output<TOptions>, TOptions>>> {
 		const options = this.options as ObjectValSanOptions;
 		if (input === undefined || input === null) {
 			return this.checkRequired(input);
@@ -181,9 +202,10 @@ export class ObjectValSan<
 
 		const errors: ValidationError[] = [];
 		const schema = options.schema;
-		const output = Object.create(
-			Object.getPrototypeOf(input)
-		) as Record<string, unknown>;
+		const output = Object.create(Object.getPrototypeOf(input)) as Record<
+			string,
+			unknown
+		>;
 
 		for (const key of Object.keys(input)) {
 			Object.defineProperty(output, key, {

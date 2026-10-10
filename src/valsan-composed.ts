@@ -5,13 +5,10 @@ import {
 	ValSanOptions,
 } from './valsan';
 import { BaseValSan } from './valsan-base';
-import { standardProps, SchemaValue } from './schema';
-import {
-	exportChildSchema,
-	intersectPrimitiveSchemas,
-	JsonSchema,
-	JsonSchemaDirection,
-	JsonSchemaOptions,
+import { cachedStandardProps, SchemaValue } from './schema';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import type {
+	JsonSchema, JsonSchemaContext, JsonSchemaDirection, JsonSchemaOptions,
 } from './json-schema';
 
 export interface ComposedValSanOptions extends ValSanOptions {
@@ -62,17 +59,19 @@ export class ComposedValSan<
 	protected override description =
 		'A value that satisfies each configured Valsan step in sequence.';
 
-	public readonly '~standard' = standardProps<
+	public get '~standard'(): StandardSchemaV1.Props<
 		ComposedValSanOptions extends NoInfer<TOptions> ? TInput :
 			SchemaValue<TInput, NoInfer<TOptions>>,
 		SchemaValue<TOutput, NoInfer<TOptions>>
-	>(
-		async (input) => this.run(input as TInput),
-		{
-			input: (options) => this.toJsonSchema('input', options),
-			output: (options) => this.toJsonSchema('output', options),
-		}
-	);
+		> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
+		const run = (input: unknown) => this.run(input as TInput);
+		return cachedStandardProps<
+			ComposedValSanOptions extends NoInfer<TOptions> ? TInput :
+				SchemaValue<TInput, NoInfer<TOptions>>,
+			SchemaValue<TOutput, NoInfer<TOptions>>
+		>(this, run);
+	}
 
 	public override get jsonSchemaPreservesInput(): boolean {
 		return this.steps.every((step) =>
@@ -82,11 +81,14 @@ export class ComposedValSan<
 	}
 
 	protected override jsonSchemaDefinition(
-		direction: JsonSchemaDirection,
-		options: JsonSchemaOptions
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		_direction: JsonSchemaDirection,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		_options: JsonSchemaOptions,
+		context: JsonSchemaContext
 	): JsonSchema {
 		if (this.steps.length === 1) {
-			return exportChildSchema(this.steps[0], direction, options);
+			return context.exportChild(this.steps[0]);
 		}
 
 		if (!this.jsonSchemaPreservesInput) {
@@ -95,8 +97,8 @@ export class ComposedValSan<
 			);
 		}
 
-		return intersectPrimitiveSchemas(this.steps.map((step) =>
-			exportChildSchema(step, direction, options)
+		return context.intersect(this.steps.map((step) =>
+			context.exportChild(step)
 		));
 	}
 

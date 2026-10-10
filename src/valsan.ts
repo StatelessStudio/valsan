@@ -3,15 +3,15 @@ import { Rule } from './rules';
 import { RuleSet } from './rules/rule';
 import { ValSanTypes, ValSanValueType } from './types/types';
 import { BaseValSan } from './valsan-base';
-import { standardProps, SchemaValue } from './schema';
-import {
-	deriveRuleSchema,
+import { cachedStandardProps, SchemaValue } from './schema';
+import type {
 	JsonSchema,
+	JsonSchemaContext,
 	JsonSchemaDefinition,
 	JsonSchemaDirection,
 	JsonSchemaOptions,
-	JsonSchemaShapes,
 } from './json-schema';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 export interface ValidationError {
 	field?: string;
@@ -94,24 +94,28 @@ export interface RunsLikeAValSan<TInput = unknown, TOutput = TInput> {
 }
 
 export abstract class ValSan<
-		TInput = unknown,
-		TOutput = TInput,
-		TNormalized = TInput | TOutput,
-		TOptions extends ValSanOptions = ValSanOptions,
-	>
+	TInput = unknown,
+	TOutput = TInput,
+	TNormalized = TInput | TOutput,
+	TOptions extends ValSanOptions = ValSanOptions,
+>
 	extends BaseValSan<TInput, TOutput>
 	implements RunsLikeAValSan<TInput, TOutput> {
-	public readonly '~standard' = standardProps<
-		ValSanOptions extends NoInfer<TOptions> ? TInput :
-			SchemaValue<TInput, NoInfer<TOptions>>,
+	public get '~standard'(): StandardSchemaV1.Props<
+		ValSanOptions extends NoInfer<TOptions>
+		? TInput
+		: SchemaValue<TInput, NoInfer<TOptions>>,
 		SchemaValue<TOutput, NoInfer<TOptions>>
-	>(
-		async (input) => this.run(input as TInput),
-		{
-			input: (options) => this.toJsonSchema('input', options),
-			output: (options) => this.toJsonSchema('output', options),
-		}
-	);
+		> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
+		const run = (input: unknown) => this.run(input as TInput);
+		return cachedStandardProps<
+			ValSanOptions extends NoInfer<TOptions>
+			? TInput
+			: SchemaValue<TInput, NoInfer<TOptions>>,
+			SchemaValue<TOutput, NoInfer<TOptions>>
+		>(this, run);
+	}
 
 	public override readonly options: NoInfer<TOptions> &
 		Readonly<ValSanOptions>;
@@ -135,17 +139,22 @@ export abstract class ValSan<
 
 	protected override jsonSchemaDefinition(
 		direction: JsonSchemaDirection,
-		options: JsonSchemaOptions
+		options: JsonSchemaOptions,
+		context: JsonSchemaContext
 	): JsonSchema {
 		const rules = this.rules();
+
 		if (Object.keys(rules).length === 0) {
-			return super.jsonSchemaDefinition(direction, options);
+			return super.jsonSchemaDefinition(direction, options, context);
 		}
-		const shapes: JsonSchemaShapes = {
-			input: this.inputType ?? this.type,
-			output: this.outputType ?? this.type,
-		};
-		return deriveRuleSchema(shapes, rules, direction);
+
+		return context.deriveRules(
+			{
+				input: this.inputType ?? this.type,
+				output: this.outputType ?? this.type,
+			},
+			rules
+		);
 	}
 
 	public copy(options: ValSanOptions): ValSan<TInput, TOutput, TNormalized> {

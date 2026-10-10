@@ -1,7 +1,4 @@
-import type {
-	StandardSchemaV1,
-	StandardJSONSchemaV1,
-} from '@standard-schema/spec';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type {
 	RunsLikeAValSan,
 	SanitizeResult,
@@ -42,14 +39,11 @@ export type StandardSchema = StandardSchemaV1<unknown, unknown>;
 export type SchemaLike = RunsLikeAValSan<unknown, unknown> | StandardSchema;
 
 export function standardProps<TInput, TOutput>(
-	run: (input: unknown) => Promise<SanitizeResult<TOutput>>,
-	jsonSchema: StandardJSONSchemaV1.Converter
-): StandardSchemaV1.Props<TInput, TOutput> &
-	StandardJSONSchemaV1.Props<TInput, TOutput> {
+	run: (input: unknown) => Promise<SanitizeResult<TOutput>>
+): StandardSchemaV1.Props<TInput, TOutput> {
 	return {
 		version: 1,
 		vendor: 'valsan',
-		jsonSchema,
 		validate: async (input) => {
 			const result = await run(input);
 
@@ -65,6 +59,30 @@ export function standardProps<TInput, TOutput>(
 			};
 		},
 	};
+}
+
+const frozenStandardProps =
+	new WeakMap<object, StandardSchemaV1.Props<unknown, unknown>>();
+
+export function cachedStandardProps<TInput, TOutput>(
+	schema: object,
+	run: (input: unknown) => Promise<SanitizeResult<TOutput>>
+): StandardSchemaV1.Props<TInput, TOutput> {
+	const cached = frozenStandardProps.get(schema);
+	if (cached !== undefined) {
+		// Each schema is cached with its own input/output types.
+		return cached as StandardSchemaV1.Props<TInput, TOutput>;
+	}
+	const props = standardProps<TInput, TOutput>(run);
+	if (Object.isExtensible(schema)) {
+		Object.defineProperty(schema, '~standard', {
+			value: props, enumerable: true, configurable: true,
+		});
+	}
+	else {
+		frozenStandardProps.set(schema, props);
+	}
+	return props;
 }
 
 function isObject(value: unknown): value is object {
@@ -123,7 +141,22 @@ function validationIssue(issue: unknown): ValidationError {
 	};
 }
 
-export async function runSchema(
+// Native schemas return their existing promise without an async wrapper.
+// eslint-disable-next-line @typescript-eslint/promise-function-async
+export function runSchema(
+	schema: SchemaLike,
+	input: unknown
+): Promise<SanitizeResult<unknown>> {
+	if (isSchemaContainer(schema) &&
+		'run' in schema && typeof schema.run === 'function') {
+		return schema.run(input);
+	}
+
+	// eslint-disable-next-line no-use-before-define
+	return runStandardSchema(schema, input);
+}
+
+async function runStandardSchema(
 	schema: SchemaLike,
 	input: unknown
 ): Promise<SanitizeResult<unknown>> {
@@ -131,10 +164,6 @@ export async function runSchema(
 		throw new TypeError(
 			'Schema must implement run() or Standard Schema v1 validation'
 		);
-	}
-
-	if ('run' in schema && typeof schema.run === 'function') {
-		return schema.run(input);
 	}
 
 	if (

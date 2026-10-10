@@ -7,11 +7,14 @@ import {
 import { ValSanTypes } from '../../types/types';
 import { runSchema } from '../../schema';
 import type {
-	SchemaLike, SchemaInput, SchemaOutput, SchemaValue,
+	SchemaLike,
+	SchemaInput,
+	SchemaOutput,
+	SchemaValue,
 } from '../../schema';
-import {
-	exportChildSchema,
+import type {
 	JsonSchema,
+	JsonSchemaContext,
 	JsonSchemaDirection,
 	JsonSchemaOptions,
 } from '../../json-schema';
@@ -54,8 +57,11 @@ export class ArrayValSan<
 		'An array whose items each satisfy the configured schema.';
 
 	protected override jsonSchemaDefinition(
-		direction: JsonSchemaDirection,
-		options: JsonSchemaOptions
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		_direction: JsonSchemaDirection,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		_options: JsonSchemaOptions,
+		context: JsonSchemaContext
 	): JsonSchema {
 		if (
 			'jsonSchemaAllowsUndefined' in this.schema &&
@@ -65,10 +71,8 @@ export class ArrayValSan<
 				'Undefined array elements cannot be represented in JSON Schema'
 			);
 		}
-		return {
-			type: 'array',
-			items: exportChildSchema(this.schema, direction, options),
-		};
+
+		return { type: 'array', items: context.exportChild(this.schema) };
 	}
 
 	public get schema(): TOptions['schema'] {
@@ -93,9 +97,11 @@ export class ArrayValSan<
 
 	public override async run(
 		input: unknown[] | unknown
-	): Promise<SanitizeResult<
-		SchemaValue<Array<SchemaOutput<TOptions['schema']>>, TOptions>
-	>> {
+	): Promise<
+		SanitizeResult<
+			SchemaValue<Array<SchemaOutput<TOptions['schema']>>, TOptions>
+		>
+	> {
 		const options = this.options as ArrayValSanOptions;
 
 		if (input === undefined || input === null) {

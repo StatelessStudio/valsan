@@ -12,6 +12,8 @@ export type {
 } from '@standard-schema/spec';
 export type {
 	JsonSchema,
+	JsonSchemaContext,
+	JsonSchemaProvider,
 	JsonSchemaDefinition,
 	JsonSchemaDirection,
 	JsonSchemaOptions,

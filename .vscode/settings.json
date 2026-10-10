@@ -6,5 +6,8 @@
 	"editor.formatOnSaveMode": "file", // required to format on save
 	"[json]": {
 		"editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	}
 }

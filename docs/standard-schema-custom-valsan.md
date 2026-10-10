@@ -48,7 +48,38 @@ Include an issue's `path` as an array of property keys or array indices when the
 
 ## JSON Schema
 
-`ValSan` exposes synchronous Standard JSON Schema conversion through `~standard.jsonSchema.input(options)` and `.output(options)`. It also provides `toJsonSchema('input' | 'output', options)` for direct conversion. Conversion supports `draft-07` and `draft-2020-12`.
+JSON Schema conversion is opt-in through `valsan/json-schema`. Core validators
+implement Standard Schema validation but do not expose `~standard.jsonSchema`
+or load the exporter. Their Standard Schema adapters are created lazily and
+cached on first access.
+
+Use `toJsonSchema(schema, 'input' | 'output', options)` for direct conversion,
+or `withJsonSchema(schema)` for consumers such as Mastra that require both
+Standard Schema and Standard JSON Schema. Conversion supports `draft-07` and
+`draft-2020-12`.
+
+```typescript
+import { ObjectValSan, LengthValidator } from 'valsan';
+import { toJsonSchema, withJsonSchema } from 'valsan/json-schema';
+
+const validator = new ObjectValSan({
+    schema: { name: new LengthValidator({ minLength: 1, maxLength: 100 }) },
+});
+
+const formSchema = toJsonSchema(validator, 'input', { target: 'draft-07' });
+const schema = withJsonSchema(validator);
+const inputSchema = schema['~standard'].jsonSchema.input({
+    target: 'draft-2020-12',
+});
+const result = await schema['~standard'].validate({ name: 'Alice' });
+```
+
+The adapter is a separate schema object; it preserves validation, issue paths,
+and input/output types without modifying the validator. Call `.run()` or
+`.copy()` on the original validator, not the adapter. Nested native schemas
+are exported automatically; they do not need individual adapters. Existing
+custom `jsonSchemaDefinition()` hooks and explicit `options.jsonSchema`
+definitions remain supported.
 
 For rule-based conversion, declare the wire types with `type` and, when input and output differ, `inputType` and `outputType`. Recognized rule kinds derive their JSON Schema constraints from their context:
 
@@ -93,7 +124,7 @@ const validator = new MyValSan({
 });
 ```
 
-Alternatively, override `protected jsonSchemaDefinition(direction, options)` to return a schema for the non-null value. The shared exporter applies nullability, title, and description; an explicit `options.jsonSchema` definition takes precedence over the hook.
+Alternatively, override `protected jsonSchemaDefinition(direction, options, context)` to return a schema for the non-null value. The shared exporter applies nullability, title, and description; an explicit `options.jsonSchema` definition takes precedence over the hook. Hooks that do not need the context can omit that parameter.
 
 ```typescript
 protected override jsonSchemaDefinition(
@@ -106,6 +137,27 @@ protected override jsonSchemaDefinition(
 }
 ```
 
-Import `JsonSchema`, `JsonSchemaDirection`, and `JsonSchemaOptions` from `valsan`. The hook is useful for custom transformations or constraints that cannot be derived from rules. The default implementation derives a schema from `type`/`inputType`/`outputType` and rule metadata when possible; otherwise conversion throws rather than guessing.
+Import `JsonSchema`, `JsonSchemaDirection`, and `JsonSchemaOptions` from
+`valsan/json-schema` (type-only exports also remain available from `valsan`).
+The hook is useful for custom transformations or constraints that cannot be
+derived from rules. The default `ValSan` hook derives a schema from `type`/`inputType`/`outputType` and rule metadata through the context; otherwise conversion throws rather than guessing.
 
 For a custom step used in a multi-step `ComposedValSan`, override `jsonSchemaPreservesInput` to return `true` only when the step preserves the input's JSON representation. Transforming compositions need explicit input/output definitions.
+
+### Conversion limitations
+
+Exported schemas describe JSON-compatible shapes and supported constraints;
+they are not a substitute for running the validator. For example, numeric
+string inputs are exported as strings without reproducing normalization and
+range checks, and boolean-string conversion exports the string input shape.
+String length keywords count Unicode code points in JSON Schema, whereas
+ValSan's runtime length validators count UTF-16 code units. These differ for
+characters outside the Basic Multilingual Plane.
+
+Native optionality is preserved, including when a native child is wrapped
+with `withJsonSchema`. Foreign Standard Schema validators do not expose a
+standard optionality flag, so their object properties are treated as required.
+For foreign defaults or optional fields, provide an explicit parent
+`options.jsonSchema`. Unsupported transformations, regex flags, restricted
+email validators, and reference-bearing child schemas likewise require
+explicit definitions. Explicit definitions must match the selected draft.

@@ -41,6 +41,8 @@ import {
 	exportChildSchema,
 	deriveRuleSchema,
 	intersectPrimitiveSchemas,
+	toJsonSchema,
+	withJsonSchema,
 } from '../../../src/json-schema';
 
 describe('Standard JSON Schema export', () => {
@@ -77,7 +79,7 @@ describe('Standard JSON Schema export', () => {
 						expect(schema.jsonSchemaAllowsUndefined)
 							.toBe(allowsUndefined);
 						for (const direction of ['input', 'output'] as const) {
-							const json = schema.toJsonSchema(direction, {
+							const json = toJsonSchema(schema, direction, {
 								target: 'draft-07',
 							});
 							expect(new Ajv().compile(json)(null))
@@ -128,13 +130,13 @@ describe('Standard JSON Schema export', () => {
 			});
 			for (const target of ['draft-07', 'draft-2020-12']) {
 				for (const direction of ['input', 'output'] as const) {
-					expect(defaults.toJsonSchema(direction, { target }))
+					expect(toJsonSchema(defaults, direction, { target }))
 						.toEqual({
 							type: 'string',
 							title: defaults.getTitle(),
 							description: defaults.getDescription(),
 						});
-					expect(custom.toJsonSchema(direction, { target }))
+					expect(toJsonSchema(custom, direction, { target }))
 						.toEqual({
 							type: 'string', title: 'Display name',
 							description: 'A public display name.',
@@ -155,7 +157,9 @@ describe('Standard JSON Schema export', () => {
 			title: 'Payload', description: 'A nullable payload.',
 		});
 		for (const direction of ['input', 'output'] as const) {
-			const json = parent.toJsonSchema(direction, { target: 'draft-07' });
+			const json = toJsonSchema(parent, direction, {
+				target: 'draft-07',
+			});
 			expect(json).toEqual({
 				title: 'Payload', description: 'A nullable payload.',
 				anyOf: [
@@ -195,13 +199,13 @@ describe('Standard JSON Schema export', () => {
 				jsonSchema: { input: definition, output: definition },
 			});
 			for (const direction of ['input', 'output'] as const) {
-				const composed = schema.toJsonSchema(direction, {
+				const composed = toJsonSchema(schema, direction, {
 					target: 'draft-07',
 				});
 				expect(composed['title']).toBe('Short text');
 				expect(composed['description'])
 					.toBe('Two to four characters.');
-				const exported = explicit.toJsonSchema(direction, {
+				const exported = toJsonSchema(explicit, direction, {
 					target: 'draft-07',
 				});
 				expect(exported).toEqual({
@@ -234,7 +238,7 @@ describe('Standard JSON Schema export', () => {
 					}),
 				},
 			});
-			const standard: StandardJSONSchemaV1 = schema;
+			const standard: StandardJSONSchemaV1 = withJsonSchema(schema);
 			const converters = standard['~standard'].jsonSchema;
 			const input = converters.input({ target });
 			const output = converters.output({ target });
@@ -270,7 +274,7 @@ describe('Standard JSON Schema export', () => {
 				}),
 			},
 		});
-		const json = schema['~standard'].jsonSchema.input({
+		const json = withJsonSchema(schema)['~standard'].jsonSchema.input({
 			target: 'draft-07',
 		});
 		expect(json['required']).toEqual([
@@ -307,15 +311,15 @@ describe('Standard JSON Schema export', () => {
 						.toBe(undefinable);
 					expect(schema.jsonSchemaAllowsUndefined).toBe(undefinable);
 					for (const direction of ['input', 'output'] as const) {
-						const validate = new Ajv().compile(schema.toJsonSchema(
-							direction, { target: 'draft-07' }
+						const validate = new Ajv().compile(toJsonSchema(
+							schema, direction, { target: 'draft-07' }
 						));
 						expect(validate(null)).toBe(nullable);
 						const parent = new ObjectValSan({
 							schema: { child: schema },
 						});
-						expect(new Ajv().compile(parent.toJsonSchema(
-							direction, { target: 'draft-07' }
+						expect(new Ajv().compile(toJsonSchema(
+							parent, direction, { target: 'draft-07' }
 						))({})).toBe(undefinable);
 					}
 				}
@@ -330,8 +334,9 @@ describe('Standard JSON Schema export', () => {
 			}),
 		]) {
 			for (const direction of ['input', 'output'] as const) {
-				expect(() => new ArrayValSan({ schema: child }).toJsonSchema(
-					direction, { target: 'draft-07' }
+				expect(() => toJsonSchema(
+					new ArrayValSan({ schema: child }), direction,
+					{ target: 'draft-07' }
 				)).toThrowError(TypeError, /Undefined array elements/);
 			}
 		}
@@ -341,7 +346,7 @@ describe('Standard JSON Schema export', () => {
 		const schema = new ObjectValSan({
 			schema: {}, allowAdditionalProperties: true,
 		});
-		expect(schema.toJsonSchema('input', { target: 'draft-07' }))
+		expect(toJsonSchema(schema, 'input', { target: 'draft-07' }))
 			.toEqual(documented(schema, {
 				type: 'object', properties: {}, required: [],
 				additionalProperties: true,
@@ -354,9 +359,9 @@ describe('Standard JSON Schema export', () => {
 			new TrimSanitizer(), new LowercaseSanitizer(),
 			new UppercaseSanitizer(),
 		]) {
-			expect(schema.toJsonSchema('input', options))
+			expect(toJsonSchema(schema, 'input', options))
 				.toEqual(documented(schema, { type: 'string' }));
-			expect(schema.toJsonSchema('output', options))
+			expect(toJsonSchema(schema, 'output', options))
 				.toEqual(documented(schema, { type: 'string' }));
 		}
 		const cases: Array<[ValSan, JsonSchema]> = [
@@ -386,11 +391,11 @@ describe('Standard JSON Schema export', () => {
 			}],
 		];
 		for (const [schema, expected] of cases) {
-			expect(schema.toJsonSchema('output', options))
+			expect(toJsonSchema(schema, 'output', options))
 				.toEqual(documented(schema, expected));
 		}
 		const integer = new IntegerValidator();
-		expect(integer.toJsonSchema('input', options))
+		expect(toJsonSchema(integer, 'input', options))
 			.toEqual(documented(integer, {
 				anyOf: [{ type: 'integer' }, { type: 'string' }],
 			}));
@@ -399,7 +404,7 @@ describe('Standard JSON Schema export', () => {
 	it('exports length constraints as a flat string schema', () => {
 		const schema = new LengthValidator({ minLength: 2, maxLength: 4 });
 		expect(schema.jsonSchemaPreservesInput).toBe(true);
-		const json = schema['~standard'].jsonSchema.input({
+		const json = withJsonSchema(schema)['~standard'].jsonSchema.input({
 			target: 'draft-07',
 		});
 		expect(json).toEqual(documented(schema, {
@@ -409,7 +414,7 @@ describe('Standard JSON Schema export', () => {
 		expect(validate('abc')).toBe(true);
 		expect(validate('a')).toBe(false);
 		expect(validate('abcde')).toBe(false);
-		expect(schema['~standard'].jsonSchema.output({
+		expect(withJsonSchema(schema)['~standard'].jsonSchema.output({
 			target: 'draft-07',
 		})).toEqual(json);
 		expect(new PatternValidator({ pattern: /^a$/ })
@@ -429,7 +434,7 @@ describe('Standard JSON Schema export', () => {
 			});
 			for (const target of ['draft-07', 'draft-2020-12']) {
 				for (const direction of ['input', 'output'] as const) {
-					const json = schema.toJsonSchema(direction, { target });
+					const json = toJsonSchema(schema, direction, { target });
 					const properties =
 						json['properties'] as Record<string, JsonSchema>;
 					expect(properties['exampleField']).toEqual({
@@ -451,8 +456,8 @@ describe('Standard JSON Schema export', () => {
 					expect(validate({ exampleField: {} })).toBe(false);
 				}
 			}
-			expect(new LengthValidator().toJsonSchema(
-				'input', { target: 'draft-07' }
+			expect(toJsonSchema(
+				new LengthValidator(), 'input', { target: 'draft-07' }
 			)).toEqual(documented(new LengthValidator(), {
 				type: 'string', minLength: 1,
 			}));
@@ -467,16 +472,15 @@ describe('Standard JSON Schema export', () => {
 				output: { type: 'string', const: 'abc' },
 			},
 		});
-		const json = schema.toJsonSchema('input', { target: 'draft-07' });
+		const json = toJsonSchema(schema, 'input', { target: 'draft-07' });
 		expect(json['allOf']).toBeDefined();
 		const validate = new Ajv().compile(json);
 		expect(validate('abc')).toBe(true);
 		expect(validate('abcd')).toBe(false);
 		const extended = new LengthValidator();
 		extended.steps.push(new MinLengthValidator({ minLength: 2 }));
-		expect(extended.toJsonSchema(
-			'input', { target: 'draft-07' }
-		)).toEqual(documented(extended, { type: 'string', minLength: 2 }));
+		expect(toJsonSchema(extended, 'input', { target: 'draft-07' }))
+			.toEqual(documented(extended, { type: 'string', minLength: 2 }));
 		class CustomMin extends MinLengthValidator {
 			protected override jsonSchemaDefinition() {
 				return { type: 'string', pattern: '^a' };
@@ -484,9 +488,8 @@ describe('Standard JSON Schema export', () => {
 		}
 		const custom = new LengthValidator();
 		custom.steps[0] = new CustomMin();
-		expect(custom.toJsonSchema(
-			'input', { target: 'draft-07' }
-		)).toEqual(documented(custom, { type: 'string', pattern: '^a' }));
+		expect(toJsonSchema(custom, 'input', { target: 'draft-07' }))
+			.toEqual(documented(custom, { type: 'string', pattern: '^a' }));
 	});
 
 	it('keeps transforming length subclasses subject to composition checks',
@@ -497,21 +500,21 @@ describe('Standard JSON Schema export', () => {
 					this.steps.push(new TrimSanitizer());
 				}
 			}
-			expect(() => new Transforming().toJsonSchema(
-				'input', { target: 'draft-07' }
+			expect(() => toJsonSchema(
+				new Transforming(), 'input', { target: 'draft-07' }
 			)).toThrowError(TypeError, /Transforming compositions/);
 		});
 
 	it('exports single transforms but rejects unsafe pipelines', () => {
 		const one = new ComposedValSan([new StringToNumberValSan()]);
-		expect(one.toJsonSchema('output', { target: 'draft-07' }))
+		expect(toJsonSchema(one, 'output', { target: 'draft-07' }))
 			.toEqual(documented(new StringToNumberValSan(), {
 				type: 'number',
 			}));
 		const multiple = new ComposedValSan([
 			new TrimSanitizer(), new MinLengthValidator(),
 		]);
-		expect(() => multiple.toJsonSchema('input', { target: 'draft-07' }))
+		expect(() => toJsonSchema(multiple, 'input', { target: 'draft-07' }))
 			.toThrowError(
 				TypeError,
 				'Transforming compositions require explicit options.jsonSchema'
@@ -525,9 +528,9 @@ describe('Standard JSON Schema export', () => {
 				input: { type: 'string' }, output: { type: 'number' },
 			} }
 		);
-		expect(schema.toJsonSchema('input', { target: 'draft-07' }))
+		expect(toJsonSchema(schema, 'input', { target: 'draft-07' }))
 			.toEqual(documented(schema, { type: 'string' }));
-		expect(schema.toJsonSchema('output', { target: 'draft-07' }))
+		expect(toJsonSchema(schema, 'output', { target: 'draft-07' }))
 			.toEqual(documented(schema, { type: 'number' }));
 		expect(await schema['~standard'].validate(' 42 '))
 			.toEqual({ value: 42 });
@@ -550,7 +553,7 @@ describe('Standard JSON Schema export', () => {
 			}
 		}
 		const schema = new Custom();
-		expect(schema.toJsonSchema('output', { target: 'draft-07' }))
+		expect(toJsonSchema(schema, 'output', { target: 'draft-07' }))
 			.toEqual(documented(schema, {
 				type: 'string', description: 'output',
 			}));
@@ -559,7 +562,7 @@ describe('Standard JSON Schema export', () => {
 				input: { type: 'string' }, output: { const: 'provided' },
 			},
 		});
-		expect(overridden.toJsonSchema('output', { target: 'draft-07' }))
+		expect(toJsonSchema(overridden, 'output', { target: 'draft-07' }))
 			.toEqual(documented(overridden, { const: 'provided' }));
 	});
 
@@ -595,8 +598,8 @@ describe('Standard JSON Schema export', () => {
 	});
 
 	it('rejects unsupported targets, custom validators, and cycles', () => {
-		expect(() => new TrimSanitizer().toJsonSchema(
-			'input', { target: 'openapi-3.0' }
+		expect(() => toJsonSchema(
+			new TrimSanitizer(), 'input', { target: 'openapi-3.0' }
 		)).toThrowError(TypeError, /Unsupported JSON Schema target/);
 		class Unsupported extends ValSan<string> {
 			protected override async validate() {
@@ -607,14 +610,14 @@ describe('Standard JSON Schema export', () => {
 			}
 		}
 		const schema = new Unsupported();
-		expect(() => schema.toJsonSchema('input', { target: 'draft-07' }))
+		expect(() => toJsonSchema(schema, 'input', { target: 'draft-07' }))
 			.toThrowError(TypeError, /does not support JSON Schema export/);
 		const object = new ObjectValSan({ schema: {} as ObjectSchema });
 		object.schema['self'] = object;
-		expect(() => object.toJsonSchema('input', { target: 'draft-07' }))
+		expect(() => toJsonSchema(object, 'input', { target: 'draft-07' }))
 			.toThrowError(TypeError, /Cyclic schemas/);
 		delete object.schema['self'];
-		expect(object.toJsonSchema('input', { target: 'draft-07' })['type'])
+		expect(toJsonSchema(object, 'input', { target: 'draft-07' })['type'])
 			.toBe('object');
 	});
 
@@ -659,9 +662,8 @@ describe('Standard JSON Schema export', () => {
 				schema: new TrimSanitizer({ isOptional: true }),
 			}),
 		]) {
-			expect(() => schema.toJsonSchema(
-				'input', { target: 'draft-07' }
-			)).toThrowError(TypeError);
+			expect(() => toJsonSchema(schema, 'input', { target: 'draft-07' }))
+				.toThrowError(TypeError);
 		}
 	});
 
@@ -671,7 +673,7 @@ describe('Standard JSON Schema export', () => {
 			isOptional: true,
 		});
 		expect(schema.jsonSchemaAllowsUndefined).toBe(true);
-		expect(schema.toJsonSchema('input', { target: 'draft-07' }))
+		expect(toJsonSchema(schema, 'input', { target: 'draft-07' }))
 			.toEqual(documented(schema, {
 				anyOf: [
 					{ type: 'array', items: documented(
@@ -718,8 +720,8 @@ describe('Standard JSON Schema export', () => {
 				},
 			},
 		};
-		expect(() => new ArrayValSan({ schema }).toJsonSchema(
-			'input', { target: 'draft-07' }
+		expect(() => toJsonSchema(
+			new ArrayValSan({ schema }), 'input', { target: 'draft-07' }
 		)).toThrowError(TypeError, /Reference-bearing child schemas/);
 		const cycle: JsonSchema = {};
 		cycle['allOf'] = [cycle];
@@ -734,8 +736,8 @@ describe('Standard JSON Schema export', () => {
 			schema: { ['__proto__']: new TrimSanitizer() },
 			isOptional: true,
 		});
-		const first = schema.toJsonSchema('input', { target: 'draft-07' });
-		const second = schema.toJsonSchema('input', { target: 'draft-07' });
+		const first = toJsonSchema(schema, 'input', { target: 'draft-07' });
+		const second = toJsonSchema(schema, 'input', { target: 'draft-07' });
 		expect(first).toEqual(second);
 		expect(first).not.toBe(second);
 		expect(JSON.stringify(first)).toContain('"__proto__"');
@@ -755,9 +757,8 @@ describe('Standard JSON Schema export', () => {
 			}
 		}
 		const custom = new Custom({ min: 2 });
-		expect(custom.toJsonSchema(
-			'output', { target: 'draft-07' }
-		)).toEqual(documented(custom, { type: 'number', minimum: 5 }));
+		expect(toJsonSchema(custom, 'output', { target: 'draft-07' }))
+			.toEqual(documented(custom, { type: 'number', minimum: 5 }));
 		class Unsupported extends ValSan<number> {
 			override type = 'number' as const;
 			override rules() {
@@ -771,9 +772,8 @@ describe('Standard JSON Schema export', () => {
 			}
 		}
 		const unsupported = new Unsupported();
-		expect(unsupported.toJsonSchema(
-			'output', { target: 'draft-07' }
-		)).toEqual(documented(unsupported, { type: 'number', minimum: 2 }));
+		expect(toJsonSchema(unsupported, 'output', { target: 'draft-07' }))
+			.toEqual(documented(unsupported, { type: 'number', minimum: 2 }));
 	});
 
 	it('derives richer semantic rules without conversion hooks', () => {
@@ -931,7 +931,7 @@ describe('Standard JSON Schema export', () => {
 			]);
 			for (const target of ['draft-07', 'draft-2020-12']) {
 				for (const direction of ['input', 'output'] as const) {
-					const json = schema.toJsonSchema(direction, { target });
+					const json = toJsonSchema(schema, direction, { target });
 					expect(json).toEqual(documented(schema, {
 						type: 'string', minLength: 3,
 						allOf: [{ pattern: '^a' }, { pattern: 'z$' }],
@@ -1225,7 +1225,7 @@ describe('Standard JSON Schema export', () => {
 				output: { type: 'number', description: 'Explicit' },
 			},
 		});
-		expect(schema.toJsonSchema('output', { target: 'draft-07' }))
+		expect(toJsonSchema(schema, 'output', { target: 'draft-07' }))
 			.toEqual(documented(schema, {
 				type: 'number', description: 'Explicit',
 			}));
@@ -1262,14 +1262,14 @@ describe('Standard JSON Schema export', () => {
 		] as const) {
 			const schema = new SameType(type);
 			for (const direction of ['input', 'output'] as const) {
-				expect(schema.toJsonSchema(direction, { target: 'draft-07' }))
+				expect(toJsonSchema(schema, direction, { target: 'draft-07' }))
 					.toEqual(documented(schema, { type }));
 			}
 			expect(schema.jsonSchemaPreservesInput).toBe(false);
 		}
 		for (const type of ['object', 'array', 'file', 'unknown'] as const) {
-			expect(() => new SameType(type).toJsonSchema(
-				'input', { target: 'draft-07' }
+			expect(() => toJsonSchema(
+				new SameType(type), 'input', { target: 'draft-07' }
 			)).toThrowError(TypeError, /Cannot derive primitive JSON Schema/);
 		}
 		const explicit = new SameType('unknown', {
@@ -1277,33 +1277,32 @@ describe('Standard JSON Schema export', () => {
 				input: { type: 'string' }, output: { type: 'boolean' },
 			},
 		});
-		expect(explicit.toJsonSchema('output', { target: 'draft-07' }))
+		expect(toJsonSchema(explicit, 'output', { target: 'draft-07' }))
 			.toEqual(documented(explicit, { type: 'boolean' }));
 		class Transform extends SameType {
 			override inputType = 'string' as const;
 		}
 		const transform = new Transform('number');
-		expect(transform.toJsonSchema(
-			'input', { target: 'draft-07' }
-		)).toEqual(documented(transform, { type: 'string' }));
+		expect(toJsonSchema(transform, 'input', { target: 'draft-07' }))
+			.toEqual(documented(transform, { type: 'string' }));
 		const outputOnly = new SameType('string');
 		outputOnly.outputType = 'boolean';
-		expect(outputOnly.toJsonSchema('input', { target: 'draft-07' }))
+		expect(toJsonSchema(outputOnly, 'input', { target: 'draft-07' }))
 			.toEqual(documented(outputOnly, { type: 'string' }));
-		expect(outputOnly.toJsonSchema('output', { target: 'draft-07' }))
+		expect(toJsonSchema(outputOnly, 'output', { target: 'draft-07' }))
 			.toEqual(documented(outputOnly, { type: 'boolean' }));
 		outputOnly.inputType = ['string', 'boolean'];
 		outputOnly.outputType = ['boolean', 'string', 'boolean'];
-		expect(outputOnly.toJsonSchema('output', { target: 'draft-07' }))
+		expect(toJsonSchema(outputOnly, 'output', { target: 'draft-07' }))
 			.toEqual(documented(outputOnly, {
 				anyOf: [{ type: 'boolean' }, { type: 'string' }],
 			}));
-		expect(outputOnly.toJsonSchema('input', { target: 'draft-07' }))
+		expect(toJsonSchema(outputOnly, 'input', { target: 'draft-07' }))
 			.toEqual(documented(outputOnly, {
 				anyOf: [{ type: 'string' }, { type: 'boolean' }],
 			}));
 		outputOnly.inputType = [];
-		expect(() => outputOnly.toJsonSchema('input', { target: 'draft-07' }))
+		expect(() => toJsonSchema(outputOnly, 'input', { target: 'draft-07' }))
 			.toThrowError(TypeError, /type unions cannot be empty/);
 	});
 
@@ -1319,8 +1318,8 @@ describe('Standard JSON Schema export', () => {
 				};
 			}
 		}
-		expect(() => new Unannotated().toJsonSchema(
-			'input', { target: 'draft-07' }
+		expect(() => toJsonSchema(
+			new Unannotated(), 'input', { target: 'draft-07' }
 		)).toThrowError(TypeError, /has no JSON Schema constraint metadata/);
 	});
 });
