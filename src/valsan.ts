@@ -1,16 +1,25 @@
 import { validationError } from './errors';
 import { Rule } from './rules';
 import { RuleSet } from './rules/rule';
-import { ValSanTypes } from './types/types';
+import { ValSanTypes, ValSanValueType } from './types/types';
 import { BaseValSan } from './valsan-base';
+import { cachedStandardProps, SchemaValue } from './schema';
+import type {
+	JsonSchema,
+	JsonSchemaContext,
+	JsonSchemaDefinition,
+	JsonSchemaDirection,
+	JsonSchemaOptions,
+} from './json-schema';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 
 export interface ValidationError {
 	field?: string;
 	/**
-	 * Path to the invalid value, using property names and array
-	 * indices as separate segments
+	 * Path to the invalid value, using property keys and array indices as
+	 * separate segments
 	 */
-	path?: Array<string | number>;
+	path?: PropertyKey[];
 	code: string;
 	message: string;
 	context?: Record<string, unknown>;
@@ -44,6 +53,10 @@ export interface ValSanOptions {
 	 */
 	description?: string;
 	/**
+	 * Explicit JSON representations for custom validators or transformations.
+	 */
+	jsonSchema?: JsonSchemaDefinition;
+	/**
 	 * If true, null values will pass validation without running validation or
 	 * sanitization steps.
 	 * @default false
@@ -66,6 +79,8 @@ export interface ValSanOptions {
 
 export interface RunsLikeAValSan<TInput = unknown, TOutput = TInput> {
 	readonly type: ValSanTypes;
+	readonly inputType?: ValSanValueType;
+	readonly outputType?: ValSanValueType;
 	readonly format?: string;
 	readonly example: string;
 	readonly getTitle: () => string;
@@ -79,14 +94,35 @@ export interface RunsLikeAValSan<TInput = unknown, TOutput = TInput> {
 }
 
 export abstract class ValSan<
-		TInput = unknown,
-		TOutput = TInput,
-		TNormalized = TInput | TOutput,
-	>
+	TInput = unknown,
+	TOutput = TInput,
+	TNormalized = TInput | TOutput,
+	TOptions extends ValSanOptions = ValSanOptions,
+>
 	extends BaseValSan<TInput, TOutput>
 	implements RunsLikeAValSan<TInput, TOutput> {
-	public constructor(public override readonly options: ValSanOptions = {}) {
+	public get '~standard'(): StandardSchemaV1.Props<
+		ValSanOptions extends NoInfer<TOptions>
+		? TInput
+		: SchemaValue<TInput, NoInfer<TOptions>>,
+		SchemaValue<TOutput, NoInfer<TOptions>>
+		> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
+		const run = (input: unknown) => this.run(input as TInput);
+		return cachedStandardProps<
+			ValSanOptions extends NoInfer<TOptions>
+			? TInput
+			: SchemaValue<TInput, NoInfer<TOptions>>,
+			SchemaValue<TOutput, NoInfer<TOptions>>
+		>(this, run);
+	}
+
+	public override readonly options: NoInfer<TOptions> &
+		Readonly<ValSanOptions>;
+
+	public constructor(options: TOptions = {} as TOptions) {
 		super();
+		this.options = options;
 	}
 
 	public rules(): RuleSet {
@@ -99,6 +135,26 @@ export abstract class ValSan<
 
 	public getRuleHelperTexts(): string[] {
 		return this.collectRuleHelperTexts(this.rules());
+	}
+
+	protected override jsonSchemaDefinition(
+		direction: JsonSchemaDirection,
+		options: JsonSchemaOptions,
+		context: JsonSchemaContext
+	): JsonSchema {
+		const rules = this.rules();
+
+		if (Object.keys(rules).length === 0) {
+			return super.jsonSchemaDefinition(direction, options, context);
+		}
+
+		return context.deriveRules(
+			{
+				input: this.inputType ?? this.type,
+				output: this.outputType ?? this.type,
+			},
+			rules
+		);
 	}
 
 	public copy(options: ValSanOptions): ValSan<TInput, TOutput, TNormalized> {
@@ -180,9 +236,10 @@ export abstract class ValSan<
 
 	protected validationError(
 		error: ValidationError,
-		segment: string | number
+		segment: PropertyKey
 	): ValidationError {
-		const prefix = typeof segment === 'number' ? `[${segment}]` : segment;
+		const prefix =
+			typeof segment === 'number' ? `[${segment}]` : String(segment);
 
 		return {
 			...error,

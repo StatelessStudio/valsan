@@ -21,11 +21,15 @@
 		"script": "ts-node scripts",
 		"publish": "npm run script -- publish"
 	},
+	"dependencies": {
+		"@standard-schema/spec": "^1.1.0"
+	},
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "^1.0.2",
 		"@types/jasmine": "^5.1.4",
 		"@types/node": "^18.19.39",
 		"@typescript-eslint/eslint-plugin": "^7.13.1",
+		"ajv": "^8.20.0",
 		"eslint": "^8.57.0",
 		"jasmine": "^5.1.0",
 		"nyc": "^17.0.0",

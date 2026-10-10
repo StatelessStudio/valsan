@@ -54,3 +54,8 @@ When creating new primitives, follow these guidelines:
 3. **Export with the same name** as the class
 4. **Document the behavior** clearly in JSDoc comments
 5. **Add an example** by overriding the `example` property
+
+
+## Standard Schema & JSON Schema support
+
+For custom ValSans, see the [Standard Schema and JSON Schema implementation guide](./standard-schema-custom-valsan.md).

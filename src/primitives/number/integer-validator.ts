@@ -1,5 +1,5 @@
 import { ValSanTypes } from '../../types/types';
-import { ValSan, ValidationResult } from '../../valsan';
+import { ValSan, ValSanOptions, ValidationResult } from '../../valsan';
 import { numberRule } from './number-rules';
 import { normalizeNumber } from './normalize-number';
 
@@ -23,11 +23,20 @@ import { normalizeNumber } from './normalize-number';
  * // result.success === true, result.data === 42
  * ```
  */
-export class IntegerValidator extends ValSan<
+export class IntegerValidator<
+	const TOptions extends ValSanOptions = Record<string, never>,
+> extends ValSan<
 	number | string | bigint,
 	number,
-	number
+	number,
+	TOptions
 > {
+	constructor(options: TOptions = {} as TOptions) {
+		super(options);
+	}
+
+	override inputType = ['number', 'string'] as const;
+
 	override type: ValSanTypes = 'integer';
 	override title = 'Integer';
 	override description =
@@ -40,6 +49,7 @@ export class IntegerValidator extends ValSan<
 			number: numberRule,
 			integer: {
 				code: 'integer',
+				kind: 'type.integer' as const,
 				user: {
 					helperText: 'Integer',
 					errorMessage: 'Number must be an integer',

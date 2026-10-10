@@ -1,1 +1,3 @@
-export { ObjectValSan, ObjectValSanOptions } from './object-valsan';
+export {
+	ObjectValSan, ObjectValSanOptions, ObjectSchemaInput, ObjectSchemaOutput,
+} from './object-valsan';

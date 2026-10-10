@@ -3,10 +3,8 @@ import { ValSanTypes } from '../../types/types';
 import { isString } from '../string/is-string';
 import { stringRule } from '../string/string-rules';
 import { isFqdn } from '../network/is-fqdn';
-
-// This validator supports an ASCII subset, so character counts equal octets.
-const MAX_EMAIL_LENGTH = 254;
-const MAX_LOCAL_PART_LENGTH = 64;
+import { MAX_EMAIL_LENGTH, MAX_LOCAL_PART_LENGTH } from './email-limits';
+import type { Rule } from '../../rules/rule';
 
 export interface EmailValidatorOptions extends ValSanOptions {
 	/**
@@ -36,7 +34,13 @@ export interface EmailValidatorOptions extends ValSanOptions {
  * // result.success === true
  * ```
  */
-export class EmailValidator extends ValSan<string, string> {
+export class EmailValidator<
+	const TOptions extends EmailValidatorOptions = Record<string, never>,
+> extends ValSan<string, string, string, TOptions> {
+	public override get jsonSchemaPreservesInput(): boolean {
+		return true;
+	}
+
 	override type: ValSanTypes = 'string';
 	override title = 'Email address';
 	override description =
@@ -48,10 +52,11 @@ export class EmailValidator extends ValSan<string, string> {
 	protected readonly allowPlusAddress: boolean;
 	protected readonly allowedDomains?: string[];
 
-	override rules() {
+	override rules(): { string: Rule; invalid: Rule; domain: Rule } {
 		return {
 			string: stringRule,
 			invalid: {
+				kind: 'string.email' as const,
 				code: 'email_format',
 				user: {
 					helperText: 'Email',
@@ -62,6 +67,7 @@ export class EmailValidator extends ValSan<string, string> {
 				},
 			},
 			domain: {
+				kind: 'string.emailDomains' as const,
 				code: 'email_domain',
 				user: {
 					helperText:
@@ -76,7 +82,7 @@ export class EmailValidator extends ValSan<string, string> {
 		};
 	}
 
-	constructor(options: EmailValidatorOptions = {}) {
+	constructor(options: TOptions = {} as TOptions) {
 		super(options);
 		this.allowPlusAddress = options.allowPlusAddress !== false;
 		this.allowedDomains = options.allowedDomains?.map((d) =>

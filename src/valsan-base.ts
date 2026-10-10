@@ -1,9 +1,61 @@
-import { ValSanTypes } from './types/types';
+import { ValSanTypes, ValSanValueType } from './types/types';
 import { RuleSet } from './rules/rule';
 import { SanitizeResult, ValSanOptions } from './valsan';
+import type {
+	JsonSchema,
+	JsonSchemaContext,
+	JsonSchemaDirection,
+	JsonSchemaOptions,
+	JsonSchemaProvider,
+} from './json-schema';
 
-export class BaseValSan<TInput = unknown, TOutput = TInput> {
+export class BaseValSan<TInput = unknown, TOutput = TInput>
+implements JsonSchemaProvider {
+	public get jsonSchemaPreservesInput(): boolean {
+		return false;
+	}
+
+	public get jsonSchemaAllowsUndefined(): boolean {
+		return this.allowsUndefined;
+	}
+
+	protected get jsonSchemaAllowsNull(): boolean {
+		return this.allowsNull;
+	}
+
+	private get allowsNull(): boolean {
+		return this.options.isNullable ?? this.options.isOptional ?? false;
+	}
+
+	private get allowsUndefined(): boolean {
+		return this.options.isUndefinable ?? this.options.isOptional ?? false;
+	}
+
+	public getJsonSchemaDefinition(
+		direction: JsonSchemaDirection,
+		options: JsonSchemaOptions,
+		context: JsonSchemaContext
+	): JsonSchema {
+		return this.jsonSchemaDefinition(direction, options, context);
+	}
+
+	protected jsonSchemaDefinition(
+		direction: JsonSchemaDirection,
+		options: JsonSchemaOptions,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		_context: JsonSchemaContext
+	): JsonSchema {
+		throw new TypeError(
+			`${this.constructor.name} does not support JSON Schema export; ` +
+			'provide options.jsonSchema or override jsonSchemaDefinition() ' +
+			`for ${direction} (${options.target})`
+		);
+	}
+
 	public type: ValSanTypes = 'unknown';
+	declare public inputType?: ValSanValueType;
+	declare public outputType?: ValSanValueType;
+
 	protected title: string | undefined = undefined;
 	protected description: string | undefined = undefined;
 	public example = '';
@@ -54,17 +106,13 @@ export class BaseValSan<TInput = unknown, TOutput = TInput> {
 	}
 
 	public checkRequired(input: unknown): SanitizeResult<TOutput> {
-		const isNullable =
-			this.options.isNullable ?? this.options.isOptional ?? false;
-		const isUndefinable =
-			this.options.isUndefinable ?? this.options.isOptional ?? false;
 		let isAllowed = this.options.isOptional ?? false;
 
 		if (input === null) {
-			isAllowed = isNullable;
+			isAllowed = this.allowsNull;
 		}
 		else if (input === undefined) {
-			isAllowed = isUndefinable;
+			isAllowed = this.allowsUndefined;
 		}
 
 		if (isAllowed) {

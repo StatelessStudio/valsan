@@ -1,4 +1,4 @@
-import { ValSan, ValidationResult } from '../../valsan';
+import { ValSan, ValSanOptions, ValidationResult } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
 import { isString } from './is-string';
 import { stringRule } from './string-rules';
@@ -15,7 +15,13 @@ import { stringRule } from './string-rules';
  * ```
  *
  */
-export class LowercaseSanitizer extends ValSan<string, string> {
+export class LowercaseSanitizer<
+	const TOptions extends ValSanOptions = Record<string, never>,
+> extends ValSan<string, string, string, TOptions> {
+	constructor(options: TOptions = {} as TOptions) {
+		super(options);
+	}
+
 	override type: ValSanTypes = 'string';
 	override title = 'Lowercase string';
 	override description = 'A string with all letters in lowercase.';

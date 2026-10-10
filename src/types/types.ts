@@ -7,3 +7,5 @@ export type ValSanTypes =
 	| 'object'
 	| 'file'
 	| 'unknown';
+
+export type ValSanValueType = ValSanTypes | readonly ValSanTypes[];

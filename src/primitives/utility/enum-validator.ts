@@ -8,7 +8,14 @@ export interface EnumValidatorOptions<T> extends ValSanOptions {
 	allowedValues: readonly T[];
 }
 
-export class EnumValidator<T> extends ValSan<T, T> {
+export class EnumValidator<
+	T,
+	const TOptions extends EnumValidatorOptions<T> = EnumValidatorOptions<T>,
+> extends ValSan<T, T, T, TOptions> {
+	public override get jsonSchemaPreservesInput(): boolean {
+		return true;
+	}
+
 	override type: ValSanTypes = 'unknown';
 	override title = 'Enumeration';
 	override description =
@@ -16,7 +23,7 @@ export class EnumValidator<T> extends ValSan<T, T> {
 
 	protected readonly allowedValues: readonly T[];
 
-	constructor(options: EnumValidatorOptions<T>) {
+	constructor(options: TOptions & EnumValidatorOptions<T>) {
 		super(options);
 		this.allowedValues = options.allowedValues;
 	}
@@ -24,6 +31,7 @@ export class EnumValidator<T> extends ValSan<T, T> {
 	override rules() {
 		return {
 			enum: {
+				kind: 'value.enum' as const,
 				code: 'enum',
 				user: {
 					helperText: 'Values: ' + this.allowedValues.join(', '),

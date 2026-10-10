@@ -5,6 +5,11 @@ import {
 	ValSanOptions,
 } from './valsan';
 import { BaseValSan } from './valsan-base';
+import { cachedStandardProps, SchemaValue } from './schema';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
+import type {
+	JsonSchema, JsonSchemaContext, JsonSchemaDirection, JsonSchemaOptions,
+} from './json-schema';
 
 export interface ComposedValSanOptions extends ValSanOptions {
 	/**
@@ -40,12 +45,62 @@ export interface ComposedValSanOptions extends ValSanOptions {
  * const result = await validator.run('  USER@EXAMPLE.COM  ');
  * ```
  */
-export class ComposedValSan<TInput = unknown, TOutput = TInput>
+export class ComposedValSan<
+	TInput = unknown,
+	TOutput = TInput,
+	TOptions extends ComposedValSanOptions = ComposedValSanOptions,
+>
 	extends BaseValSan<TInput, TOutput>
 	implements RunsLikeAValSan<TInput, TOutput> {
+	public override readonly options: NoInfer<TOptions> &
+		Readonly<ComposedValSanOptions>;
+
 	protected override title = 'Composed value';
 	protected override description =
 		'A value that satisfies each configured Valsan step in sequence.';
+
+	public get '~standard'(): StandardSchemaV1.Props<
+		ComposedValSanOptions extends NoInfer<TOptions> ? TInput :
+			SchemaValue<TInput, NoInfer<TOptions>>,
+		SchemaValue<TOutput, NoInfer<TOptions>>
+		> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
+		const run = (input: unknown) => this.run(input as TInput);
+		return cachedStandardProps<
+			ComposedValSanOptions extends NoInfer<TOptions> ? TInput :
+				SchemaValue<TInput, NoInfer<TOptions>>,
+			SchemaValue<TOutput, NoInfer<TOptions>>
+		>(this, run);
+	}
+
+	public override get jsonSchemaPreservesInput(): boolean {
+		return this.steps.every((step) =>
+			'jsonSchemaPreservesInput' in step &&
+			step.jsonSchemaPreservesInput === true
+		);
+	}
+
+	protected override jsonSchemaDefinition(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		_direction: JsonSchemaDirection,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		_options: JsonSchemaOptions,
+		context: JsonSchemaContext
+	): JsonSchema {
+		if (this.steps.length === 1) {
+			return context.exportChild(this.steps[0]);
+		}
+
+		if (!this.jsonSchemaPreservesInput) {
+			throw new TypeError(
+				'Transforming compositions require explicit options.jsonSchema'
+			);
+		}
+
+		return context.intersect(this.steps.map((step) =>
+			context.exportChild(step)
+		));
+	}
 
 	/**
 	 * Creates a composed validator from an array of ValSan steps.
@@ -57,9 +112,10 @@ export class ComposedValSan<TInput = unknown, TOutput = TInput>
 	constructor(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		public readonly steps: RunsLikeAValSan<any, any>[],
-		public override readonly options: ComposedValSanOptions = {}
+		options: TOptions = {} as TOptions
 	) {
 		super();
+		this.options = options;
 
 		if (steps.length === 0) {
 			throw new Error('ComposedValSan requires at least one step');

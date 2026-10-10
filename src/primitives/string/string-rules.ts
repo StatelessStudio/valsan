@@ -2,6 +2,7 @@ import { Rule } from '../../rules/rule';
 
 export const stringRule: Rule = {
 	code: 'string',
+	kind: 'type.string',
 	user: {
 		helperText: 'Text',
 		errorMessage: 'Value is not valid text',

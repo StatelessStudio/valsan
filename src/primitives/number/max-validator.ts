@@ -31,11 +31,16 @@ export interface MaxValidatorOptions extends ValSanOptions {
  * // result.success === true, result.data === 50
  * ```
  */
-export class MaxValidator extends ValSan<
+export class MaxValidator<
+	const TOptions extends MaxValidatorOptions = MaxValidatorOptions,
+> extends ValSan<
 	number | string | bigint,
 	number,
-	number
+	number,
+	TOptions
 > {
+	override inputType = ['number', 'string'] as const;
+
 	override type: ValSanTypes = 'number';
 	override title = 'Maximum value';
 	override description =
@@ -48,6 +53,7 @@ export class MaxValidator extends ValSan<
 			number: numberRule,
 			max: {
 				code: 'maximum',
+				kind: 'number.maximum' as const,
 				user: {
 					helperText: `Maximum value: ${this.max}`,
 					errorMessage: `Number must be at most ${this.max}`,
@@ -59,7 +65,7 @@ export class MaxValidator extends ValSan<
 		};
 	}
 
-	constructor(options: MaxValidatorOptions) {
+	constructor(options: TOptions) {
 		super(options);
 		this.max = options.max;
 	}

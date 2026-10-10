@@ -3,11 +3,23 @@ import {
 	ValSanOptions,
 	SanitizeResult,
 	ValidationError,
-	RunsLikeAValSan,
 } from '../../valsan';
 import { ValSanTypes } from '../../types/types';
+import { runSchema } from '../../schema';
+import type {
+	SchemaLike,
+	SchemaInput,
+	SchemaOutput,
+	SchemaValue,
+} from '../../schema';
+import type {
+	JsonSchema,
+	JsonSchemaContext,
+	JsonSchemaDirection,
+	JsonSchemaOptions,
+} from '../../json-schema';
 
-export type ArraySchema = RunsLikeAValSan<unknown, unknown>;
+export type ArraySchema = SchemaLike;
 
 export interface ArrayValSanOptions extends ValSanOptions {
 	/**
@@ -31,17 +43,43 @@ export interface ArrayValSanOptions extends ValSanOptions {
  * ]);
  * ```
  */
-export class ArrayValSan extends ValSan<unknown[], unknown[]> {
+export class ArrayValSan<
+	const TOptions extends ArrayValSanOptions = ArrayValSanOptions,
+> extends ValSan<
+	SchemaValue<Array<SchemaInput<TOptions['schema']>>, TOptions>,
+	SchemaValue<Array<SchemaOutput<TOptions['schema']>>, TOptions>,
+	SchemaValue<Array<SchemaOutput<TOptions['schema']>>, TOptions>,
+	TOptions
+> {
 	override type: ValSanTypes = 'array';
 	override title = 'Array';
 	override description =
 		'An array whose items each satisfy the configured schema.';
 
-	public get schema(): ArraySchema {
-		return (this.options as ArrayValSanOptions).schema;
+	protected override jsonSchemaDefinition(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		_direction: JsonSchemaDirection,
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		_options: JsonSchemaOptions,
+		context: JsonSchemaContext
+	): JsonSchema {
+		if (
+			'jsonSchemaAllowsUndefined' in this.schema &&
+			this.schema.jsonSchemaAllowsUndefined === true
+		) {
+			throw new TypeError(
+				'Undefined array elements cannot be represented in JSON Schema'
+			);
+		}
+
+		return { type: 'array', items: context.exportChild(this.schema) };
 	}
 
-	constructor(options: ArrayValSanOptions) {
+	public get schema(): TOptions['schema'] {
+		return this.options.schema;
+	}
+
+	constructor(options: TOptions) {
 		super(options);
 	}
 
@@ -59,8 +97,13 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 
 	public override async run(
 		input: unknown[] | unknown
-	): Promise<SanitizeResult<unknown[]>> {
+	): Promise<
+		SanitizeResult<
+			SchemaValue<Array<SchemaOutput<TOptions['schema']>>, TOptions>
+		>
+	> {
 		const options = this.options as ArrayValSanOptions;
+
 		if (input === undefined || input === null) {
 			return this.checkRequired(input);
 		}
@@ -84,7 +127,7 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 		// Validate and sanitize each item
 		for (let i = 0; i < input.length; i++) {
 			const value = input[i];
-			const itemResult = await schema.run(value);
+			const itemResult = await runSchema(schema, value);
 
 			if (itemResult.success) {
 				result.push(itemResult.data);
@@ -107,7 +150,7 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 
 		return {
 			success: true,
-			data: result,
+			data: result as Array<SchemaOutput<TOptions['schema']>>,
 			errors: [],
 		};
 	}
@@ -122,7 +165,7 @@ export class ArrayValSan extends ValSan<unknown[], unknown[]> {
 	/**
 	 * Unused - sanitization is handled in run()
 	 */
-	protected override async sanitize(): Promise<unknown[]> {
-		return [];
+	protected override async sanitize() {
+		return [] as Array<SchemaOutput<TOptions['schema']>>;
 	}
 }

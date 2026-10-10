@@ -40,13 +40,15 @@ export interface LengthValidatorOptions
  * // result.errors[0].code === 'string_max_len'
  * ```
  */
-export class LengthValidator extends ComposedValSan<string, string> {
+export class LengthValidator<
+	const TOptions extends LengthValidatorOptions = Record<string, never>,
+> extends ComposedValSan<string, string, TOptions> {
 	override type: ValSanTypes = 'string';
 	override title = 'String length';
 	override description =
 		'A string whose length falls within the configured inclusive range.';
 
-	constructor(options: LengthValidatorOptions = {}) {
+	constructor(options: TOptions = {} as TOptions) {
 		const steps = [
 			new MinLengthValidator({ minLength: options.minLength ?? 1 }),
 			new MaxLengthValidator({

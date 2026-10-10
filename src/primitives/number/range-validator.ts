@@ -36,11 +36,16 @@ export interface RangeValidatorOptions extends ValSanOptions {
  * // result.success === true, result.data === 50
  * ```
  */
-export class RangeValidator extends ValSan<
+export class RangeValidator<
+	const TOptions extends RangeValidatorOptions = RangeValidatorOptions,
+> extends ValSan<
 	number | string | bigint,
 	number,
-	number
+	number,
+	TOptions
 > {
+	override inputType = ['number', 'string'] as const;
+
 	override type: ValSanTypes = 'number';
 	override title = 'Number range';
 	override description =
@@ -54,6 +59,7 @@ export class RangeValidator extends ValSan<
 			number: numberRule,
 			range: {
 				code: 'number_range',
+				kind: 'number.range' as const,
 				user: {
 					helperText: `Value from ${this.min} through ${this.max}.`,
 					errorMessage:
@@ -71,7 +77,7 @@ export class RangeValidator extends ValSan<
 		};
 	}
 
-	constructor(options: RangeValidatorOptions) {
+	constructor(options: TOptions) {
 		super(options);
 		this.min = options.min;
 		this.max = options.max;
