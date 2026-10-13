@@ -16,6 +16,16 @@ describe('StringToBooleanValSan', () => {
 		expect(result.data).toBe(false);
 	});
 
+	it('should accept boolean input', async () => {
+		const validator = new StringToBooleanValSan();
+		const trueResult = await validator.run(true);
+		const falseResult = await validator.run(false);
+		expect(trueResult.success).toBe(true);
+		expect(trueResult.data).toBe(true);
+		expect(falseResult.success).toBe(true);
+		expect(falseResult.data).toBe(false);
+	});
+
 	it('should be case-insensitive for "true"', async () => {
 		const validator = new StringToBooleanValSan();
 		const result1 = await validator.run('TRUE');

@@ -23,10 +23,11 @@ import { normalizeNumber } from './normalize-number';
  * // result.errors[0].code === 'number'
  * ```
  */
-export class StringToNumberValSan extends ValSan<string, number> {
+export class StringToNumberValSan extends ValSan<string | number, number> {
 	override type: ValSanTypes = 'number';
 	override title = 'Number';
-	override description = 'A string representing a valid number.';
+	override description =
+		'A numeric string or number representing a valid number.';
 
 	override rules() {
 		return {
@@ -34,11 +35,9 @@ export class StringToNumberValSan extends ValSan<string, number> {
 		};
 	}
 
-	protected override async normalize(input: string): Promise<number> {
-		if (typeof input !== 'string') {
-			return Number.NaN;
-		}
-
+	protected override async normalize(
+		input: string | number
+	): Promise<number> {
 		return normalizeNumber(input);
 	}
 
