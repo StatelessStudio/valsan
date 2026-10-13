@@ -18,7 +18,7 @@ export interface StringToBooleanValSanOptions extends ValSanOptions {
 }
 
 /**
- * Converts a string to a boolean.
+ * Converts a string to a boolean and accepts boolean values directly.
  *
  * By default, recognizes common boolean string representations:
  * - True: 'true', '1', 'yes', 'on'
@@ -51,12 +51,15 @@ export interface StringToBooleanValSanOptions extends ValSanOptions {
  * // result.errors[0].code === 'boolean'
  * ```
  */
-export class StringToBooleanValSan extends ValSan<string, boolean> {
+export class StringToBooleanValSan extends ValSan<
+	string | boolean,
+	boolean
+> {
 	override type: ValSanTypes = 'boolean';
 	override title = 'Boolean string';
 	override description =
-		'A string representing true or false, such as "true", "false", "1", ' +
-		'or "0".';
+		'A boolean or a string representing true or false, such as "true", ' +
+		'"false", "1", or "0".';
 	override example = 'true';
 
 	private readonly trueValues: string[];
@@ -94,11 +97,17 @@ export class StringToBooleanValSan extends ValSan<string, boolean> {
 		).map((v) => v.toLowerCase());
 	}
 
-	override async normalize(input: string): Promise<string> {
+	override async normalize(
+		input: string | boolean
+	): Promise<string | boolean> {
 		return typeof input === 'string' ? input.toLowerCase() : input;
 	}
 
-	async validate(input: string): Promise<ValidationResult> {
+	async validate(input: string | boolean): Promise<ValidationResult> {
+		if (typeof input === 'boolean') {
+			return this.pass();
+		}
+
 		if (!isString(input)) {
 			return this.fail([this.rules().string]);
 		}
@@ -113,7 +122,9 @@ export class StringToBooleanValSan extends ValSan<string, boolean> {
 		return this.pass();
 	}
 
-	async sanitize(input: string): Promise<boolean> {
-		return this.trueValues.includes(input);
+	async sanitize(input: string | boolean): Promise<boolean> {
+		return typeof input === 'boolean'
+			? input
+			: this.trueValues.includes(input);
 	}
 }

@@ -31,6 +31,20 @@ describe('StringToNumberValSan', () => {
 		expect(result.data).toBe(0);
 	});
 
+	it('should accept numeric input', async () => {
+		const validator = new StringToNumberValSan();
+		const result = await validator.run(42);
+		expect(result.success).toBe(true);
+		expect(result.data).toBe(42);
+	});
+
+	it('should reject non-finite numeric input', async () => {
+		const validator = new StringToNumberValSan();
+		const result = await validator.run(Number.NaN);
+		expect(result.success).toBe(false);
+		expect(result.errors[0].code).toBe('number');
+	});
+
 	it('should reject non-numeric strings', async () => {
 		const validator = new StringToNumberValSan();
 		const result = await validator.run('not a number');

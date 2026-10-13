@@ -104,6 +104,8 @@ const addressValidator = new ArrayValSan({
 
 ### StringToBooleanValSan
 
+Accepts recognized boolean strings or boolean values and returns a boolean.
+
 ```typescript
 import { StringToBooleanValSan } from 'valsan'; // from 'valsan/bool'
 
@@ -660,7 +662,7 @@ that lose precision are no longer accepted.
 
 ### StringToNumberValSan
 
-Converts a string to a number, validating that it's a valid numeric string.
+Converts a numeric string to a number or validates and passes through a number.
 
 ```typescript
 import { StringToNumberValSan } from 'valsan'; // from 'valsan/number'
