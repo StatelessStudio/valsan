@@ -656,6 +656,24 @@ describe('ObjectValSan', () => {
 		expect((result.data as any)?.another).toBe(123);
 	});
 
+	it('should strip additional properties when enabled', async () => {
+		const valsan = new ObjectValSan({
+			schema: {
+				name: new TrimSanitizer(),
+			},
+			allowAdditionalProperties: true,
+			stripAdditionalProperties: true,
+		});
+
+		const result = await valsan.run({
+			name: '  John  ',
+			extra: 'field',
+		});
+
+		expect(result.success).toBe(true);
+		expect(result.data).toEqual({ name: 'John' });
+	});
+
 	// eslint-disable-next-line max-len
 	it('should allow additional properties in nested objects when enabled', async () => {
 		const addressValSan = new ObjectValSan({

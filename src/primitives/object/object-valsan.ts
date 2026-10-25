@@ -20,6 +20,13 @@ export interface ObjectValSanOptions extends ValSanOptions {
 	 * @default false
 	 */
 	allowAdditionalProperties?: boolean;
+
+	/**
+	 * Strip additional properties instead of rejecting them.
+	 * Takes precedence over allowAdditionalProperties.
+	 * @default false
+	 */
+	stripAdditionalProperties?: boolean;
 }
 
 /**
@@ -99,11 +106,19 @@ export class ObjectValSan extends ValSan<
 
 		const errors: ValidationError[] = [];
 		const schema = options.schema;
+		const stripAdditionalProperties = options.stripAdditionalProperties;
 		const output = Object.create(
 			Object.getPrototypeOf(input)
 		) as Record<string, unknown>;
 
 		for (const key of Object.keys(input)) {
+			if (
+				stripAdditionalProperties &&
+				!Object.hasOwn(schema, key)
+			) {
+				continue;
+			}
+
 			Object.defineProperty(output, key, {
 				configurable: true,
 				enumerable: true,
@@ -134,7 +149,10 @@ export class ObjectValSan extends ValSan<
 			}
 		}
 
-		if (!(this.options as ObjectValSanOptions).allowAdditionalProperties) {
+		if (
+			!options.allowAdditionalProperties &&
+			!stripAdditionalProperties
+		) {
 			for (const key of Object.keys(output)) {
 				if (!Object.hasOwn(schema, key)) {
 					errors.push({
