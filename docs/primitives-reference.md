@@ -431,6 +431,20 @@ const result3 = await permissiveValidator.run({
 // result3.data.metadata === { key: 'value' }
 // result3.data.count === 42
 
+// Strip additional properties instead of rejecting or preserving them
+const strippingValidator = new ObjectValSan({
+  schema: {
+    name: new TrimSanitizer()
+  },
+  stripAdditionalProperties: true
+});
+const result4 = await strippingValidator.run({
+  name: 'John',
+  metadata: { key: 'value' }
+});
+// result4.success === true
+// result4.data === { name: 'John' }
+
 // Optional object
 const optional = new ObjectValSan({
   schema: {
